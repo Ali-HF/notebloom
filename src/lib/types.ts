@@ -8,5 +8,6 @@ export type Book = {
   stock: number;
   isbn: string;
   cover_seed: string;
+  cover_seed_2?: string | null;
   created_at: string;
 };

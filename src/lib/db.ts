@@ -291,11 +291,14 @@ export async function getBook(id: number): Promise<Book | undefined> {
   return result[0] as unknown as Book | undefined;
 }
 
-export async function createBook(b: Omit<Book, "id" | "created_at" | "cover_seed">): Promise<number> {
-  const coverSeed = slug(b.title) + "-" + Date.now();
+export async function createBook(
+  b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2"> & { cover_seed?: string; cover_seed_2?: string | null }
+): Promise<number> {
+  const coverSeed = b.cover_seed || (slug(b.title) + "-" + Date.now());
+  const coverSeed2 = b.cover_seed_2 || null;
   const result = await sql`
-    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed)
-    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed})
+    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2)
+    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2})
     RETURNING id
   `;
   return Number(result[0].id);
@@ -303,11 +306,12 @@ export async function createBook(b: Omit<Book, "id" | "created_at" | "cover_seed
 
 export async function updateBook(
   id: number,
-  b: Omit<Book, "id" | "created_at" | "cover_seed">
+  b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2"> & { cover_seed?: string; cover_seed_2?: string | null }
 ): Promise<void> {
   await sql`
     UPDATE books 
-    SET title=${b.title}, author=${b.author}, description=${b.description}, genre=${b.genre}, price_cents=${b.price_cents}, stock=${b.stock}, isbn=${b.isbn} 
+    SET title=${b.title}, author=${b.author}, description=${b.description}, genre=${b.genre}, price_cents=${b.price_cents}, stock=${b.stock}, isbn=${b.isbn},
+        cover_seed=${b.cover_seed || sql`cover_seed`}, cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`}
     WHERE id=${id}
   `;
 }

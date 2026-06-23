@@ -22,6 +22,8 @@ const bookSchema = z.object({
   price: z.coerce.number().min(0.01, "Price must be more than PKR 0."),
   stock: z.coerce.number().int().min(0, "Stock can't be negative."),
   isbn: z.string().optional().default(""),
+  cover_seed: z.string().optional().default(""),
+  cover_seed_2: z.string().optional().default(""),
 });
 
 export type BookFormState = { error?: string } | undefined;
@@ -45,6 +47,8 @@ export async function createBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
+    cover_seed: parsed.data.cover_seed || undefined,
+    cover_seed_2: parsed.data.cover_seed_2 || null,
   });
 
   revalidatePath("/admin");
@@ -72,6 +76,8 @@ export async function updateBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
+    cover_seed: parsed.data.cover_seed || undefined,
+    cover_seed_2: parsed.data.cover_seed_2 || null,
   });
 
   revalidatePath("/admin");

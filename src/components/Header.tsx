@@ -4,6 +4,7 @@ import { cartCount } from "@/lib/db";
 import Logo from "./Logo";
 import { logoutAction } from "@/app/actions/auth-actions";
 import { cookies } from "next/headers";
+import MobileMenu from "./MobileMenu";
 
 export default async function Header() {
   const session = await auth();
@@ -65,13 +66,13 @@ export default async function Header() {
             </Link>
 
             {session?.user ? (
-              <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-4">
                 {session.user.isAdmin && (
-                  <Link href="/admin" className="trail-link hidden sm:inline">
+                  <Link href="/admin" className="trail-link">
                     ADMIN
                   </Link>
                 )}
-                <Link href="/account" className="trail-link hidden sm:inline">
+                <Link href="/account" className="trail-link">
                   ACCOUNT
                 </Link>
                 <form action={logoutAction}>
@@ -81,10 +82,12 @@ export default async function Header() {
                 </form>
               </div>
             ) : (
-              <Link href="/login" className="trail-link">
+              <Link href="/login" className="trail-link hidden sm:inline">
                 LOG IN
               </Link>
             )}
+
+            <MobileMenu session={session} count={count} />
           </nav>
         </div>
       </div>

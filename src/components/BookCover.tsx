@@ -42,16 +42,18 @@ export default function BookCover({
   author,
   genre,
   seed,
+  isSecondary = false,
   className = "",
 }: {
   title: string;
   author: string;
   genre: string;
   seed: string;
+  isSecondary?: boolean;
   className?: string;
 }) {
   const isUrl = seed.startsWith("http://") || seed.startsWith("https://") || seed.startsWith("/");
-  if (isUrl) {
+  if (isUrl && !isSecondary) {
     return (
       <div className={`relative overflow-hidden bg-stone-50 rounded-xl shadow-md ring-1 ring-ink/10 ${className}`} style={{ aspectRatio: "1/1" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -66,8 +68,9 @@ export default function BookCover({
     );
   }
 
+  const displaySeed = isUrl ? `${title}-${author}-alt` : seed;
   const palette = PALETTES[genre] ?? PALETTES.Notebooks;
-  const variant = hashCode(seed) % 4;
+  const variant = isSecondary ? (hashCode(displaySeed) + 1) % 4 : hashCode(displaySeed) % 4;
   const titleLines = wrapText(title, 14);
 
   return (

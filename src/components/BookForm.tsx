@@ -89,6 +89,21 @@ export default function BookForm({
         />
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <Field
+          label="Primary Image URL / Seed"
+          name="cover_seed"
+          defaultValue={initial?.cover_seed}
+          placeholder="e.g. /images/peach_case.png"
+        />
+        <Field
+          label="Secondary Image URL / Seed"
+          name="cover_seed_2"
+          defaultValue={initial?.cover_seed_2 || ""}
+          placeholder="e.g. /images/peach_case_2.png"
+        />
+      </div>
+
       {state?.error && <p className="text-sm text-oxblood">{state.error}</p>}
 
       <button
@@ -112,6 +127,7 @@ function Field({
   required,
   step,
   min,
+  placeholder,
 }: {
   label: string;
   name: string;
@@ -120,6 +136,7 @@ function Field({
   required?: boolean;
   step?: string;
   min?: string;
+  placeholder?: string;
 }) {
   return (
     <div>
@@ -138,6 +155,7 @@ function Field({
         min={min}
         required={required}
         defaultValue={defaultValue}
+        placeholder={placeholder}
         className="w-full rounded-md border border-ink/20 bg-cream px-3 py-2.5 text-sm focus:border-oxblood transition-colors"
       />
     </div>

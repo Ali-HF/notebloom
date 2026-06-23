@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BookCover from "@/components/BookCover";
+import ProductImageSlider from "@/components/ProductImageSlider";
 import StarRating from "@/components/StarRating";
 import ReviewForm from "@/components/ReviewForm";
 import WormDivider from "@/components/WormDivider";
@@ -35,13 +36,13 @@ export default async function BookDetailPage({
       </Link>
 
       <div className="mt-6 grid sm:grid-cols-[280px_1fr] gap-12">
-        <div className="rounded-xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(34,29,24,0.4)] ring-1 ring-ink/10 h-fit">
-          <BookCover
+        <div className="w-full h-fit">
+          <ProductImageSlider
             title={book.title}
             author={book.author}
             genre={book.genre}
-            seed={book.cover_seed}
-            className="w-full h-auto"
+            coverSeed={book.cover_seed}
+            coverSeed2={book.cover_seed_2}
           />
         </div>
 
