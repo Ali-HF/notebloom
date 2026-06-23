@@ -281,5 +281,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
 
   revalidatePath("/cart");
   revalidatePath("/account");
-  redirect(`/account/orders/${result.orderId}`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
+  redirect(`/account/orders/${result.orderId}?new=true`);
 }

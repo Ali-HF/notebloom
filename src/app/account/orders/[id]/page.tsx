@@ -5,15 +5,21 @@ import { getOrdersForUser, getOrderItems, formatPrice, getOrder } from "@/lib/db
 import BookCover from "@/components/BookCover";
 import WormMark from "@/components/WormMark";
 import { cookies } from "next/headers";
+import Confetti from "@/components/Confetti";
 
 export default async function OrderDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ new?: string }>;
 }) {
   const session = await auth();
   const { id } = await params;
   const orderId = Number(id);
+
+  const { new: isNew } = await searchParams;
+  const showConfetti = isNew === "true";
 
   const cookieStore = await cookies();
   const hasGuestAccess = cookieStore.get(`guest_order_access_${orderId}`)?.value === "true";
@@ -44,6 +50,7 @@ export default async function OrderDetailPage({
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
+      {showConfetti && <Confetti />}
       <div className="text-center mb-10">
         <WormMark size={36} className="mx-auto mb-4" />
         <p

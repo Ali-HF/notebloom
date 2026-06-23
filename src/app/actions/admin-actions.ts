@@ -92,4 +92,5 @@ export async function updateOrderStatusAction(orderId: number, formData: FormDat
   if (!status) return;
   await updateOrderStatus(orderId, status);
   revalidatePath("/admin/orders");
+  revalidatePath("/admin");
 }

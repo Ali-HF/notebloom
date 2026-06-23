@@ -540,8 +540,8 @@ export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
 
 export async function getAllOrders(): Promise<(Order & { user_name: string; user_email: string })[]> {
   const result = await sql`
-    SELECT o.*, u.name as user_name, u.email as user_email
-    FROM orders o JOIN users u ON u.id = o.user_id
+    SELECT o.*, COALESCE(u.name, 'Guest') as user_name, COALESCE(u.email, 'No Email') as user_email
+    FROM orders o LEFT JOIN users u ON u.id = o.user_id
     ORDER BY o.created_at DESC
   `;
   return result as unknown as (Order & { user_name: string; user_email: string })[];
