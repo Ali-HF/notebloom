@@ -21,6 +21,17 @@ export default async function OrderDetailPage({
 
   const items = await getOrderItems(orderId);
 
+  const statusConfig: Record<string, { color: string; bg: string; icon: string; heading: string }> = {
+    Pending:    { color: "text-amber-700",  bg: "bg-amber-100",  icon: "⏳", heading: "We've sent you a WhatsApp message!" },
+    Confirmed:  { color: "text-emerald-700", bg: "bg-emerald-100", icon: "✅", heading: "Order confirmed — it's tunneling its way to you." },
+    Processing: { color: "text-blue-700",   bg: "bg-blue-100",   icon: "📦", heading: "Your order is being processed." },
+    Shipped:    { color: "text-indigo-700",  bg: "bg-indigo-100",  icon: "🚚", heading: "Your order is on the way!" },
+    Delivered:  { color: "text-emerald-700", bg: "bg-emerald-100", icon: "🎉", heading: "Delivered — enjoy your goodies!" },
+    Cancelled:  { color: "text-red-700",     bg: "bg-red-100",     icon: "❌", heading: "This order was cancelled." },
+  };
+
+  const cfg = statusConfig[order.status] || statusConfig.Pending;
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
       <div className="text-center mb-10">
@@ -29,34 +40,93 @@ export default async function OrderDetailPage({
           className="text-xs tracking-[0.22em] uppercase text-oxblood mb-2"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
-          Order confirmed
+          Order #{order.id}
         </p>
         <h1
           className="text-3xl"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
         >
-          Thanks — it&rsquo;s tunneling its way to you.
+          {cfg.heading}
         </h1>
         <p className="text-ink-soft mt-2">
-          Order #{order.id} ·{" "}
           {new Date(order.created_at).toLocaleDateString(undefined, {
             year: "numeric",
             month: "long",
             day: "numeric",
           })}
         </p>
+
+        {/* Status badge */}
         <div className="mt-4 flex items-center justify-center gap-2">
           <span className="text-xs uppercase text-ink-soft" style={{ fontFamily: "var(--font-stamp)" }}>Status:</span>
-          <span className={`text-xs uppercase font-bold px-3 py-1 rounded-full ${
-            order.status === "Delivered" ? "text-green-800 bg-green-100" :
-            order.status === "Shipped" ? "text-amber-800 bg-amber-100" :
-            order.status === "Processing" ? "text-blue-800 bg-blue-100" :
-            "text-moss bg-moss/10"
-          }`} style={{ fontFamily: "var(--font-stamp)" }}>
-            {order.status}
+          <span
+            className={`text-xs uppercase font-bold px-3 py-1 rounded-full ${cfg.color} ${cfg.bg}`}
+            style={{ fontFamily: "var(--font-stamp)" }}
+          >
+            {cfg.icon} {order.status}
           </span>
         </div>
       </div>
+
+      {/* WhatsApp confirmation prompt for pending orders */}
+      {order.status === "Pending" && (
+        <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">📱</span>
+            <div>
+              <p className="font-semibold text-amber-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Check your WhatsApp!
+              </p>
+              <p className="text-sm text-amber-800 leading-relaxed">
+                We&rsquo;ve sent a confirmation message to your phone number. Please reply
+                <strong className="mx-1">&ldquo;confirm&rdquo;</strong>
+                to finalize your order, or
+                <strong className="mx-1">&ldquo;cancel&rdquo;</strong>
+                if you&rsquo;d like to cancel it.
+              </p>
+              <p className="text-xs text-amber-600 mt-2">
+                Your order will be processed once confirmed via WhatsApp.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmed success banner */}
+      {order.status === "Confirmed" && (
+        <div className="mb-8 rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">🎉</span>
+            <div>
+              <p className="font-semibold text-emerald-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Order confirmed via WhatsApp!
+              </p>
+              <p className="text-sm text-emerald-800 leading-relaxed">
+                Thank you for confirming. Your order is now being prepared for delivery.
+                We&rsquo;ll notify you when it ships!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancelled banner */}
+      {order.status === "Cancelled" && (
+        <div className="mb-8 rounded-lg border border-red-200 bg-red-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">😔</span>
+            <div>
+              <p className="font-semibold text-red-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Order cancelled
+              </p>
+              <p className="text-sm text-red-800 leading-relaxed">
+                This order was cancelled. If this was a mistake, you can place a new order
+                from our shop.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ul className="divide-y divide-ink/10 mb-8">
         {items.map((item) => (

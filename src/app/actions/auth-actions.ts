@@ -3,8 +3,10 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/lib/auth";
-import { createUser, getUserByEmail } from "@/lib/db";
+import { createUser, getUserByEmail, createVerificationToken } from "@/lib/db";
+import { sendVerificationEmail } from "@/lib/email";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
@@ -26,6 +28,14 @@ export async function loginAction(
   }
 
   const next = String(formData.get("next") || "/account");
+
+  const user = await getUserByEmail(parsed.data.email);
+  if (user) {
+    const valid = await bcrypt.compare(parsed.data.password, user.password_hash);
+    if (valid && !user.email_verified) {
+      return { error: `UNVERIFIED:${user.email}` };
+    }
+  }
 
   try {
     await signIn("credentials", {
@@ -68,19 +78,41 @@ export async function signupAction(
   }
 
   const hash = await bcrypt.hash(parsed.data.password, 10);
-  await createUser(parsed.data.name, parsed.data.email, hash);
+  const userId = await createUser(parsed.data.name, parsed.data.email, hash);
 
   try {
-    await signIn("credentials", {
-      email: parsed.data.email,
-      password: parsed.data.password,
-      redirectTo: "/account",
-    });
+    const token = await createVerificationToken(userId);
+    await sendVerificationEmail(parsed.data.email, token);
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Account created, but sign-in failed. Try logging in." };
-    }
-    throw error;
+    console.error("Failed to generate verification token or send email:", error);
+    return { error: "Account created, but we couldn't send a verification email. Please try logging in to resend." };
+  }
+
+  redirect(`/verify-email?email=${encodeURIComponent(parsed.data.email)}`);
+}
+
+export async function resendVerificationAction(email: string): Promise<{ success?: string; error?: string }> {
+  if (!email || !email.includes("@")) {
+    return { error: "A valid email address is required." };
+  }
+
+  const user = await getUserByEmail(email);
+  if (!user) {
+    // Return standard success to avoid email enumeration
+    return { success: "If that email is registered, we have sent a new verification link." };
+  }
+
+  if (user.email_verified) {
+    return { error: "This email is already verified. Please try logging in." };
+  }
+
+  try {
+    const token = await createVerificationToken(user.id);
+    await sendVerificationEmail(user.email, token);
+    return { success: "A new verification link has been sent to your email." };
+  } catch (error) {
+    console.error("Failed to resend verification email:", error);
+    return { error: "We encountered an error sending the verification email. Please try again later." };
   }
 }
 

@@ -120,22 +120,37 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   console.log(`Total:         ${totalPKR}`);
   console.log("==================================================");
 
-  // 9. Send WhatsApp Message (Twilio API)
-  const whatsappBody = `Hi ${fullName}! Thanks for ordering from The Paperworm! Your order #${result.orderId} (Total: ${totalPKR}) has been received. Please reply with "confirm" to this message to confirm your order and schedule it for delivery!`;
-  await sendWhatsappNotification(phone, whatsappBody);
+  // 9. Send WhatsApp confirmation (fire-and-forget — never block checkout)
+  try {
+    const whatsappBody =
+      `Hi ${fullName}! 🛍️ Thanks for ordering from *The Paperworm*!\n\n` +
+      `Your order *#${result.orderId}* (Total: ${totalPKR}) has been received.\n\n` +
+      `📦 Reply *confirm* to confirm your order\n` +
+      `❌ Reply *cancel* to cancel\n\n` +
+      `We'll start processing as soon as you confirm!`;
+    const whatsappSent = await sendWhatsappNotification(phone, whatsappBody);
+    console.log(`WhatsApp notification ${whatsappSent ? "✅ sent" : "⚠️ skipped/failed"} for order #${result.orderId}`);
+  } catch (whatsappError) {
+    console.error("WhatsApp notification failed (non-blocking):", whatsappError);
+  }
 
-  // 10. Send Simulated Email
-  const emailSubject = `Order #${result.orderId} Confirmation - The Paperworm`;
-  const emailHtml = `
-    <h1>Thank you for your order, ${fullName}!</h1>
-    <p>We've received your order <strong>#${result.orderId}</strong>.</p>
-    <p><strong>Payment Method:</strong> Cash on Delivery (COD)</p>
-    <p><strong>Shipping Address:</strong> ${address}, ${area}, ${city}</p>
-    <p><strong>Items:</strong> ${itemsSummary}</p>
-    <p><strong>Total:</strong> ${totalPKR}</p>
-    <p>We will contact you on ${phone} when your package is ready for delivery.</p>
-  `;
-  await sendEmailNotification(session.user.email || "customer@example.com", emailSubject, emailHtml);
+  // 10. Send Simulated Email (fire-and-forget)
+  try {
+    const emailSubject = `Order #${result.orderId} Confirmation - The Paperworm`;
+    const emailHtml = `
+      <h1>Thank you for your order, ${fullName}!</h1>
+      <p>We've received your order <strong>#${result.orderId}</strong>.</p>
+      <p><strong>Payment Method:</strong> Cash on Delivery (COD)</p>
+      <p><strong>Shipping Address:</strong> ${address}, ${area}, ${city}</p>
+      <p><strong>Items:</strong> ${itemsSummary}</p>
+      <p><strong>Total:</strong> ${totalPKR}</p>
+      <p>We will contact you on ${phone} when your package is ready for delivery.</p>
+      <p>Please check your WhatsApp and reply <strong>"confirm"</strong> to confirm your order!</p>
+    `;
+    await sendEmailNotification(session.user.email || "customer@example.com", emailSubject, emailHtml);
+  } catch (emailError) {
+    console.error("Email notification failed (non-blocking):", emailError);
+  }
 
   revalidatePath("/cart");
   revalidatePath("/account");
