@@ -3,10 +3,28 @@ import { auth } from "@/lib/auth";
 import { cartCount } from "@/lib/db";
 import Logo from "./Logo";
 import { logoutAction } from "@/app/actions/auth-actions";
+import { cookies } from "next/headers";
 
 export default async function Header() {
   const session = await auth();
-  const count = session?.user?.id ? await cartCount(Number(session.user.id)) : 0;
+  
+  let count = 0;
+  if (session?.user?.id) {
+    count = await cartCount(Number(session.user.id));
+  } else {
+    try {
+      const cookieStore = await cookies();
+      const cartCookie = cookieStore.get("paperworm_cart")?.value;
+      if (cartCookie) {
+        const parsed = JSON.parse(cartCookie);
+        if (Array.isArray(parsed)) {
+          count = parsed.reduce((sum, item: any) => sum + (Number(item.quantity) || 0), 0);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-ink/10">

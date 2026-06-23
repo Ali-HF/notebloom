@@ -3,53 +3,133 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getCart, addToCart, setCartQty, removeFromCart, placeOrder, saveUserShipping } from "@/lib/db";
+import { cookies } from "next/headers";
+import { 
+  getCart, 
+  addToCart, 
+  setCartQty, 
+  removeFromCart, 
+  placeOrder, 
+  saveUserShipping, 
+  getBook, 
+  getOrCreateGuestUser 
+} from "@/lib/db";
 import { sendWhatsappNotification } from "@/lib/whatsapp";
 import { sendEmailNotification } from "@/lib/email";
 
 export async function addToCartAction(bookId: number, qty: number = 1) {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect(`/login?next=/shop`);
+  if (session?.user?.id) {
+    await addToCart(Number(session.user.id), bookId, qty);
+  } else {
+    // Guest cart in cookies
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    let cart: Array<{ book_id: number; quantity: number }> = [];
+    if (cartCookie) {
+      try {
+        const parsed = JSON.parse(cartCookie);
+        if (Array.isArray(parsed)) cart = parsed;
+      } catch (e) {}
+    }
+    const idx = cart.findIndex((it) => it.book_id === bookId);
+    if (idx >= 0) {
+      cart[idx].quantity += qty;
+    } else {
+      cart.push({ book_id: bookId, quantity: qty });
+    }
+    cookieStore.set("paperworm_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
-  await addToCart(Number(session.user.id), bookId, qty);
   revalidatePath("/cart");
   revalidatePath("/shop");
 }
 
 export async function addToCartWithQtyAction(bookId: number, formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect(`/login?next=/shop/${bookId}`);
-  }
   const qty = Number(formData.get("qty"));
-  await addToCart(Number(session.user.id), bookId, Number.isFinite(qty) && qty > 0 ? qty : 1);
+  const cleanQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
+
+  if (session?.user?.id) {
+    await addToCart(Number(session.user.id), bookId, cleanQty);
+  } else {
+    // Guest cart in cookies
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    let cart: Array<{ book_id: number; quantity: number }> = [];
+    if (cartCookie) {
+      try {
+        const parsed = JSON.parse(cartCookie);
+        if (Array.isArray(parsed)) cart = parsed;
+      } catch (e) {}
+    }
+    const idx = cart.findIndex((it) => it.book_id === bookId);
+    if (idx >= 0) {
+      cart[idx].quantity += cleanQty;
+    } else {
+      cart.push({ book_id: bookId, quantity: cleanQty });
+    }
+    cookieStore.set("paperworm_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
+  }
   revalidatePath("/cart");
   revalidatePath("/shop");
 }
 
 export async function updateCartQtyAction(bookId: number, formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
   const qty = Number(formData.get("qty"));
-  await setCartQty(Number(session.user.id), bookId, Number.isFinite(qty) ? qty : 1);
+  const cleanQty = Number.isFinite(qty) ? qty : 1;
+
+  if (session?.user?.id) {
+    await setCartQty(Number(session.user.id), bookId, cleanQty);
+  } else {
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    if (cartCookie) {
+      try {
+        let cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+        if (Array.isArray(cart)) {
+          const idx = cart.findIndex((it) => it.book_id === bookId);
+          if (idx >= 0) {
+            if (cleanQty <= 0) {
+              cart.splice(idx, 1);
+            } else {
+              cart[idx].quantity = cleanQty;
+            }
+            cookieStore.set("paperworm_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
+          }
+        }
+      } catch (e) {}
+    }
+  }
   revalidatePath("/cart");
 }
 
 export async function removeFromCartAction(bookId: number) {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
-  await removeFromCart(Number(session.user.id), bookId);
+  if (session?.user?.id) {
+    await removeFromCart(Number(session.user.id), bookId);
+  } else {
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    if (cartCookie) {
+      try {
+        let cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+        if (Array.isArray(cart)) {
+          const filtered = cart.filter((it) => it.book_id !== bookId);
+          cookieStore.set("paperworm_cart", JSON.stringify(filtered), { maxAge: 86400 * 30, path: "/" });
+        }
+      } catch (e) {}
+    }
+  }
   revalidatePath("/cart");
 }
 
 export async function checkoutAction(prevState: unknown, formData: FormData): Promise<{ error?: string }> {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login?next=/cart");
+  let userId: number;
+  let email = "";
 
-  const userId = Number(session.user.id);
-
-  // 1. Retrieve all shipping fields
+  // 1. Retrieve shipping fields
   const fullName = formData.get("fullName") as string;
   const phone = formData.get("phone") as string;
   const address = formData.get("address") as string;
@@ -68,8 +148,46 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   if (!area || area.trim() === "") return { error: "Area / Neighbourhood is required." };
   if (!city || city.trim() === "") return { error: "City is required." };
 
-  // 3. Validate cart is not empty
-  const cartItems = await getCart(userId);
+  if (session?.user?.id) {
+    userId = Number(session.user.id);
+    email = session.user.email || "";
+  } else {
+    // Guest checkout requires email
+    email = (formData.get("email") as string) || "";
+    if (!email || !email.includes("@")) {
+      return { error: "A valid Email Address is required for guest checkout." };
+    }
+    userId = await getOrCreateGuestUser(fullName, email);
+  }
+
+  // 3. Resolve cart items (from database for logged-in users, or from cookies for guests)
+  let cartItems;
+  if (session?.user?.id) {
+    cartItems = await getCart(userId);
+  } else {
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    const tempCart: Array<{ book_id: number; quantity: number }> = cartCookie ? JSON.parse(cartCookie) : [];
+    
+    const resolvedItems = [];
+    for (const item of tempCart) {
+      const book = await getBook(item.book_id);
+      if (book) {
+        resolvedItems.push({
+          id: 0,
+          book_id: book.id,
+          quantity: item.quantity,
+          title: book.title,
+          author: book.author,
+          price_cents: book.price_cents,
+          cover_seed: book.cover_seed,
+          stock: book.stock,
+        });
+      }
+    }
+    cartItems = resolvedItems;
+  }
+
   if (cartItems.length === 0) {
     return { error: "Your cart is empty. Please add items before checking out." };
   }
@@ -88,15 +206,22 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   };
   const shippingJson = JSON.stringify(shippingDetails);
 
-  // 5. Place order (handles stock checks and database writes)
+  // 5. Place order
   const result = await placeOrder(userId, shippingJson, "cod");
   if ("error" in result) {
     return { error: result.error };
   }
 
-  // 6. Save address for future orders if checked
-  if (saveAddress) {
+  // 6. Save address for future orders if checked and logged in
+  if (saveAddress && session?.user?.id) {
     await saveUserShipping(userId, shippingJson);
+  }
+
+  // Set guest order access cookie and clear guest cart if not logged in
+  if (!session?.user?.id) {
+    const cookieStore = await cookies();
+    cookieStore.set(`guest_order_access_${result.orderId}`, "true", { maxAge: 86400 * 7, path: "/" }); // 7 days access
+    cookieStore.delete("paperworm_cart");
   }
 
   // 7. Format order summary details
@@ -110,6 +235,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   console.log("ORDER CONFIRMATION LOGGING");
   console.log(`Order ID:      #${result.orderId}`);
   console.log(`Customer Name: ${fullName}`);
+  console.log(`Email:         ${email}`);
   console.log(`Phone:         ${phone} ${altPhone ? `(Alt: ${altPhone})` : ""}`);
   console.log(`Address:       ${address}`);
   console.log(`Location:      Area: ${area}, City: ${city}`);
@@ -120,7 +246,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   console.log(`Total:         ${totalPKR}`);
   console.log("==================================================");
 
-  // 9. Send WhatsApp confirmation (fire-and-forget — never block checkout)
+  // 9. Send WhatsApp confirmation (fire-and-forget)
   try {
     const whatsappBody =
       `Hi ${fullName}! 🛍️ Thanks for ordering from *The Paperworm*!\n\n` +
@@ -134,7 +260,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
     console.error("WhatsApp notification failed (non-blocking):", whatsappError);
   }
 
-  // 10. Send Simulated Email (fire-and-forget)
+  // 10. Send Email (fire-and-forget)
   try {
     const emailSubject = `Order #${result.orderId} Confirmation - The Paperworm`;
     const emailHtml = `
@@ -147,7 +273,8 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
       <p>We will contact you on ${phone} when your package is ready for delivery.</p>
       <p>Please check your WhatsApp and reply <strong>"confirm"</strong> to confirm your order!</p>
     `;
-    await sendEmailNotification(session.user.email || "customer@example.com", emailSubject, emailHtml);
+    const targetEmail = email || "customer@example.com";
+    await sendEmailNotification(targetEmail, emailSubject, emailHtml);
   } catch (emailError) {
     console.error("Email notification failed (non-blocking):", emailError);
   }

@@ -17,8 +17,10 @@ type ShippingDetails = {
 
 export default function CheckoutForm({
   savedShipping,
+  isGuest = false,
 }: {
   savedShipping: ShippingDetails | null;
+  isGuest?: boolean;
 }) {
   const [state, formAction, isPending] = useActionState(checkoutAction, undefined);
 
@@ -30,6 +32,22 @@ export default function CheckoutForm({
       >
         Shipment Details
       </h2>
+
+      {isGuest && (
+        <div>
+          <label htmlFor="email" className="text-[10px] tracking-[0.18em] uppercase text-ink-soft block mb-1" style={{ fontFamily: "var(--font-stamp)" }}>
+            Email Address *
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="you@example.com"
+            className="w-full rounded-md border border-ink/20 bg-cream px-3 py-2 text-sm focus:border-oxblood focus:outline-none transition-colors"
+          />
+        </div>
+      )}
 
       {/* Full Name & Phone Number */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

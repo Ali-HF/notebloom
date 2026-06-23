@@ -337,6 +337,22 @@ export async function createUser(name: string, email: string, passwordHash: stri
   return Number(result[0].id);
 }
 
+export async function getOrCreateGuestUser(name: string, email: string): Promise<number> {
+  const trimmedEmail = email.toLowerCase().trim();
+  const existing = await getUserByEmail(trimmedEmail);
+  if (existing) {
+    return existing.id;
+  }
+
+  const randomPasswordHash = bcrypt.hashSync(crypto.randomUUID(), 10);
+  const result = await sql`
+    INSERT INTO users (name, email, password_hash, email_verified) 
+    VALUES (${name.trim()}, ${trimmedEmail}, ${randomPasswordHash}, TRUE)
+    RETURNING id
+  `;
+  return Number(result[0].id);
+}
+
 export async function createVerificationCode(userId: number): Promise<string> {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now (standard for OTP)

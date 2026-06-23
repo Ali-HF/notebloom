@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getOrdersForUser, getOrderItems, formatPrice } from "@/lib/db";
+import { getOrdersForUser, getOrderItems, formatPrice, getOrder } from "@/lib/db";
 import BookCover from "@/components/BookCover";
 import WormMark from "@/components/WormMark";
+import { cookies } from "next/headers";
 
 export default async function OrderDetailPage({
   params,
@@ -11,13 +12,22 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
-
   const { id } = await params;
   const orderId = Number(id);
 
-  const order = (await getOrdersForUser(Number(session.user.id))).find((o) => o.id === orderId);
-  if (!order) notFound();
+  const cookieStore = await cookies();
+  const hasGuestAccess = cookieStore.get(`guest_order_access_${orderId}`)?.value === "true";
+
+  let order;
+  if (session?.user?.id) {
+    order = (await getOrdersForUser(Number(session.user.id))).find((o) => o.id === orderId);
+  } else if (hasGuestAccess) {
+    order = await getOrder(orderId);
+  }
+
+  if (!order) {
+    redirect("/login");
+  }
 
   const items = await getOrderItems(orderId);
 
