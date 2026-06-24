@@ -92,7 +92,7 @@ function createSqlInstance(): postgres.Sql {
     return dummy;
   }
 
-  return postgres(connectionString, { ssl: "require" });
+  return postgres(connectionString, { ssl: "require", prepare: false });
 }
 
 export const sql = globalThis.__paperwormSql ?? createSqlInstance();
@@ -549,11 +549,16 @@ export async function placeOrder(
       `;
       const orderId = orderResult[0].id;
 
-      // 2. Add order items
+      // 2. Add order items & decrement stock
       for (const it of finalItems) {
         await sql`
           INSERT INTO order_items (order_id, book_id, title, author, price_cents, quantity, cover_seed)
           VALUES (${orderId}, ${it.book_id}, ${it.title}, ${it.author}, ${it.price_cents}, ${it.quantity}, ${it.cover_seed})
+        `;
+        await sql`
+          UPDATE books 
+          SET stock = stock - ${it.quantity} 
+          WHERE id = ${it.book_id}
         `;
       }
 
@@ -634,7 +639,7 @@ export async function upsertReview(bookId: number, userId: number, rating: numbe
 }
 
 export async function updateOrderStatus(orderId: number, status: string): Promise<void> {
-  const deductedStatuses = ["Shipped", "Delivered"];
+  const deductedStatuses = ["Pending", "Shipped", "Delivered"];
   const newIsDeducted = deductedStatuses.includes(status);
 
   await sql.begin(async (sql) => {
