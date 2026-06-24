@@ -6,6 +6,7 @@ import BookCover from "@/components/BookCover";
 import WormMark from "@/components/WormMark";
 import { cookies } from "next/headers";
 import Confetti from "@/components/Confetti";
+import CancelOrderButton from "@/components/CancelOrderButton";
 
 export default async function OrderDetailPage({
   params,
@@ -90,7 +91,7 @@ export default async function OrderDetailPage({
         <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-5">
           <div className="flex items-start gap-3">
             <span className="text-2xl shrink-0">📱</span>
-            <div>
+            <div className="flex-1">
               <p className="font-semibold text-amber-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
                 Check your WhatsApp!
               </p>
@@ -104,6 +105,9 @@ export default async function OrderDetailPage({
               <p className="text-xs text-amber-600 mt-2">
                 Your order will be processed once confirmed via WhatsApp.
               </p>
+              <div className="mt-1 border-t border-amber-200/50 pt-1">
+                <CancelOrderButton orderId={orderId} />
+              </div>
             </div>
           </div>
         </div>
