@@ -52,7 +52,7 @@ export default function LoginForm({ next, verified, resetSuccess }: { next: stri
             Password
           </label>
           <Link href={`/forgot-password?next=${encodeURIComponent(next)}`} className="text-xs text-oxblood hover:underline">
-            Forgot?
+            Forgot Password?
           </Link>
         </div>
         <input
