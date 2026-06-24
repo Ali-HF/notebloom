@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { upsertReview } from "@/lib/db";
+import { upsertReview, hasUserPurchasedBook } from "@/lib/db";
 
 export type ReviewState = { error?: string } | undefined;
 
@@ -20,6 +20,11 @@ export async function submitReviewAction(
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return { error: "Choose a rating from 1 to 5." };
+  }
+
+  const purchased = await hasUserPurchasedBook(Number(session.user.id), bookId);
+  if (!purchased) {
+    return { error: "You can only review products you have purchased and had delivered." };
   }
 
   await upsertReview(bookId, Number(session.user.id), rating, comment);

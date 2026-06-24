@@ -10,6 +10,7 @@ import {
   formatPrice,
   getReviewsForBook,
   getRatingSummary,
+  hasUserPurchasedBook,
 } from "@/lib/db";
 import AddToCartButton from "@/components/AddToCartButton";
 import { auth } from "@/lib/auth";
@@ -28,6 +29,10 @@ export default async function BookDetailPage({
   const reviews = await getReviewsForBook(bookId);
   const summary = await getRatingSummary(bookId);
   const maxQty = Math.min(book.stock, 10);
+
+  const hasPurchased = session?.user?.id 
+    ? await hasUserPurchasedBook(Number(session.user.id), bookId)
+    : false;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
@@ -128,7 +133,15 @@ export default async function BookDetailPage({
         )}
 
         {session?.user ? (
-          <ReviewForm bookId={book.id} />
+          hasPurchased ? (
+            <ReviewForm bookId={book.id} />
+          ) : (
+            <div className="bg-brass/10 border border-brass/20 rounded-lg p-5 max-w-prose">
+              <p className="text-sm text-ink-soft leading-relaxed">
+                <strong>Verified Purchase Required</strong> — Only customers who have purchased this product and had it delivered can submit a review. If you bought this, please make sure the order status is updated to Delivered in your account.
+              </p>
+            </div>
+          )
         ) : (
           <p className="text-sm text-ink-soft">
             <Link href={`/login?next=/shop/${book.id}`} className="trail-link text-oxblood">

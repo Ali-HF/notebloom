@@ -629,6 +629,18 @@ export async function getRatingSummary(bookId: number): Promise<{ avg: number; c
   return { avg: row?.avg ?? 0, count: row?.count ?? 0 };
 }
 
+export async function hasUserPurchasedBook(userId: number, bookId: number): Promise<boolean> {
+  const result = await sql`
+    SELECT COUNT(*)::int as count 
+    FROM orders o 
+    JOIN order_items oi ON o.id = oi.order_id 
+    WHERE o.user_id = ${userId} 
+      AND oi.book_id = ${bookId} 
+      AND o.status = 'Delivered'
+  `;
+  return (result[0]?.count ?? 0) > 0;
+}
+
 export async function upsertReview(bookId: number, userId: number, rating: number, comment: string): Promise<void> {
   await sql`
     INSERT INTO reviews (book_id, user_id, rating, comment) 
