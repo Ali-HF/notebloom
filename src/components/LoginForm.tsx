@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { loginAction } from "@/app/actions/auth-actions";
 
-export default function LoginForm({ next, verified }: { next: string; verified?: boolean }) {
+export default function LoginForm({ next, verified, resetSuccess }: { next: string; verified?: boolean; resetSuccess?: boolean }) {
   const [state, formAction, isPending] = useActionState(loginAction, undefined);
 
   return (
@@ -12,6 +12,11 @@ export default function LoginForm({ next, verified }: { next: string; verified?:
       {verified && (
         <div className="bg-moss/10 border border-moss/20 text-moss px-4 py-3 rounded-lg text-sm font-medium text-center animate-fadeIn">
           Your account is verified! You can now log in.
+        </div>
+      )}
+      {resetSuccess && (
+        <div className="bg-moss/10 border border-moss/20 text-moss px-4 py-3 rounded-lg text-sm font-medium text-center animate-fadeIn">
+          Your password has been reset! Please log in with your new password.
         </div>
       )}
       <input type="hidden" name="next" value={next} />
@@ -35,13 +40,18 @@ export default function LoginForm({ next, verified }: { next: string; verified?:
       </div>
 
       <div>
-        <label
-          htmlFor="password"
-          className="text-xs tracking-[0.18em] uppercase text-ink-soft block mb-1.5"
-          style={{ fontFamily: "var(--font-stamp)" }}
-        >
-          Password
-        </label>
+        <div className="flex justify-between items-center mb-1.5">
+          <label
+            htmlFor="password"
+            className="text-xs tracking-[0.18em] uppercase text-ink-soft block"
+            style={{ fontFamily: "var(--font-stamp)" }}
+          >
+            Password
+          </label>
+          <Link href={`/forgot-password?next=${encodeURIComponent(next)}`} className="text-xs text-oxblood hover:underline">
+            Forgot?
+          </Link>
+        </div>
         <input
           id="password"
           name="password"

@@ -5,8 +5,8 @@ import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/lib/auth";
-import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode, upgradeGuestUser } from "@/lib/db";
-import { sendVerificationCodeEmail } from "@/lib/email";
+import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode, upgradeGuestUser, createPasswordResetToken, verifyPasswordResetToken, resetUserPassword } from "@/lib/db";
+import { sendVerificationCodeEmail, sendPasswordResetEmail } from "@/lib/email";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address."),
@@ -162,4 +162,69 @@ export async function resendVerificationAction(email: string): Promise<{ success
 
 export async function logoutAction() {
   await signOut({ redirectTo: "/" });
+}
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Enter a valid email address."),
+});
+
+export type ForgotPasswordState = { error?: string; success?: string } | undefined;
+
+export async function forgotPasswordAction(
+  _prev: ForgotPasswordState,
+  formData: FormData
+): Promise<ForgotPasswordState> {
+  const parsed = forgotPasswordSchema.safeParse({
+    email: formData.get("email"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  try {
+    const token = await createPasswordResetToken(parsed.data.email);
+    if (token) {
+      await sendPasswordResetEmail(parsed.data.email, token);
+    }
+    // Return standard success to avoid email enumeration
+    return { success: "If that email is registered, we have sent a password reset link." };
+  } catch (error) {
+    console.error("Failed to request password reset:", error);
+    return { error: "An error occurred. Please try again later." };
+  }
+}
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Reset token is required."),
+  password: z.string().min(8, "Use at least 8 characters."),
+});
+
+export type ResetPasswordState = { error?: string } | undefined;
+
+export async function resetPasswordAction(
+  _prev: ResetPasswordState,
+  formData: FormData
+): Promise<ResetPasswordState> {
+  const parsed = resetPasswordSchema.safeParse({
+    token: formData.get("token"),
+    password: formData.get("password"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  try {
+    const user = await verifyPasswordResetToken(parsed.data.token);
+    if (!user) {
+      return { error: "This password reset link is invalid or has expired." };
+    }
+
+    const hash = await bcrypt.hash(parsed.data.password, 10);
+    await resetUserPassword(user.id, hash);
+  } catch (error) {
+    console.error("Failed to reset password:", error);
+    return { error: "An error occurred resetting your password. Please try again." };
+  }
+
+  redirect("/login?resetSuccess=true");
 }

@@ -156,6 +156,18 @@ async function main() {
   const upgradedUser = await db.getUserById(guestId);
   assert(!!upgradedUser && upgradedUser.name === "Upgraded Guest" && upgradedUser.password_hash === upgradedHash && !upgradedUser.email_verified, "guest user successfully upgraded to standard password account with email_verified=false");
 
+  // password reset database verification tests
+  const resetToken = await db.createPasswordResetToken("reader@example.com");
+  assert(!!resetToken, "createPasswordResetToken generates a token for existing user");
+  const verifiedResetUser = await db.verifyPasswordResetToken(resetToken!);
+  assert(!!verifiedResetUser && verifiedResetUser.email === "reader@example.com", "verifyPasswordResetToken returns correct user for valid token");
+
+  const newPasswordHash = bcrypt.hashSync("newsupersecure123", 10);
+  await db.resetUserPassword(verifiedResetUser!.id, newPasswordHash);
+  const userAfterReset = await db.getUserById(verifiedResetUser!.id);
+  assert(!!userAfterReset && userAfterReset.password_hash === newPasswordHash, "resetUserPassword correctly updates user password hash and clears reset token");
+  assert(!!userAfterReset && userAfterReset.reset_token === null, "resetUserPassword clears reset_token column");
+
   // ---------- CLEAN UP ----------
   console.log("Cleaning up test reader and test order data from database...");
   if (!("error" in orderResult)) {

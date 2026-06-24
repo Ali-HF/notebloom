@@ -19,6 +19,8 @@ export type User = {
   email_verified: boolean;
   verification_token: string | null;
   verification_token_expires: Date | null;
+  reset_token: string | null;
+  reset_token_expires: Date | null;
 };
 
 export type CartRow = {
@@ -411,6 +413,47 @@ export async function verifyEmailCode(email: string, code: string): Promise<{ su
     WHERE id = ${user.id}
   `;
   return { success: true };
+}
+
+export async function createPasswordResetToken(email: string): Promise<string | null> {
+  const trimmedEmail = email.toLowerCase().trim();
+  const user = await getUserByEmail(trimmedEmail);
+  if (!user) return null;
+
+  const token = crypto.randomUUID();
+  const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+  await sql`
+    UPDATE users 
+    SET reset_token = ${token}, reset_token_expires = ${expires}
+    WHERE id = ${user.id}
+  `;
+  return token;
+}
+
+export async function verifyPasswordResetToken(token: string): Promise<User | undefined> {
+  const trimmedToken = token.trim();
+  if (!trimmedToken) return undefined;
+
+  const result = await sql`
+    SELECT * FROM users 
+    WHERE reset_token = ${trimmedToken}
+  `;
+  const user = result[0] as unknown as User | undefined;
+  if (!user) return undefined;
+
+  if (user.reset_token_expires && new Date(user.reset_token_expires).getTime() < Date.now()) {
+    return undefined;
+  }
+
+  return user;
+}
+
+export async function resetUserPassword(userId: number, passwordHash: string): Promise<void> {
+  await sql`
+    UPDATE users 
+    SET password_hash = ${passwordHash}, reset_token = NULL, reset_token_expires = NULL, email_verified = TRUE
+    WHERE id = ${userId}
+  `;
 }
 
 export async function isEmailVerified(userId: number): Promise<boolean> {

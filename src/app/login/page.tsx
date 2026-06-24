@@ -4,10 +4,11 @@ import LoginForm from "@/components/LoginForm";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; verified?: string }>;
+  searchParams: Promise<{ next?: string; verified?: string; resetSuccess?: string }>;
 }) {
-  const { next, verified } = await searchParams;
+  const { next, verified, resetSuccess } = await searchParams;
   const isVerified = verified === "true";
+  const isResetSuccess = resetSuccess === "true";
 
   return (
     <div className="max-w-sm mx-auto px-4 py-20">
@@ -20,7 +21,7 @@ export default async function LoginPage({
           Welcome back
         </h1>
       </div>
-      <LoginForm next={next ?? "/account"} verified={isVerified} />
+      <LoginForm next={next ?? "/account"} verified={isVerified} resetSuccess={isResetSuccess} />
     </div>
   );
 }
