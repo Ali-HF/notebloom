@@ -145,6 +145,17 @@ async function main() {
   const allOrders = await db.getAllOrders();
   assert(allOrders.some((o) => o.user_email === "reader@example.com"), "admin getAllOrders includes the new order");
 
+  // guest conversion tests
+  const guestEmail = "guest-check@example.com";
+  const guestId = await db.getOrCreateGuestUser("Guest Buyer", guestEmail);
+  const guestUser = await db.getUserById(guestId);
+  assert(!!guestUser && guestUser.password_hash === "NO_PASSWORD" && guestUser.email_verified, "guest user created with NO_PASSWORD and email_verified=true");
+
+  const upgradedHash = bcrypt.hashSync("upgradedpass123", 10);
+  await db.upgradeGuestUser(guestId, "Upgraded Guest", upgradedHash);
+  const upgradedUser = await db.getUserById(guestId);
+  assert(!!upgradedUser && upgradedUser.name === "Upgraded Guest" && upgradedUser.password_hash === upgradedHash && !upgradedUser.email_verified, "guest user successfully upgraded to standard password account with email_verified=false");
+
   // ---------- CLEAN UP ----------
   console.log("Cleaning up test reader and test order data from database...");
   if (!("error" in orderResult)) {
@@ -153,6 +164,7 @@ async function main() {
   }
   await db.sql`DELETE FROM reviews WHERE user_id = ${userId}`;
   await db.sql`DELETE FROM users WHERE id = ${userId}`;
+  await db.sql`DELETE FROM users WHERE email = ${guestEmail}`;
 
   console.log("\nDone.");
 }

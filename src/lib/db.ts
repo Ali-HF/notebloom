@@ -353,13 +353,20 @@ export async function getOrCreateGuestUser(name: string, email: string): Promise
     return existing.id;
   }
 
-  const randomPasswordHash = bcrypt.hashSync(crypto.randomUUID(), 10);
   const result = await sql`
     INSERT INTO users (name, email, password_hash, email_verified) 
-    VALUES (${name.trim()}, ${trimmedEmail}, ${randomPasswordHash}, TRUE)
+    VALUES (${name.trim()}, ${trimmedEmail}, 'NO_PASSWORD', TRUE)
     RETURNING id
   `;
   return Number(result[0].id);
+}
+
+export async function upgradeGuestUser(userId: number, name: string, passwordHash: string): Promise<void> {
+  await sql`
+    UPDATE users 
+    SET name = ${name.trim()}, password_hash = ${passwordHash}, email_verified = FALSE
+    WHERE id = ${userId}
+  `;
 }
 
 export async function createVerificationCode(userId: number): Promise<string> {

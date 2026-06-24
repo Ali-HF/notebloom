@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/lib/auth";
-import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode } from "@/lib/db";
+import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode, upgradeGuestUser } from "@/lib/db";
 import { sendVerificationCodeEmail } from "@/lib/email";
 
 const loginSchema = z.object({
@@ -31,7 +31,7 @@ export async function loginAction(
 
   const user = await getUserByEmail(parsed.data.email);
   if (user) {
-    const valid = await bcrypt.compare(parsed.data.password, user.password_hash);
+    const valid = user.password_hash.startsWith("$") ? await bcrypt.compare(parsed.data.password, user.password_hash) : false;
     if (valid && !user.email_verified) {
       redirect(`/verify-email?email=${encodeURIComponent(user.email)}`);
     }
@@ -73,12 +73,24 @@ export async function signupAction(
   }
 
   const existing = await getUserByEmail(parsed.data.email);
+  let userId = existing?.id;
+  let isUpgradingGuest = false;
+
   if (existing) {
-    return { error: "An account with that email already exists." };
+    if (existing.password_hash === "NO_PASSWORD") {
+      isUpgradingGuest = true;
+    } else {
+      return { error: "An account with that email already exists." };
+    }
   }
 
   const hash = await bcrypt.hash(parsed.data.password, 10);
-  const userId = await createUser(parsed.data.name, parsed.data.email, hash);
+  
+  if (isUpgradingGuest && userId !== undefined) {
+    await upgradeGuestUser(userId, parsed.data.name, hash);
+  } else {
+    userId = await createUser(parsed.data.name, parsed.data.email, hash);
+  }
 
   try {
     const code = await createVerificationCode(userId);
