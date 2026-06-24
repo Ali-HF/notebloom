@@ -87,9 +87,22 @@ async function main() {
     assert(!!order && order.total_cents === orderResult.total, "order recorded with correct total");
     const items = await db.getOrderItems(orderResult.orderId);
     assert(items.length === 1 && items[0].quantity === 2, "order_items snapshot matches cart");
-    const updatedBook = await db.getBook(book.id);
-    const stockAfter = updatedBook!.stock;
-    assert(stockAfter === stockBefore - 2, `stock decremented by quantity (before=${stockBefore}, after=${stockAfter})`);
+    let updatedBook = await db.getBook(book.id);
+    let stockAfter = updatedBook!.stock;
+    assert(stockAfter === stockBefore, `stock NOT decremented at checkout (before=${stockBefore}, after=${stockAfter})`);
+
+    // Transition to Shipped should decrement stock
+    await db.updateOrderStatus(orderResult.orderId, "Shipped");
+    updatedBook = await db.getBook(book.id);
+    stockAfter = updatedBook!.stock;
+    assert(stockAfter === stockBefore - 2, `stock decremented on Shipped status update (before=${stockBefore}, after=${stockAfter})`);
+
+    // Transition to Cancelled should restore stock
+    await db.updateOrderStatus(orderResult.orderId, "Cancelled");
+    updatedBook = await db.getBook(book.id);
+    stockAfter = updatedBook!.stock;
+    assert(stockAfter === stockBefore, `stock restored on Cancelled status update (before=${stockBefore}, after=${stockAfter})`);
+
     assert((await db.getCart(userId)).length === 0, "cart cleared after checkout");
   }
 

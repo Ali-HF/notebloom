@@ -93,11 +93,17 @@ export async function deleteBookAction(id: number) {
   revalidatePath("/shop");
 }
 
-export async function updateOrderStatusAction(orderId: number, formData: FormData) {
+export async function updateOrderStatusAction(orderId: number, formData: FormData): Promise<{ error?: string } | undefined> {
   await requireAdmin();
   const status = formData.get("status") as string;
   if (!status) return;
-  await updateOrderStatus(orderId, status);
+
+  try {
+    await updateOrderStatus(orderId, status);
+  } catch (error: any) {
+    console.error("Failed to update order status:", error);
+    return { error: error.message || "Failed to update order status." };
+  }
 
   // Trigger status emails asynchronously (fire-and-forget)
   try {

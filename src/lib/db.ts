@@ -499,16 +499,11 @@ export async function placeOrder(
       `;
       const orderId = orderResult[0].id;
 
-      // 2. Add order items & decrement stock
+      // 2. Add order items
       for (const it of finalItems) {
         await sql`
           INSERT INTO order_items (order_id, book_id, title, author, price_cents, quantity, cover_seed)
           VALUES (${orderId}, ${it.book_id}, ${it.title}, ${it.author}, ${it.price_cents}, ${it.quantity}, ${it.cover_seed})
-        `;
-        await sql`
-          UPDATE books 
-          SET stock = stock - ${it.quantity} 
-          WHERE id = ${it.book_id}
         `;
       }
 
@@ -589,7 +584,64 @@ export async function upsertReview(bookId: number, userId: number, rating: numbe
 }
 
 export async function updateOrderStatus(orderId: number, status: string): Promise<void> {
-  await sql`UPDATE orders SET status = ${status} WHERE id = ${orderId}`;
+  const deductedStatuses = ["Shipped", "Delivered"];
+  const newIsDeducted = deductedStatuses.includes(status);
+
+  await sql.begin(async (sql) => {
+    // 1. Fetch current order status
+    const orderResult = await sql`SELECT status FROM orders WHERE id = ${orderId}`;
+    if (orderResult.length === 0) {
+      throw new Error(`Order #${orderId} not found.`);
+    }
+    const oldStatus = orderResult[0].status;
+    const oldIsDeducted = deductedStatuses.includes(oldStatus);
+
+    // 2. Perform status change in DB
+    await sql`UPDATE orders SET status = ${status} WHERE id = ${orderId}`;
+
+    // If status transition doesn't change the deduction state, do nothing
+    if (oldIsDeducted === newIsDeducted) {
+      return;
+    }
+
+    // Fetch order items
+    const items = await sql`SELECT book_id, quantity, title FROM order_items WHERE order_id = ${orderId}`;
+
+    if (newIsDeducted && !oldIsDeducted) {
+      // Transitioning TO Shipped/Delivered: Decrement stock
+      for (const item of items) {
+        if (!item.book_id) continue;
+        
+        // Fetch current book stock
+        const bookResult = await sql`SELECT stock FROM books WHERE id = ${item.book_id}`;
+        if (bookResult.length === 0) continue;
+        const currentStock = bookResult[0].stock;
+        
+        if (currentStock < item.quantity) {
+          throw new Error(`Insufficient stock for "${item.title}". Available: ${currentStock}, Required: ${item.quantity}.`);
+        }
+
+        // Decrement stock
+        await sql`
+          UPDATE books 
+          SET stock = stock - ${item.quantity} 
+          WHERE id = ${item.book_id}
+        `;
+      }
+    } else if (!newIsDeducted && oldIsDeducted) {
+      // Transitioning FROM Shipped/Delivered: Restore stock
+      for (const item of items) {
+        if (!item.book_id) continue;
+        
+        // Increment stock back
+        await sql`
+          UPDATE books 
+          SET stock = stock + ${item.quantity} 
+          WHERE id = ${item.book_id}
+        `;
+      }
+    }
+  });
 }
 
 export async function getAdminStats() {

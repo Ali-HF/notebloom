@@ -1,6 +1,7 @@
 "use client";
 
 import { updateOrderStatusAction } from "@/app/actions/admin-actions";
+import { showToast } from "@/lib/toast";
 
 export default function OrderStatusSelect({
   orderId,
@@ -12,11 +13,22 @@ export default function OrderStatusSelect({
   return (
     <form
       action={async (formData) => {
-        await updateOrderStatusAction(orderId, formData);
+        const result = await updateOrderStatusAction(orderId, formData);
+        if (result?.error) {
+          showToast(result.error, "error");
+          // Revert dropdown value
+          const selectEl = document.getElementById(`status-select-${orderId}`) as HTMLSelectElement;
+          if (selectEl) {
+            selectEl.value = currentStatus;
+          }
+        } else {
+          showToast("Order status updated successfully.", "success");
+        }
       }}
       className="inline-block"
     >
       <select
+        id={`status-select-${orderId}`}
         name="status"
         defaultValue={currentStatus}
         onChange={(e) => e.target.form?.requestSubmit()}
