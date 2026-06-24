@@ -1,11 +1,13 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { cancelOrderAction } from "@/app/actions/order-actions";
 import { showToast } from "@/lib/toast";
 
-export default function CancelOrderButton({ orderId }: { orderId: number }) {
+export default function CancelOrderButton({ orderId, isGuest }: { orderId: number; isGuest: boolean }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleCancel = () => {
     if (!confirm("Are you sure you want to cancel this order?")) {
@@ -18,6 +20,7 @@ export default function CancelOrderButton({ orderId }: { orderId: number }) {
         showToast(res.error, "error");
       } else {
         showToast("Order cancelled successfully.", "success");
+        router.replace(isGuest ? "/" : "/account");
       }
     });
   };

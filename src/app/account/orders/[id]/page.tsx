@@ -36,6 +36,7 @@ export default async function OrderDetailPage({
     redirect("/login");
   }
 
+  const isGuest = !session?.user?.id;
   const items = await getOrderItems(orderId);
 
   const statusConfig: Record<string, { color: string; bg: string; icon: string; heading: string }> = {
@@ -106,7 +107,7 @@ export default async function OrderDetailPage({
                 Your order will be processed once confirmed via WhatsApp.
               </p>
               <div className="mt-1 border-t border-amber-200/50 pt-1">
-                <CancelOrderButton orderId={orderId} />
+                <CancelOrderButton orderId={orderId} isGuest={isGuest} />
               </div>
             </div>
           </div>
