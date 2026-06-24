@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/lib/auth";
-import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode, upgradeGuestUser, createPasswordResetToken, verifyPasswordResetToken, resetUserPassword } from "@/lib/db";
+import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode, upgradeGuestUser, createPasswordResetToken, verifyPasswordResetToken, resetUserPassword, checkAndIncrementOtpRateLimit } from "@/lib/db";
 import { sendVerificationCodeEmail, sendPasswordResetEmail } from "@/lib/email";
 
 const loginSchema = z.object({
@@ -138,6 +138,11 @@ export async function verifyCodeAction(
 export async function resendVerificationAction(email: string): Promise<{ success?: string; error?: string }> {
   if (!email || !email.includes("@")) {
     return { error: "A valid email address is required." };
+  }
+
+  const rateLimit = await checkAndIncrementOtpRateLimit(email);
+  if (!rateLimit.allowed) {
+    return { error: `Too many resend attempts. Please wait ${rateLimit.resetInMinutes} minutes before requesting another code.` };
   }
 
   const user = await getUserByEmail(email);

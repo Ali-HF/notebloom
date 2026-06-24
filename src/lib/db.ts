@@ -109,6 +109,24 @@ export async function seedIfEmpty() {
   }
 
   try {
+    // Ensure rate limiting table exists
+    const tableExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+          AND table_name = 'otp_resend_limits'
+      )
+    `;
+    if (!tableExists[0].exists) {
+      await sql`
+        CREATE TABLE otp_resend_limits (
+          email VARCHAR(255) PRIMARY KEY,
+          attempts INT DEFAULT 0,
+          last_attempt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+    }
+
     const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
     const count = countResult[0]?.c ?? 0;
     
@@ -639,6 +657,60 @@ export async function hasUserPurchasedBook(userId: number, bookId: number): Prom
       AND o.status = 'Delivered'
   `;
   return (result[0]?.count ?? 0) > 0;
+}
+
+export async function checkAndIncrementOtpRateLimit(email: string): Promise<{ allowed: boolean; remaining: number; resetInMinutes: number }> {
+  const trimmedEmail = email.toLowerCase().trim();
+  const now = new Date();
+  
+  // 1. Fetch current limit record
+  const result = await sql`
+    SELECT attempts, last_attempt_at 
+    FROM otp_resend_limits 
+    WHERE email = ${trimmedEmail}
+  `;
+  
+  if (result.length === 0) {
+    // No record yet, create one
+    await sql`
+      INSERT INTO otp_resend_limits (email, attempts, last_attempt_at)
+      VALUES (${trimmedEmail}, 1, ${now})
+      ON CONFLICT (email) DO UPDATE 
+      SET attempts = 1, last_attempt_at = ${now}
+    `;
+    return { allowed: true, remaining: 2, resetInMinutes: 10 };
+  }
+  
+  const record = result[0];
+  const lastAttemptAt = new Date(record.last_attempt_at);
+  const diffMs = now.getTime() - lastAttemptAt.getTime();
+  const diffMinutes = diffMs / (1000 * 60);
+  
+  if (diffMinutes >= 10) {
+    // Window has expired, reset attempts
+    await sql`
+      UPDATE otp_resend_limits 
+      SET attempts = 1, last_attempt_at = ${now}
+      WHERE email = ${trimmedEmail}
+    `;
+    return { allowed: true, remaining: 2, resetInMinutes: 10 };
+  }
+  
+  if (record.attempts >= 3) {
+    // Over the limit
+    const remainingTime = Math.ceil(10 - diffMinutes);
+    return { allowed: false, remaining: 0, resetInMinutes: remainingTime };
+  }
+  
+  // Increment attempts
+  const newAttempts = record.attempts + 1;
+  await sql`
+    UPDATE otp_resend_limits 
+    SET attempts = ${newAttempts}, last_attempt_at = ${now}
+    WHERE email = ${trimmedEmail}
+  `;
+  
+  return { allowed: true, remaining: 3 - newAttempts, resetInMinutes: Math.ceil(10 - diffMinutes) };
 }
 
 export async function upsertReview(bookId: number, userId: number, rating: number, comment: string): Promise<void> {
