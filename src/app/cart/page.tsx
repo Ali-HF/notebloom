@@ -4,7 +4,8 @@ import CheckoutForm from "@/components/CheckoutForm";
 import WormMark from "@/components/WormMark";
 import { auth } from "@/lib/auth";
 import { getCart, formatPrice, getUserSavedShipping, getBook, type CartRow } from "@/lib/db";
-import { updateCartQtyAction, removeFromCartAction } from "@/app/actions/cart-actions";
+import { removeFromCartAction } from "@/app/actions/cart-actions";
+import CartQtyInput from "@/components/CartQtyInput";
 import { cookies } from "next/headers";
 
 export default async function CartPage() {
@@ -123,30 +124,11 @@ export default async function CartPage() {
                 </p>
 
                 <div className="mt-3 flex items-center gap-3">
-                  <form
-                    action={updateCartQtyAction.bind(null, item.book_id)}
-                    className="flex items-center gap-2"
-                  >
-                    <label htmlFor={`qty-${item.book_id}`} className="sr-only">
-                      Quantity
-                    </label>
-                    <input
-                      id={`qty-${item.book_id}`}
-                      name="qty"
-                      type="number"
-                      min={1}
-                      max={item.stock}
-                      defaultValue={item.quantity}
-                      className="w-16 rounded-md border border-ink/20 bg-cream px-2 py-1 text-sm focus:border-oxblood"
-                    />
-                    <button
-                      type="submit"
-                      className="text-xs trail-link text-ink-soft cursor-pointer"
-                      style={{ fontFamily: "var(--font-stamp)" }}
-                    >
-                      UPDATE
-                    </button>
-                  </form>
+                  <CartQtyInput
+                    bookId={item.book_id}
+                    currentQty={item.quantity}
+                    stock={item.stock}
+                  />
 
                   <form action={removeFromCartAction.bind(null, item.book_id)}>
                     <button
