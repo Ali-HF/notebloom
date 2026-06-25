@@ -7,14 +7,13 @@ export default function Logo({ tagline = false }: { tagline?: boolean }) {
       href="/"
       className="flex flex-col focus-visible:outline-none focus-visible:rounded-sm"
     >
-      <div className="flex items-center">
+      <div className="flex items-center justify-center overflow-hidden h-16 w-48">
         <Image
           src="/logo.png"
           alt="Notebloom Logo"
-          width={160}
-          height={48}
-          className="h-11 w-auto transition-transform duration-300 hover:scale-102"
-          style={{ mixBlendMode: "multiply" }}
+          width={220}
+          height={220}
+          className="h-48 w-auto -my-12 transition-transform duration-300 hover:scale-102"
           priority
         />
       </div>
