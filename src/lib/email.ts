@@ -919,3 +919,104 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
 
   return sendEmailNotification(to, "Reset your Notebloom password", htmlContent);
 }
+
+export async function sendLowStockAlert(productName: string, remainingStock: number): Promise<boolean> {
+  const adminEmail = "admin@notebloom.shop";
+  const subject = `⚠️ Low Stock Alert: "${productName}" is running low`;
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Low Stock Alert</title>
+        <style>
+          body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #20283a;
+            background-color: #ede4d3;
+            margin: 0;
+            padding: 20px;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #faf6ec;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(32, 40, 58, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          }
+          h2 {
+            color: #7c2f2f;
+            margin-top: 0;
+            font-family: serif;
+            font-size: 24px;
+            border-bottom: 1px solid rgba(32, 40, 58, 0.1);
+            padding-bottom: 10px;
+          }
+          .details {
+            background-color: #ede4d3;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1.5px dashed #af8a4f;
+          }
+          .details p {
+            margin: 8px 0;
+            font-size: 16px;
+          }
+          .btn-container {
+            text-align: center;
+            margin-top: 25px;
+          }
+          .btn {
+            display: inline-block;
+            background-color: #7c2f2f;
+            color: #faf6ec !important;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-family: monospace;
+            font-weight: bold;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(32, 40, 58, 0.6);
+            border-top: 1px solid rgba(32, 40, 58, 0.1);
+            padding-top: 15px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>⚠️ Low Stock Notification</h2>
+          <p>This is an automated alert to notify you that the inventory level for a product has dropped to 5 or below.</p>
+          
+          <div class="details">
+            <p><strong>Product Name:</strong> ${productName}</p>
+            <p style="color: #7c2f2f;"><strong>Remaining Stock:</strong> ${remainingStock}</p>
+          </div>
+          
+          <p>Please restock this item soon to avoid running out of stock.</p>
+          
+          <div class="btn-container">
+            <a href="https://the-paperworm.vercel.app/admin" class="btn">Admin Panel</a>
+          </div>
+          
+          <div class="footer">
+            &copy; 2026 Notebloom. All rights reserved. <br>
+            Adding character to your desk, one page at a time.
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  return sendEmailNotification(adminEmail, subject, htmlContent);
+}

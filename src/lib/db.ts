@@ -2,6 +2,7 @@ import postgres from "postgres";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import type { Book } from "./types";
+import { sendLowStockAlert } from "./email";
 
 export { GENRES } from "./constants";
 export type { Book } from "./types";
@@ -316,6 +317,18 @@ export async function getBook(id: number): Promise<Book | undefined> {
   return result[0] as unknown as Book | undefined;
 }
 
+export async function checkAndNotifyLowStock(bookId: number): Promise<void> {
+  try {
+    const book = await getBook(bookId);
+    if (book && book.stock <= 5) {
+      console.log(`[Low Stock Check] Product "${book.title}" is at low stock level: ${book.stock}. Triggering admin alert email.`);
+      await sendLowStockAlert(book.title, book.stock);
+    }
+  } catch (error) {
+    console.error("Error in checkAndNotifyLowStock:", error);
+  }
+}
+
 export async function createBook(
   b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2"> & { cover_seed?: string; cover_seed_2?: string | null }
 ): Promise<number> {
@@ -339,6 +352,7 @@ export async function updateBook(
         cover_seed=${b.cover_seed || sql`cover_seed`}, cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`}
     WHERE id=${id}
   `;
+  checkAndNotifyLowStock(id).catch(console.error);
 }
 
 export async function deleteBook(id: number): Promise<void> {
@@ -586,6 +600,11 @@ export async function placeOrder(
       return orderId;
     });
 
+    // Check stock levels after transaction succeeds
+    for (const it of finalItems) {
+      checkAndNotifyLowStock(it.book_id).catch(console.error);
+    }
+
     return { orderId: Number(result), total };
   } catch (error) {
     console.error("Order placement transaction failed:", error);
@@ -781,6 +800,18 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
       }
     }
   });
+
+  // Check stock levels after the transaction completes
+  try {
+    const orderItems = await sql`SELECT book_id FROM order_items WHERE order_id = ${orderId}`;
+    for (const item of orderItems) {
+      if (item.book_id) {
+        checkAndNotifyLowStock(item.book_id).catch(console.error);
+      }
+    }
+  } catch (err) {
+    console.error("Error checking low stock after status update:", err);
+  }
 }
 
 export async function getAdminStats() {
