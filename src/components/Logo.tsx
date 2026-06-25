@@ -1,25 +1,20 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Logo({ tagline = false }: { tagline?: boolean }) {
   return (
     <Link
       href="/"
-      className="flex flex-col focus-visible:outline-none focus-visible:rounded-sm"
+      className="flex flex-col focus-visible:outline-none focus-visible:rounded-sm hover:opacity-85 transition-opacity"
     >
-      <div className="flex items-center justify-center overflow-hidden h-16 w-48">
-        <Image
-          src="/logo-transparent.png"
-          alt="Notebloom Logo"
-          width={220}
-          height={220}
-          className="h-48 w-auto -my-12 transition-transform duration-300 hover:scale-102"
-          priority
-        />
-      </div>
+      <span
+        className="text-2xl font-bold tracking-wide text-ink leading-none"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        Notebloom
+      </span>
       {tagline && (
         <span
-          className="text-[11px] tracking-[0.18em] uppercase text-ink-soft mt-1"
+          className="text-[10px] tracking-[0.18em] uppercase text-ink-soft mt-1"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
           Ideas in full bloom
@@ -28,4 +23,5 @@ export default function Logo({ tagline = false }: { tagline?: boolean }) {
     </Link>
   );
 }
+
 

@@ -11,59 +11,63 @@ export default async function HomePage() {
     <div>
       {/* hero */}
       <section className="relative overflow-hidden border-b border-ink/10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28 grid sm:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
-          <div>
-            <p
-              className="text-xs tracking-[0.22em] uppercase text-oxblood mb-5"
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 sm:py-28 flex flex-col items-center text-center">
+          <p
+            className="text-xs tracking-[0.22em] uppercase text-oxblood mb-5"
+            style={{ fontFamily: "var(--font-stamp)" }}
+          >
+            Est. whenever the lights went out too late
+          </p>
+          <h1
+            className="text-5xl sm:text-7xl leading-[1.1] text-ink font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Write your own story.
+          </h1>
+          <p className="mt-6 text-lg sm:text-xl text-ink-soft max-w-2xl leading-relaxed">
+            Explore our curated collection of aesthetic Korean stationery for journaling, studying, and creative expression.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/shop"
+              className="inline-flex items-center justify-center rounded-full bg-oxblood text-cream px-8 py-3.5
+                         text-sm hover:bg-oxblood-dark transition-colors tracking-wider"
               style={{ fontFamily: "var(--font-stamp)" }}
             >
-              Est. whenever the lights went out too late
-            </p>
-            <h1
-              className="text-5xl sm:text-6xl leading-[1.05] text-ink"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+              BROWSE SHELVES
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex items-center justify-center rounded-full border-2 border-oxblood text-oxblood bg-transparent px-8 py-3.5
+                         text-sm hover:bg-oxblood/5 transition-colors tracking-wider"
+              style={{ fontFamily: "var(--font-stamp)" }}
             >
-              Write your
-              <br />
-              own story.
-            </h1>
-            <p className="mt-6 text-lg text-ink-soft max-w-md leading-relaxed">
-              A curated collection of aesthetic Korean stationery, journals, and pens. Beautiful tools to hold your thoughts and organize your day.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 rounded-full bg-oxblood text-cream px-6 py-3
-                           text-sm hover:bg-oxblood-dark transition-colors"
-                style={{ fontFamily: "var(--font-stamp)" }}
-              >
-                BROWSE THE SHELVES
-              </Link>
-              <span className="text-sm text-ink-soft">
-                or jump to{" "}
-                <Link href="/shop?genre=Notebooks" className="trail-link text-ink">
-                  Notebooks
-                </Link>
-                ,{" "}
-                <Link href="/shop?genre=Planners" className="trail-link text-ink">
-                  Planners
-                </Link>
-                ,{" "}
-                <Link href="/shop?genre=Washi%20Tape" className="trail-link text-ink">
-                  Washi Tape
-                </Link>
-              </span>
-            </div>
+              NEW ARRIVALS
+            </Link>
           </div>
+        </div>
+      </section>
 
-          <div className="relative flex justify-center sm:justify-end">
-            <div className="relative">
-              <div className="absolute -inset-6 rounded-[2rem] bg-parchment-dark/70 -rotate-3" />
-              <div className="relative bg-cream rounded-[1.5rem] p-8 ring-1 ring-ink/10 rotate-2 shadow-xl">
-                <BloomMark size={120} />
-              </div>
-            </div>
-          </div>
+      {/* category navigator */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 border-b border-ink/10">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/shop"
+            className="px-5 py-2.5 rounded-full bg-oxblood text-cream ring-1 ring-oxblood hover:bg-oxblood-dark transition-colors text-sm font-medium tracking-wide"
+            style={{ fontFamily: "var(--font-stamp)" }}
+          >
+            ALL PRODUCTS
+          </Link>
+          {GENRES.map((genre) => (
+            <Link
+              key={genre}
+              href={`/shop?genre=${encodeURIComponent(genre)}`}
+              className="px-5 py-2.5 rounded-full bg-cream hover:bg-parchment-dark/30 text-ink ring-1 ring-ink/15 hover:ring-oxblood hover:text-oxblood transition-colors text-sm tracking-wide"
+              style={{ fontFamily: "var(--font-stamp)" }}
+            >
+              {genre.toUpperCase()}
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -88,29 +92,6 @@ export default async function HomePage() {
       </section>
 
       <BloomDivider className="max-w-6xl mx-auto px-4 sm:px-6" />
-
-      {/* genres */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-        <h2
-          className="text-2xl mb-8"
-          style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
-        >
-          Pick a bloom
-        </h2>
-        <div className="flex flex-wrap gap-3">
-          {GENRES.map((genre) => (
-            <Link
-              key={genre}
-              href={`/shop?genre=${encodeURIComponent(genre)}`}
-              className="px-5 py-2.5 rounded-full bg-cream ring-1 ring-ink/15 hover:ring-oxblood hover:text-oxblood
-                         transition-colors text-sm"
-              style={{ fontFamily: "var(--font-stamp)" }}
-            >
-              {genre}
-            </Link>
-          ))}
-        </div>
-      </section>
 
       {/* trust / how it works */}
       <section className="bg-charcoal text-parchment py-16">

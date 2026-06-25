@@ -33,16 +33,16 @@ export default async function Header() {
         <div className="h-20 flex items-center justify-between gap-4">
           <Logo />
 
-          <form action="/shop" className="hidden md:flex flex-1 max-w-md mx-6">
+          <form action="/shop" className="hidden md:flex flex-1 max-w-md mx-auto">
             <label htmlFor="header-search" className="sr-only">
-              Search books
+              Search notebooks, pens, washi...
             </label>
             <input
               id="header-search"
               name="q"
               type="search"
-              placeholder="Search title or author…"
-              className="w-full rounded-full border border-ink/20 bg-parchment px-4 py-2 text-sm
+              placeholder="Search notebooks, pens, washi..."
+              className="w-full rounded-full border border-ink/20 bg-parchment px-5 py-2 text-sm
                          placeholder:text-ink-soft/70 focus:border-oxblood transition-colors"
             />
           </form>

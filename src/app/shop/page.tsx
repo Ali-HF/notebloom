@@ -46,7 +46,7 @@ export default async function ShopPage({
               name="q"
               defaultValue={q ?? ""}
               type="search"
-              placeholder="Title or author…"
+              placeholder="Search notebooks, pens, washi..."
               className="w-full rounded-md border border-ink/20 bg-cream px-3 py-2 text-sm
                          focus:border-oxblood transition-colors"
             />
