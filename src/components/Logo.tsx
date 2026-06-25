@@ -9,7 +9,7 @@ export default function Logo({ tagline = false }: { tagline?: boolean }) {
     >
       <div className="flex items-center justify-center overflow-hidden h-16 w-48">
         <Image
-          src="/logo.png"
+          src="/logo.png?v=2"
           alt="Notebloom Logo"
           width={220}
           height={220}
