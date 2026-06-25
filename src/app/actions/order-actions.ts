@@ -34,7 +34,7 @@ export async function cancelOrderAction(orderId: number): Promise<{ error?: stri
 
     // 5. Notify the admin
     try {
-      const adminEmail = "admin@paperworm.shop";
+      const adminEmail = "admin@notebloom.shop";
       const subject = `Order #${orderId} Cancelled by Customer`;
       const htmlContent = `
         <div style="font-family: sans-serif; line-height: 1.5; color: #222;">

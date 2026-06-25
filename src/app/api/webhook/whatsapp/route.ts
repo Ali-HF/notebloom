@@ -7,7 +7,7 @@ import { validateTwilioSignature, sendWhatsappNotification } from "@/lib/whatsap
  * Return 200 so it doesn't flag the endpoint as down.
  */
 export async function GET() {
-  return NextResponse.json({ status: "ok", service: "paperworm-whatsapp-webhook" });
+  return NextResponse.json({ status: "ok", service: "notebloom-whatsapp-webhook" });
 }
 
 /**
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     // ── Process the reply ──
     if (!matchedOrder) {
       return twilioXml(
-        "Hi! We couldn't find any pending orders associated with this phone number. If you believe this is an error, please contact support@paperworm.shop."
+        "Hi! We couldn't find any pending orders associated with this phone number. If you believe this is an error, please contact support@notebloom.shop."
       );
     }
 
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       await updateOrderStatus(matchedOrder.id, "Cancelled");
       console.log(`❌ Order #${matchedOrder.id} cancelled via WhatsApp by ${from}`);
       return twilioXml(
-        `Your order #${matchedOrder.id} has been *Cancelled*. If this was a mistake, please place a new order at paperworm.shop.\n\nWe hope to serve you again soon!`
+        `Your order #${matchedOrder.id} has been *Cancelled*. If this was a mistake, please place a new order at notebloom.shop.\n\nWe hope to serve you again soon!`
       );
     }
 

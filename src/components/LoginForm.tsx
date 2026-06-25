@@ -97,7 +97,7 @@ export default function LoginForm({ next, verified, resetSuccess }: { next: stri
         </Link>
       </p>
       <p className="text-xs text-ink-soft/70 text-center">
-        Demo admin: admin@paperworm.shop / paperworm123
+        Demo admin: admin@notebloom.shop / notebloom123
       </p>
     </form>
   );

@@ -3,7 +3,7 @@
  */
 export function showToast(message: string, type: "success" | "error" = "success") {
   if (typeof window !== "undefined") {
-    const event = new CustomEvent("paperworm-toast", { detail: { message, type } });
+    const event = new CustomEvent("notebloom-toast", { detail: { message, type } });
     window.dispatchEvent(event);
   }
 }

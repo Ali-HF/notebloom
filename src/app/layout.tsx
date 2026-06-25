@@ -5,9 +5,9 @@ import Footer from "@/components/Footer";
 import ToastContainer from "@/components/ToastContainer";
 
 export const metadata: Metadata = {
-  title: "The Paperworm — Books, slightly gnawed at the edges",
+  title: "Notebloom — Aesthetic Korean stationery, journals, and pens",
   description:
-    "An independent online bookstore. Browse fiction, mystery, sci-fi, fantasy, romance, horror, poetry, and non-fiction.",
+    "An independent online shop for aesthetic stationery, journals, planners, and pens. Beautiful tools to hold your thoughts, sketch ideas, and organize your day.",
 };
 
 export default function RootLayout({

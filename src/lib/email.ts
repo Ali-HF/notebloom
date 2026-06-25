@@ -36,7 +36,7 @@ export async function sendEmailNotification(to: string, subject: string, htmlCon
       }
 
       await mailTransporter.sendMail({
-        from: `"The Paperworm" <${smtpUser}>`,
+        from: `"Notebloom" <${smtpUser}>`,
         to: to,
         subject: subject,
         html: htmlContent,
@@ -71,7 +71,7 @@ export async function sendEmailNotification(to: string, subject: string, htmlCon
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "The Paperworm <onboarding@resend.dev>",
+        from: "Notebloom <onboarding@resend.dev>",
         to: to,
         subject: subject,
         html: htmlContent,
@@ -101,7 +101,7 @@ export async function sendVerificationCodeEmail(to: string, code: string): Promi
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Verify Your Paperworm Account</title>
+        <title>Verify Your Notebloom Account</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -176,11 +176,11 @@ export async function sendVerificationCodeEmail(to: string, code: string): Promi
       <body>
         <div class="container">
           <div class="header">
-            <span class="logo">~ the paperworm ~</span>
+            <span class="logo">~ notebloom ~</span>
           </div>
           <div class="content">
             <h1>Verify your account</h1>
-            <p>Thank you for signing up for The Paperworm! Please use the following 6-digit verification code to complete your signup process:</p>
+            <p>Thank you for signing up for Notebloom! Please use the following 6-digit verification code to complete your signup process:</p>
             
             <div class="code-container">
               <div class="code-box">${code}</div>
@@ -189,7 +189,7 @@ export async function sendVerificationCodeEmail(to: string, code: string): Promi
             <p>This verification code is valid for 1 hour. If you did not request this, you can safely ignore this email.</p>
           </div>
           <div class="footer">
-            &copy; 2026 The Paperworm. All rights reserved. <br>
+            &copy; 2026 Notebloom. All rights reserved. <br>
             Adding character to your desk, one page at a time.
           </div>
         </div>
@@ -197,7 +197,7 @@ export async function sendVerificationCodeEmail(to: string, code: string): Promi
     </html>
   `;
 
-  return sendEmailNotification(to, "Your Paperworm verification code", htmlContent);
+  return sendEmailNotification(to, "Your Notebloom verification code", htmlContent);
 }
 
 function getBaseUrl() {
@@ -241,7 +241,7 @@ export async function sendOrderConfirmationRequestEmail(
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Confirm Your Order #${orderId} - The Paperworm</title>
+        <title>Confirm Your Order #${orderId} - Notebloom</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -326,7 +326,7 @@ export async function sendOrderConfirmationRequestEmail(
       <body>
         <div class="container">
           <div class="header">
-            <span class="logo">~ the paperworm ~</span>
+            <span class="logo">~ notebloom ~</span>
           </div>
           <div class="content">
             <h1>Thank you for your order, ${customerName}!</h1>
@@ -355,7 +355,7 @@ export async function sendOrderConfirmationRequestEmail(
             </div>
           </div>
           <div class="footer">
-            &copy; 2026 The Paperworm. All rights reserved. <br>
+            &copy; 2026 Notebloom. All rights reserved. <br>
             Adding character to your desk, one page at a time.
           </div>
         </div>
@@ -363,7 +363,7 @@ export async function sendOrderConfirmationRequestEmail(
     </html>
   `;
 
-  return sendEmailNotification(to, `Verify and Confirm Your Order #${orderId} - The Paperworm`, htmlContent);
+  return sendEmailNotification(to, `Verify and Confirm Your Order #${orderId} - Notebloom`, htmlContent);
 }
 
 export async function sendOrderShippedEmail(
@@ -397,7 +397,7 @@ export async function sendOrderShippedEmail(
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Your Order #${orderId} Has Shipped! 📦 - The Paperworm</title>
+        <title>Your Order #${orderId} Has Shipped! 📦 - Notebloom</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -482,7 +482,7 @@ export async function sendOrderShippedEmail(
       <body>
         <div class="container">
           <div class="header">
-            <span class="logo">~ the paperworm ~</span>
+            <span class="logo">~ notebloom ~</span>
           </div>
           <div class="content">
             <h1>Great news! Your order has been shipped. 📦</h1>
@@ -507,7 +507,7 @@ export async function sendOrderShippedEmail(
             </div>
           </div>
           <div class="footer">
-            &copy; 2026 The Paperworm. All rights reserved. <br>
+            &copy; 2026 Notebloom. All rights reserved. <br>
             Adding character to your desk, one page at a time.
           </div>
         </div>
@@ -515,7 +515,7 @@ export async function sendOrderShippedEmail(
     </html>
   `;
 
-  return sendEmailNotification(to, `Your Order #${orderId} Has Shipped! 📦 - The Paperworm`, htmlContent);
+  return sendEmailNotification(to, `Your Order #${orderId} Has Shipped! 📦 - Notebloom`, htmlContent);
 }
 
 export async function sendOrderOutForDeliveryEmail(
@@ -549,7 +549,7 @@ export async function sendOrderOutForDeliveryEmail(
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Your Order #${orderId} Is Out for Delivery! 🛵 - The Paperworm</title>
+        <title>Your Order #${orderId} Is Out for Delivery! 🛵 - Notebloom</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -634,7 +634,7 @@ export async function sendOrderOutForDeliveryEmail(
       <body>
         <div class="container">
           <div class="header">
-            <span class="logo">~ the paperworm ~</span>
+            <span class="logo">~ notebloom ~</span>
           </div>
           <div class="content">
             <h1>Great news! Your order is out for delivery. 🛵</h1>
@@ -659,7 +659,7 @@ export async function sendOrderOutForDeliveryEmail(
             </div>
           </div>
           <div class="footer">
-            &copy; 2026 The Paperworm. All rights reserved. <br>
+            &copy; 2026 Notebloom. All rights reserved. <br>
             Adding character to your desk, one page at a time.
           </div>
         </div>
@@ -667,7 +667,7 @@ export async function sendOrderOutForDeliveryEmail(
     </html>
   `;
 
-  return sendEmailNotification(to, `Your Order #${orderId} Is Out for Delivery! 🛵 - The Paperworm`, htmlContent);
+  return sendEmailNotification(to, `Your Order #${orderId} Is Out for Delivery! 🛵 - Notebloom`, htmlContent);
 }
 
 export async function sendOrderDeliveredEmail(
@@ -700,7 +700,7 @@ export async function sendOrderDeliveredEmail(
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Order #${orderId} Delivered successfully! 🎉 - The Paperworm</title>
+        <title>Order #${orderId} Delivered successfully! 🎉 - Notebloom</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -769,7 +769,7 @@ export async function sendOrderDeliveredEmail(
       <body>
         <div class="container">
           <div class="header">
-            <span class="logo">~ the paperworm ~</span>
+            <span class="logo">~ notebloom ~</span>
           </div>
           <div class="content">
             <h1>Your package has arrived! 📦🎉</h1>
@@ -781,10 +781,10 @@ export async function sendOrderDeliveredEmail(
               ${itemsListHtml}
             </div>
             
-            <p style="margin-top: 25px;">Thank you for supporting ~ the paperworm ~!</p>
+            <p style="margin-top: 25px;">Thank you for supporting ~ notebloom ~!</p>
           </div>
           <div class="footer">
-            &copy; 2026 The Paperworm. All rights reserved. <br>
+            &copy; 2026 Notebloom. All rights reserved. <br>
             Adding character to your desk, one page at a time.
           </div>
         </div>
@@ -792,7 +792,7 @@ export async function sendOrderDeliveredEmail(
     </html>
   `;
 
-  return sendEmailNotification(to, `Order #${orderId} Delivered successfully! 🎉 - The Paperworm`, htmlContent);
+  return sendEmailNotification(to, `Order #${orderId} Delivered successfully! 🎉 - Notebloom`, htmlContent);
 }
 
 export async function sendPasswordResetEmail(to: string, token: string): Promise<boolean> {
@@ -804,7 +804,7 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Reset Your Paperworm Password</title>
+        <title>Reset Your Notebloom Password</title>
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -891,11 +891,11 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
       <body>
         <div class="container">
           <div class="header">
-            <span class="logo">~ the paperworm ~</span>
+            <span class="logo">~ notebloom ~</span>
           </div>
           <div class="content">
             <h1>Reset your password</h1>
-            <p>We received a request to reset the password for your Paperworm account. Please click the button below to choose a new password:</p>
+            <p>We received a request to reset the password for your Notebloom account. Please click the button below to choose a new password:</p>
             
             <div class="btn-container">
               <a href="${resetUrl}" class="btn" style="color: #faf8f5;">Reset Password</a>
@@ -909,7 +909,7 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
             </div>
           </div>
           <div class="footer">
-            &copy; 2026 The Paperworm. All rights reserved. <br>
+            &copy; 2026 Notebloom. All rights reserved. <br>
             Adding character to your desk, one page at a time.
           </div>
         </div>
@@ -917,5 +917,5 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
     </html>
   `;
 
-  return sendEmailNotification(to, "Reset your Paperworm password", htmlContent);
+  return sendEmailNotification(to, "Reset your Notebloom password", htmlContent);
 }

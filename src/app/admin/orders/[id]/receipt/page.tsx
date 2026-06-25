@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getOrder, getOrderItems, formatPrice } from "@/lib/db";
 import PrintTrigger from "@/components/PrintTrigger";
-import WormMark from "@/components/WormMark";
+import BloomMark from "@/components/BloomMark";
 
 export default async function OrderReceiptPage({
   params,
@@ -49,17 +49,17 @@ export default async function OrderReceiptPage({
         
         {/* Header Section */}
         <div className="flex flex-col items-center text-center border-b border-ink/20 pb-6 mb-6">
-          <WormMark size={40} className="mb-2" />
+          <BloomMark size={40} className="mb-2" />
           <h1
             className="text-2xl tracking-tight text-ink font-semibold"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            The Paperworm
+            Notebloom
           </h1>
           <p className="text-[10px] tracking-[0.18em] uppercase text-ink-soft mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
             Aesthetic Stationery & Journals
           </p>
-          <p className="text-xs text-ink-soft/75 mt-1.5">Karachi, Pakistan · support@paperworm.shop</p>
+          <p className="text-xs text-ink-soft/75 mt-1.5">Karachi, Pakistan · support@notebloom.shop</p>
         </div>
 
         {/* Invoice Summary */}
@@ -197,7 +197,7 @@ export default async function OrderReceiptPage({
 
         {/* Footer Notes */}
         <div className="text-center mt-12 text-xs text-ink-soft/70 border-t border-ink/10 pt-4">
-          <p>Thank you for buying from The Paperworm!</p>
+          <p>Thank you for buying from Notebloom!</p>
           <p className="mt-1">Please retain this invoice as proof of purchase.</p>
         </div>
       </div>

@@ -24,7 +24,7 @@ export async function addToCartAction(bookId: number, qty: number = 1) {
   } else {
     // Guest cart in cookies
     const cookieStore = await cookies();
-    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    const cartCookie = cookieStore.get("notebloom_cart")?.value;
     let cart: Array<{ book_id: number; quantity: number }> = [];
     if (cartCookie) {
       try {
@@ -38,7 +38,7 @@ export async function addToCartAction(bookId: number, qty: number = 1) {
     } else {
       cart.push({ book_id: bookId, quantity: qty });
     }
-    cookieStore.set("paperworm_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
+    cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
   revalidatePath("/cart");
   revalidatePath("/shop");
@@ -54,7 +54,7 @@ export async function addToCartWithQtyAction(bookId: number, formData: FormData)
   } else {
     // Guest cart in cookies
     const cookieStore = await cookies();
-    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    const cartCookie = cookieStore.get("notebloom_cart")?.value;
     let cart: Array<{ book_id: number; quantity: number }> = [];
     if (cartCookie) {
       try {
@@ -68,7 +68,7 @@ export async function addToCartWithQtyAction(bookId: number, formData: FormData)
     } else {
       cart.push({ book_id: bookId, quantity: cleanQty });
     }
-    cookieStore.set("paperworm_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
+    cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
   revalidatePath("/cart");
   revalidatePath("/shop");
@@ -83,7 +83,7 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
     await setCartQty(Number(session.user.id), bookId, cleanQty);
   } else {
     const cookieStore = await cookies();
-    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    const cartCookie = cookieStore.get("notebloom_cart")?.value;
     if (cartCookie) {
       try {
         let cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
@@ -95,7 +95,7 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
             } else {
               cart[idx].quantity = cleanQty;
             }
-            cookieStore.set("paperworm_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
+            cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
           }
         }
       } catch (e) {}
@@ -110,13 +110,13 @@ export async function removeFromCartAction(bookId: number) {
     await removeFromCart(Number(session.user.id), bookId);
   } else {
     const cookieStore = await cookies();
-    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    const cartCookie = cookieStore.get("notebloom_cart")?.value;
     if (cartCookie) {
       try {
         let cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
         if (Array.isArray(cart)) {
           const filtered = cart.filter((it) => it.book_id !== bookId);
-          cookieStore.set("paperworm_cart", JSON.stringify(filtered), { maxAge: 86400 * 30, path: "/" });
+          cookieStore.set("notebloom_cart", JSON.stringify(filtered), { maxAge: 86400 * 30, path: "/" });
         }
       } catch (e) {}
     }
@@ -166,7 +166,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
     cartItems = await getCart(userId);
   } else {
     const cookieStore = await cookies();
-    const cartCookie = cookieStore.get("paperworm_cart")?.value;
+    const cartCookie = cookieStore.get("notebloom_cart")?.value;
     const tempCart: Array<{ book_id: number; quantity: number }> = cartCookie ? JSON.parse(cartCookie) : [];
     
     const resolvedItems = [];
@@ -221,7 +221,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   if (!session?.user?.id) {
     const cookieStore = await cookies();
     cookieStore.set(`guest_order_access_${result.orderId}`, "true", { maxAge: 86400 * 7, path: "/" }); // 7 days access
-    cookieStore.delete("paperworm_cart");
+    cookieStore.delete("notebloom_cart");
   }
 
   // 7. Format order summary details
@@ -249,7 +249,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   // 9. Send WhatsApp confirmation (fire-and-forget)
   try {
     const whatsappBody =
-      `Hi ${fullName}! 🛍️ Thanks for ordering from *The Paperworm*!\n\n` +
+      `Hi ${fullName}! 🛍️ Thanks for ordering from *Notebloom*!\n\n` +
       `Your order *#${result.orderId}* (Total: ${totalPKR}) has been received.\n\n` +
       `📦 Reply *confirm* to confirm your order\n` +
       `❌ Reply *cancel* to cancel\n\n` +

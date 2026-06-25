@@ -1,7 +1,7 @@
 import Link from "next/link";
 import BookCard from "@/components/BookCard";
-import WormDivider from "@/components/WormDivider";
-import WormMark from "@/components/WormMark";
+import BloomDivider from "@/components/BloomDivider";
+import BloomMark from "@/components/BloomMark";
 import { listBooks, GENRES } from "@/lib/db";
 
 export default async function HomePage() {
@@ -60,7 +60,7 @@ export default async function HomePage() {
             <div className="relative">
               <div className="absolute -inset-6 rounded-[2rem] bg-parchment-dark/70 -rotate-3" />
               <div className="relative bg-cream rounded-[1.5rem] p-8 ring-1 ring-ink/10 rotate-2 shadow-xl">
-                <WormMark size={120} />
+                <BloomMark size={120} />
               </div>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <WormDivider className="max-w-6xl mx-auto px-4 sm:px-6" />
+      <BloomDivider className="max-w-6xl mx-auto px-4 sm:px-6" />
 
       {/* genres */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
@@ -95,7 +95,7 @@ export default async function HomePage() {
           className="text-2xl mb-8"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
         >
-          Pick a tunnel
+          Pick a bloom
         </h2>
         <div className="flex flex-wrap gap-3">
           {GENRES.map((genre) => (
@@ -136,7 +136,7 @@ export default async function HomePage() {
 function TrustItem({ title, body }: { title: string; body: string }) {
   return (
     <div>
-      <WormMark size={22} />
+      <BloomMark size={22} />
       <h3
         className="mt-3 text-lg"
         style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

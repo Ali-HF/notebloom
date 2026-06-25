@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getOrdersForUser, getOrderItems, formatPrice, getOrder } from "@/lib/db";
 import BookCover from "@/components/BookCover";
-import WormMark from "@/components/WormMark";
+import BloomMark from "@/components/BloomMark";
 import { cookies } from "next/headers";
 import Confetti from "@/components/Confetti";
 import CancelOrderButton from "@/components/CancelOrderButton";
@@ -41,7 +41,7 @@ export default async function OrderDetailPage({
 
   const statusConfig: Record<string, { color: string; bg: string; icon: string; heading: string }> = {
     Pending:    { color: "text-amber-700",  bg: "bg-amber-100",  icon: "⏳", heading: "We've sent you a WhatsApp message!" },
-    Confirmed:  { color: "text-emerald-700", bg: "bg-emerald-100", icon: "✅", heading: "Order confirmed — it's tunneling its way to you." },
+    Confirmed:  { color: "text-emerald-700", bg: "bg-emerald-100", icon: "✅", heading: "Order confirmed — it's blooming its way to you." },
     Processing: { color: "text-blue-700",   bg: "bg-blue-100",   icon: "📦", heading: "Your order is being processed." },
     Shipped:    { color: "text-indigo-700",  bg: "bg-indigo-100",  icon: "🚚", heading: "Your order is on the way!" },
     Delivered:  { color: "text-emerald-700", bg: "bg-emerald-100", icon: "🎉", heading: "Delivered — enjoy your goodies!" },
@@ -54,7 +54,7 @@ export default async function OrderDetailPage({
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
       {showConfetti && <Confetti />}
       <div className="text-center mb-10">
-        <WormMark size={36} className="mx-auto mb-4" />
+        <BloomMark size={36} className="mx-auto mb-4" />
         <p
           className="text-xs tracking-[0.22em] uppercase text-oxblood mb-2"
           style={{ fontFamily: "var(--font-stamp)" }}

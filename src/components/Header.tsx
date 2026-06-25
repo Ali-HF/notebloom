@@ -15,7 +15,7 @@ export default async function Header() {
   } else {
     try {
       const cookieStore = await cookies();
-      const cartCookie = cookieStore.get("paperworm_cart")?.value;
+      const cartCookie = cookieStore.get("notebloom_cart")?.value;
       if (cartCookie) {
         const parsed = JSON.parse(cartCookie);
         if (Array.isArray(parsed)) {

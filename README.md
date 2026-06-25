@@ -1,4 +1,4 @@
-# The Paperworm
+# Notebloom
 
 An independent online bookstore — browse, sign up, add to cart, check out,
 leave reviews, and manage inventory from an admin dashboard. Built as a real
@@ -10,7 +10,7 @@ database and cookie-based auth, no third-party services required.
 - **Next.js 16** (App Router, Server Components, Server Actions)
 - **Database:** Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html)
   module — no native binaries to install, no external DB to provision. The
-  whole database is one file: `data/paperworm.db`, created automatically (and
+  whole database is one file: `data/notebloom.db`, created automatically (and
   seeded with 15 books + a demo admin account) the first time the app runs.
 - **Auth:** [Auth.js / NextAuth v5](https://authjs.dev) with a credentials
   (email + password) provider, passwords hashed with bcrypt, JWT sessions.
@@ -34,7 +34,7 @@ npm run dev
 Visit `http://localhost:3000`. The database and seed data are created
 automatically on first run.
 
-**Demo admin login:** `admin@paperworm.shop` / `paperworm123`
+**Demo admin login:** `admin@notebloom.shop` / `notebloom123`
 (shown on the login page too). Log in with this account and an **ADMIN**
 link appears in the header, linking to `/admin` for inventory and order
 management.

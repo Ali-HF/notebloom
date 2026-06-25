@@ -1,7 +1,7 @@
 import Link from "next/link";
 import BookCover from "@/components/BookCover";
 import CheckoutForm from "@/components/CheckoutForm";
-import WormMark from "@/components/WormMark";
+import BloomMark from "@/components/BloomMark";
 import { auth } from "@/lib/auth";
 import { getCart, formatPrice, getUserSavedShipping, getBook, type CartRow } from "@/lib/db";
 import { removeFromCartAction } from "@/app/actions/cart-actions";
@@ -25,7 +25,7 @@ export default async function CartPage() {
     // Guest cart resolution from cookies
     try {
       const cookieStore = await cookies();
-      const cartCookie = cookieStore.get("paperworm_cart")?.value;
+      const cartCookie = cookieStore.get("notebloom_cart")?.value;
       if (cartCookie) {
         const parsed = JSON.parse(cartCookie);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -59,7 +59,7 @@ export default async function CartPage() {
   if (items.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24 text-center flex flex-col items-center gap-4">
-        <WormMark size={40} />
+        <BloomMark size={40} />
         <h1
           className="text-3xl"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

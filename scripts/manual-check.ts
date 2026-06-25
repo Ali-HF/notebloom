@@ -26,10 +26,10 @@ async function main() {
   const books = await db.listBooks();
   assert(books.length === 10, `seed created 10 products (got ${books.length})`);
 
-  const admin = await db.getUserByEmail("admin@paperworm.shop");
+  const admin = await db.getUserByEmail("admin@notebloom.shop");
   assert(!!admin && admin.is_admin === 1, "seed admin exists and is_admin=1");
   assert(
-    !!admin && bcrypt.compareSync("paperworm123", admin.password_hash),
+    !!admin && bcrypt.compareSync("notebloom123", admin.password_hash),
     "seed admin password verifies"
   );
 

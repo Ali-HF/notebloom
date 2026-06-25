@@ -1,5 +1,5 @@
-import WormMark from "@/components/WormMark";
-import WormDivider from "@/components/WormDivider";
+import BloomMark from "@/components/BloomMark";
+import BloomDivider from "@/components/BloomDivider";
 import ResendButton from "@/components/ResendButton";
 import ResendForm from "@/components/ResendForm";
 import OtpForm from "@/components/OtpForm";
@@ -16,13 +16,13 @@ export default async function VerifyEmailPage({
   return (
     <div className="max-w-md mx-auto px-4 py-16 md:py-24">
       <div className="flex flex-col items-center gap-3 mb-8">
-        <WormMark size={40} />
+        <BloomMark size={40} />
         <Link 
           href="/" 
           className="text-xl hover:opacity-80 transition-opacity font-semibold"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          the paperworm
+          notebloom
         </Link>
       </div>
 
@@ -55,11 +55,11 @@ export default async function VerifyEmailPage({
               </p>
             </div>
 
-            <WormDivider className="my-4" />
+            <BloomDivider className="my-4" />
 
             <OtpForm email={email} />
 
-            <WormDivider className="my-4" />
+            <BloomDivider className="my-4" />
 
             <div className="space-y-4">
               <p className="text-xs text-ink-soft/75 text-center leading-relaxed">
@@ -88,7 +88,7 @@ export default async function VerifyEmailPage({
               </p>
             </div>
 
-            <WormDivider className="my-4" />
+            <BloomDivider className="my-4" />
 
             <ResendForm />
 

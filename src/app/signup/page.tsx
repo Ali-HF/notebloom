@@ -1,4 +1,4 @@
-import WormMark from "@/components/WormMark";
+import BloomMark from "@/components/BloomMark";
 import SignupForm from "@/components/SignupForm";
 
 export default async function SignupPage({
@@ -11,12 +11,12 @@ export default async function SignupPage({
   return (
     <div className="max-w-sm mx-auto px-4 py-20">
       <div className="flex flex-col items-center gap-3 mb-8">
-        <WormMark size={36} />
+        <BloomMark size={36} />
         <h1
           className="text-3xl"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
         >
-          Join the tunnel
+          Join Notebloom
         </h1>
       </div>
       <SignupForm next={next ?? "/account"} initialEmail={email} />

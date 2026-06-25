@@ -25,8 +25,8 @@ export default function ToastContainer() {
       }, 3500);
     };
 
-    window.addEventListener("paperworm-toast", handleToast);
-    return () => window.removeEventListener("paperworm-toast", handleToast);
+    window.addEventListener("notebloom-toast", handleToast);
+    return () => window.removeEventListener("notebloom-toast", handleToast);
   }, []);
 
   return (

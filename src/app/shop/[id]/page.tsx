@@ -4,7 +4,7 @@ import BookCover from "@/components/BookCover";
 import ProductImageSlider from "@/components/ProductImageSlider";
 import StarRating from "@/components/StarRating";
 import ReviewForm from "@/components/ReviewForm";
-import WormDivider from "@/components/WormDivider";
+import BloomDivider from "@/components/BloomDivider";
 import {
   getBook,
   formatPrice,
@@ -104,7 +104,7 @@ export default async function BookDetailPage({
         </div>
       </div>
 
-      <WormDivider className="my-14" />
+      <BloomDivider className="my-14" />
 
       <section>
         <h2

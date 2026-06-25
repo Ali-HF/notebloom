@@ -1,6 +1,6 @@
 import Link from "next/link";
 import BookCard from "@/components/BookCard";
-import WormMark from "@/components/WormMark";
+import BloomMark from "@/components/BloomMark";
 import { listBooks, GENRES } from "@/lib/db";
 
 export default async function ShopPage({
@@ -97,9 +97,9 @@ export default async function ShopPage({
 
           {books.length === 0 ? (
             <div className="flex flex-col items-center text-center py-20 gap-4">
-              <WormMark size={40} />
+              <BloomMark size={40} />
               <p className="text-ink-soft max-w-sm">
-                Nothing in this tunnel. Try a different category or clear your search.
+                Nothing blooming here. Try a different category or clear your search.
               </p>
               <Link href="/shop" className="trail-link text-oxblood">
                 Back to all products

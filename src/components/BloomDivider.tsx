@@ -1,4 +1,4 @@
-export default function WormDivider({ className = "" }: { className?: string }) {
+export default function BloomDivider({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center justify-center gap-3 ${className}`} aria-hidden="true">
       <span className="h-px flex-1 bg-ink/15" />

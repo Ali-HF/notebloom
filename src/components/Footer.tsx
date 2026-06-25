@@ -1,5 +1,5 @@
 import Link from "next/link";
-import WormMark from "./WormMark";
+import BloomMark from "./BloomMark";
 import { GENRES } from "@/lib/db";
 
 export default function Footer() {
@@ -8,17 +8,16 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 grid gap-10 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <WormMark size={24} />
+            <BloomMark size={24} />
             <span
               className="text-xl"
               style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
             >
-              The Paperworm
+              Notebloom
             </span>
           </div>
           <p className="mt-3 text-sm text-parchment/70 max-w-xs">
-            An independent shop for books that leave a mark. Every copy ships
-            from a single cramped storeroom that smells like dust and glue.
+            An independent shop for aesthetic stationery, planners, journals, and pens. Beautiful tools to help your ideas bloom.
           </p>
         </div>
 
@@ -61,7 +60,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-parchment/10 py-4 text-center text-xs text-parchment/50">
-        © {new Date().getFullYear()} The Paperworm. Demo storefront — no real orders are processed.
+        © {new Date().getFullYear()} Notebloom. Demo storefront — no real orders are processed.
       </div>
     </footer>
   );
