@@ -68,7 +68,7 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
                   id="mobile-search"
                   name="q"
                   type="search"
-                  placeholder="Search title or author…"
+                  placeholder="Search notebooks, pens, washi..."
                   className="w-full rounded-full border border-ink/20 bg-[#ede4d3] px-4 py-2 text-sm text-ink
                              placeholder:text-ink-soft/70 focus:border-oxblood focus:outline-none transition-colors"
                 />

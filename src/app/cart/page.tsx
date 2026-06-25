@@ -90,84 +90,95 @@ export default async function CartPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 animate-fadeIn">
       <h1
-        className="text-4xl mb-8"
-        style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+        className="text-4xl mb-8 font-semibold text-ink"
+        style={{ fontFamily: "var(--font-display)" }}
       >
         Your cart
       </h1>
 
-      <div className="grid sm:grid-cols-[1fr_300px] gap-12">
-        <ul className="divide-y divide-ink/10">
+      <div className="grid md:grid-cols-[1fr_340px] gap-12 items-start">
+        {/* Cart items list */}
+        <ul className="divide-y divide-ink/10 border-t border-b border-ink/10">
           {items.map((item) => (
-            <li key={item.id} className="py-5 flex gap-4">
-              <Link href={`/shop/${item.book_id}`} className="w-16 shrink-0">
+            <li key={item.id} className="py-6 flex items-center justify-between gap-6">
+              <Link href={`/shop/${item.book_id}`} className="w-16 h-16 shrink-0 overflow-hidden rounded-lg border border-ink/10 bg-cream">
                 <BookCover
                   title={item.title}
                   author={item.author}
                   genre=""
                   seed={item.cover_seed}
-                  className="w-full h-auto rounded-xl ring-1 ring-ink/10"
+                  className="w-full h-full object-cover"
                 />
               </Link>
 
               <div className="flex-1 min-w-0">
-                <Link href={`/shop/${item.book_id}`} className="trail-link">
-                  <h3 className="font-semibold leading-snug" style={{ fontFamily: "var(--font-body)" }}>
+                <Link href={`/shop/${item.book_id}`} className="hover:text-oxblood transition-colors">
+                  <h3 className="font-semibold text-base text-ink leading-snug" style={{ fontFamily: "var(--font-body)" }}>
                     {item.title}
                   </h3>
                 </Link>
-                <p className="text-sm text-ink-soft">{item.author}</p>
-                <p className="text-sm mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                <p className="text-xs text-ink-soft mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                  SKU: NB-00{item.book_id}
+                </p>
+                <p className="text-sm mt-1 font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
                   {formatPrice(item.price_cents)} each
                 </p>
-
-                <div className="mt-3 flex items-center gap-3">
-                  <CartQtyInput
-                    bookId={item.book_id}
-                    currentQty={item.quantity}
-                    stock={item.stock}
-                  />
-
-                  <form action={removeFromCartAction.bind(null, item.book_id)}>
-                    <button
-                      type="submit"
-                      className="text-xs trail-link text-oxblood cursor-pointer"
-                      style={{ fontFamily: "var(--font-stamp)" }}
-                    >
-                      REMOVE
-                    </button>
-                  </form>
-                </div>
               </div>
 
-              <div className="text-right shrink-0" style={{ fontFamily: "var(--font-stamp)" }}>
-                {formatPrice(item.price_cents * item.quantity)}
+              <div className="flex items-center gap-8 shrink-0">
+                <CartQtyInput
+                  bookId={item.book_id}
+                  currentQty={item.quantity}
+                  stock={item.stock}
+                />
+
+                <div className="text-right font-semibold text-sm shrink-0 min-w-[70px]" style={{ fontFamily: "var(--font-stamp)" }}>
+                  {formatPrice(item.price_cents * item.quantity)}
+                </div>
+
+                <form action={removeFromCartAction.bind(null, item.book_id)} className="shrink-0">
+                  <button
+                    type="submit"
+                    className="flex flex-col items-center justify-center text-ink-soft hover:text-oxblood transition-colors cursor-pointer group"
+                    style={{ fontFamily: "var(--font-stamp)" }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
+                      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    </svg>
+                    <span className="text-[9px] mt-1 tracking-wider uppercase">Remove</span>
+                  </button>
+                </form>
               </div>
             </li>
           ))}
         </ul>
 
-        <aside className="h-fit bg-cream rounded-lg ring-1 ring-ink/10 p-6">
+        {/* Sidebar Summary Card */}
+        <aside className="h-fit bg-cream border border-brass rounded-xl p-6 shadow-sm">
           <h2
-            className="text-lg mb-4"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+            className="text-sm font-semibold tracking-wider mb-6 text-ink-soft uppercase"
+            style={{ fontFamily: "var(--font-stamp)" }}
           >
-            Order summary
+            ORDER SUMMARY
           </h2>
-          <div className="flex justify-between text-sm text-ink-soft mb-2">
+          <div className="flex justify-between text-sm text-ink-soft mb-3">
             <span>Subtotal</span>
             <span style={{ fontFamily: "var(--font-stamp)" }}>{formatPrice(total)}</span>
           </div>
-          <div className="flex justify-between text-sm text-ink-soft mb-4">
+          <div className="flex justify-between text-sm text-ink-soft mb-6">
             <span>Shipping</span>
-            <span style={{ fontFamily: "var(--font-stamp)" }}>Free</span>
+            <span style={{ fontFamily: "var(--font-stamp)" }}>COD - Free</span>
           </div>
-          <div className="flex justify-between text-base font-semibold mb-6 pt-4 border-t border-ink/10">
-            <span>Total</span>
-            <span style={{ fontFamily: "var(--font-stamp)" }}>{formatPrice(total)}</span>
+          
+          <div className="flex items-baseline justify-between mb-8 pt-4 border-t border-ink/10">
+            <span className="text-lg font-medium text-ink">Total</span>
+            <span className="text-2xl font-bold text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
+              {formatPrice(total)}
+            </span>
           </div>
+
           <CheckoutForm savedShipping={savedShipping} isGuest={isGuest} />
         </aside>
       </div>

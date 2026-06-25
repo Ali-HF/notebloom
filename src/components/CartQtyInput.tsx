@@ -14,7 +14,23 @@ export default function CartQtyInput({
 }) {
   const [isPending, startTransition] = useTransition();
 
-  const handleAction = async (formData: FormData) => {
+  const handleDecrement = () => {
+    if (currentQty <= 1) return;
+    const formData = new FormData();
+    formData.set("qty", String(currentQty - 1));
+    startTransition(async () => {
+      try {
+        await updateCartQtyAction(bookId, formData);
+      } catch (err) {
+        console.error("Failed to update cart quantity:", err);
+      }
+    });
+  };
+
+  const handleIncrement = () => {
+    if (currentQty >= stock) return;
+    const formData = new FormData();
+    formData.set("qty", String(currentQty + 1));
     startTransition(async () => {
       try {
         await updateCartQtyAction(bookId, formData);
@@ -25,38 +41,36 @@ export default function CartQtyInput({
   };
 
   return (
-    <form action={handleAction} className="flex items-center gap-2">
-      <label htmlFor={`qty-${bookId}`} className="sr-only">
-        Quantity
-      </label>
-      <input
-        id={`qty-${bookId}`}
-        name="qty"
-        type="number"
-        min={1}
-        max={stock}
-        defaultValue={currentQty}
-        onChange={(e) => {
-          const val = Number(e.target.value);
-          if (val >= 1 && val <= stock) {
-            e.target.form?.requestSubmit();
-          }
-        }}
-        onBlur={(e) => {
-          const val = Number(e.target.value);
-          if (!val || val < 1) {
-            e.target.value = "1";
-            e.target.form?.requestSubmit();
-          }
-        }}
-        disabled={isPending}
-        className="w-16 rounded-md border border-ink/20 bg-cream px-2 py-1 text-sm focus:border-oxblood disabled:opacity-60"
-      />
+    <div className="flex items-center gap-2">
+      <div 
+        className="flex items-center rounded-md border border-brass bg-cream overflow-hidden"
+        style={{ fontFamily: "var(--font-stamp)" }}
+      >
+        <button
+          type="button"
+          onClick={handleDecrement}
+          disabled={currentQty <= 1 || isPending}
+          className="px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-r border-brass font-bold disabled:opacity-40 cursor-pointer"
+        >
+          -
+        </button>
+        <span className="px-4 py-1.5 text-sm font-semibold text-ink bg-transparent select-none min-w-[36px] text-center">
+          {currentQty}
+        </span>
+        <button
+          type="button"
+          onClick={handleIncrement}
+          disabled={currentQty >= stock || isPending}
+          className="px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-l border-brass font-bold disabled:opacity-40 cursor-pointer"
+        >
+          +
+        </button>
+      </div>
       {isPending && (
         <span className="text-[10px] text-ink-soft animate-pulse" style={{ fontFamily: "var(--font-stamp)" }}>
-          SAVING...
+          ...
         </span>
       )}
-    </form>
+    </div>
   );
 }

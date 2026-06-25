@@ -277,11 +277,11 @@ export default function CheckoutForm({
       <button
         type="submit"
         disabled={isPending}
-        className="w-full px-6 py-3 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark
-                   transition-all text-sm disabled:opacity-60 cursor-pointer shadow-sm hover:shadow"
+        className="w-full px-6 py-3.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark
+                   transition-all text-sm tracking-wider disabled:opacity-60 cursor-pointer shadow-sm hover:shadow uppercase"
         style={{ fontFamily: "var(--font-stamp)" }}
       >
-        {isPending ? "PLACING ORDER…" : "PLACE ORDER"}
+        {isPending ? "PROCEEDING…" : "PROCEED TO CHECKOUT"}
       </button>
     </form>
   );
