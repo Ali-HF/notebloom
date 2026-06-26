@@ -1,10 +1,9 @@
 "use server";
 
 import path from "path";
-import { promises as fs } from "fs";
 import crypto from "crypto";
 import sharp from "sharp";
-
+import { put } from "@vercel/blob";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -48,18 +47,9 @@ async function processUpload(file: any, fieldName: string, titleSlug: string): P
   const buffer = Buffer.from(await file.arrayBuffer());
   const resized = await sharp(buffer).resize({ width: 800, withoutEnlargement: true }).toBuffer();
 
-  // Try Vercel Blob first, fall back to local filesystem (dev only)
-  try {
-    const { put } = await import("@vercel/blob");
-    const blob = await put(`uploads/${filename}`, resized, { access: "public" });
-    return blob.url;
-  } catch {
-    // Fallback: write to local public/uploads (works in dev, not on Vercel)
-    const filepath = path.join(process.cwd(), "public", "uploads", filename);
-    await fs.mkdir(path.dirname(filepath), { recursive: true });
-    await fs.writeFile(filepath, resized);
-    return "/uploads/" + filename;
-  }
+  // Upload to Vercel Blob
+  const blob = await put(`uploads/${filename}`, resized, { access: "public" });
+  return blob.url;
 }
 
 export async function createBookAction(
