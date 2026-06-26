@@ -52,6 +52,10 @@ export default async function Header() {
               SHOP
             </Link>
 
+            <Link href="/my-orders" className="trail-link hidden sm:inline">
+              MY ORDERS
+            </Link>
+
             <Link href="/cart" className="trail-link relative flex items-center gap-1.5" aria-label="Cart">
               <CartIcon />
               <span className="hidden sm:inline">CART</span>

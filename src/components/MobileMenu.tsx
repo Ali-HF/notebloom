@@ -88,6 +88,11 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
                 <span className="text-xs opacity-50">→</span>
               </Link>
 
+              <Link href="/my-orders" onClick={closeMenu} className="trail-link py-1 border-b border-ink/5 flex items-center justify-between text-ink">
+                <span>MY ORDERS</span>
+                <span className="text-xs opacity-50">→</span>
+              </Link>
+
               {/* Categories list section */}
               <div className="py-2 border-b border-ink/5">
                 <span className="font-bold text-xs tracking-widest text-ink-soft uppercase block mb-3">
