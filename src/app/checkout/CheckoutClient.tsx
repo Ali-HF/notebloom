@@ -137,6 +137,7 @@ export default function CheckoutClient({
       margin: "0 auto",
       padding: "2.5rem 1.5rem",
       display: "flex",
+      flexDirection: "column" as const,
       gap: "1.75rem",
       alignItems: "flex-start",
     },
@@ -328,7 +329,7 @@ export default function CheckoutClient({
     },
 
     // Right summary
-    right: { width: "320px", flexShrink: 0 },
+    right: { width: "100%", flexShrink: 0 },
     summaryCard: {
       backgroundColor: "#fff",
       border: "1px solid #ddd4c0",
@@ -466,7 +467,7 @@ export default function CheckoutClient({
         <input type="hidden" name="delivery" value={form.delivery} />
         <input type="hidden" name="paymentMethod" value="cod" />
 
-        <main style={s.main}>
+        <main style={s.main} className="md:!flex-row">
           <div style={s.left}>
             {/* 01 Contact */}
             <div style={s.card}>
@@ -684,7 +685,7 @@ export default function CheckoutClient({
           </div>
 
           {/* Right: Order Summary */}
-          <div style={s.right}>
+          <div style={s.right} className="md:!w-[320px] order-first md:order-last">
             <div style={s.summaryCard}>
               <div style={s.summaryTitle}>Order Summary</div>
 
