@@ -2,7 +2,7 @@
 
 import { updateOrderStatusAction } from "@/app/actions/admin-actions";
 import { showToast } from "@/lib/toast";
-import { useFormStatus } from "react";
+import { useFormStatus } from "react-dom";
 
 export default function OrderStatusSelect({
   orderId,

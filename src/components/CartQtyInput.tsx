@@ -1,4 +1,5 @@
 "use client";
+import { useOptimistic } from "react";
 
 import { updateCartQtyAction } from "@/app/actions/cart-actions";
 import { useTransition } from "react";
@@ -13,11 +14,14 @@ export default function CartQtyInput({
   stock: number;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [optimisticQty, setOptimisticQty] = useOptimistic<number, number>(currentQty, (state, action) => action);
 
   const handleDecrement = () => {
-    if (currentQty <= 1) return;
-    const formData = new FormData();
-    formData.set("qty", String(currentQty - 1));
+    if (optimisticQty <= 1) return;
+    const newQty = optimisticQty - 1;
+      setOptimisticQty(newQty);
+      const formData = new FormData();
+      formData.set("qty", String(newQty));
     startTransition(async () => {
       try {
         await updateCartQtyAction(bookId, formData);
@@ -28,9 +32,11 @@ export default function CartQtyInput({
   };
 
   const handleIncrement = () => {
-    if (currentQty >= stock) return;
-    const formData = new FormData();
-    formData.set("qty", String(currentQty + 1));
+    if (optimisticQty >= stock) return;
+    const newQty = optimisticQty + 1;
+      setOptimisticQty(newQty);
+      const formData = new FormData();
+      formData.set("qty", String(newQty));
     startTransition(async () => {
       try {
         await updateCartQtyAction(bookId, formData);
@@ -57,7 +63,7 @@ export default function CartQtyInput({
           -
         </button>
         <span className="px-4 py-1.5 text-sm font-semibold text-ink bg-transparent select-none min-w-[36px] text-center">
-          {currentQty}
+          {optimisticQty}
         </span>
         <button
           type="button"

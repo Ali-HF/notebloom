@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useOptimistic } from "react";
+import { useRouter } from "next/navigation";
 import { addToCartAction } from "@/app/actions/cart-actions";
 import { showToast } from "@/lib/toast";
 
@@ -16,7 +17,8 @@ export default function AddToCartButton({
   maxQty?: number;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [optimisticAdded, setOptimisticAdded] = useOptimistic(false, (state, action) => action);
+  const router = useRouter();
+  const [optimisticAdded, setOptimisticAdded] = useOptimistic<boolean, boolean>(false, (state, action) => action);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,6 +29,7 @@ export default function AddToCartButton({
       setOptimisticAdded(true);
       try {
         await addToCartAction(bookId, qty);
+          router.refresh();
         // Optimistic success already shown, keep toast for confirmation
         showToast(`"${bookTitle}" added to cart!`, "success");
       } catch (err) {

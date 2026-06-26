@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BookCover from "./BookCover";
 import { formatPrice, type Book } from "@/lib/db";
+import AddToCartButton from "./AddToCartButton";
 
 export default function BookCard({ book }: { book: Book }) {
   return (
@@ -14,7 +15,7 @@ export default function BookCard({ book }: { book: Book }) {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <span className="text-white text-center px-4 text-sm font-bold font-display line-clamp-2 leading-tight">
+          <span className="text-white text-center px-4 text-sm font-semibold font-display line-clamp-2 leading-tight">
             {book.title}
           </span>
           <Link
@@ -30,7 +31,7 @@ export default function BookCard({ book }: { book: Book }) {
       <div className="p-3.5 flex-1 flex flex-col">
         <Link href={`/shop/${book.id}`} className="block">
           <h3
-            className="text-[14px] font-bold text-ink leading-tight line-clamp-2 mb-1"
+            className="text-[14px] font-medium text-ink leading-tight line-clamp-2 mb-1"
             style={{ fontFamily: "var(--font-display)" }}
           >
             {book.title}
@@ -38,11 +39,13 @@ export default function BookCard({ book }: { book: Book }) {
         </Link>
         <p className="text-[11px] text-ink-soft/80 italic mb-3">{book.author}</p>
 
-        <div className="mt-auto pt-1 flex items-center justify-between">
-          <div className="text-[13px] font-bold text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
+        <div className="mt-auto pt-1 flex items-center justify-between gap-2">
+          <div className="text-[13px] font-semibold text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
             {formatPrice(book.price_cents)}
           </div>
-          {book.stock <= 0 && (
+          {book.stock > 0 ? (
+            <AddToCartButton bookId={book.id} bookTitle={book.title} />
+          ) : (
             <span className="text-[10px] text-oxblood font-bold uppercase tracking-wider bg-oxblood/10 px-2 py-0.5 rounded" style={{ fontFamily: "var(--font-stamp)" }}>
               SOLD OUT
             </span>
