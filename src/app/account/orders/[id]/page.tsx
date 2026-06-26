@@ -7,6 +7,7 @@ import BloomMark from "@/components/BloomMark";
 import { cookies } from "next/headers";
 import Confetti from "@/components/Confetti";
 import CancelOrderButton from "@/components/CancelOrderButton";
+import SaveGuestOrder from "@/components/SaveGuestOrder";
 
 export default async function OrderDetailPage({
   params,
@@ -53,6 +54,8 @@ export default async function OrderDetailPage({
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
       {showConfetti && <Confetti />}
+      {/* Auto-save order to localStorage for guest My Orders tracking */}
+      <SaveGuestOrder orderId={orderId} />
       <div className="text-center mb-10">
         <BloomMark size={36} className="mx-auto mb-4" />
         <p

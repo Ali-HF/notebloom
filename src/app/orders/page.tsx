@@ -7,17 +7,34 @@ export const dynamic = "force-dynamic";
 
 // Utility for localStorage handling (guest orders)
 const GUEST_ORDERS_KEY = "guestOrders";
+const EXPIRY_DAYS = 14;
+
 function saveGuestOrder(id: string) {
   try {
-    const existing = JSON.parse(localStorage.getItem(GUEST_ORDERS_KEY) || "[]");
-    if (!existing.includes(id)) {
-      existing.push(id);
-      localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(existing));
+    const raw = localStorage.getItem(GUEST_ORDERS_KEY);
+    const parsed: unknown[] = raw ? JSON.parse(raw) : [];
+    const expiryMs = EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // Normalise old string[] format → {id, savedAt}[]
+    const existing = parsed.map((e) =>
+      typeof e === "string" ? { id: e, savedAt: now } : (e as { id: string; savedAt: number })
+    );
+
+    // Remove expired entries
+    const fresh = existing.filter((o) => now - o.savedAt < expiryMs);
+
+    // Add if not already saved
+    if (!fresh.find((o) => o.id === id)) {
+      fresh.push({ id, savedAt: now });
     }
+
+    localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(fresh));
   } catch (e) {
     console.error("Failed to save guest order", e);
   }
 }
+
 
 export default function OrdersPage() {
 
@@ -88,18 +105,50 @@ export default function OrdersPage() {
           <button type="submit" className="bg-oxblood text-cream px-4 py-1 rounded mr-2">Check</button>
           <button type="button" onClick={() => router.push('/my-orders')} className="bg-cream text-oxblood px-4 py-1 rounded">My Orders</button>
         </form>
-        {error && <p className="text-oxblood">{error}</p>}
+        {error && <p className="mt-2 text-red-600 text-sm">❌ {error}</p>}
         {order && (
-          <div className="border p-4 rounded">
-            <h2 className="text-xl font-medium mb-2">Order #{order.id}</h2>
-            <p><strong>Status:</strong> {order.status}</p>
-            <p><strong>Total:</strong> ${(order.total_cents / 100).toFixed(2)}</p>
+          <div className="border border-ink/10 p-5 rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-stamp)" }}>
+                Order #{order.id}
+              </h2>
+              <span className={`text-xs font-bold uppercase px-3 py-1 rounded-full ${
+                order.status === "Delivered" || order.status === "Confirmed"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : order.status === "Shipped"
+                  ? "bg-indigo-100 text-indigo-700"
+                  : order.status === "Cancelled"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-amber-100 text-amber-700"
+              }`}>
+                {order.status}
+              </span>
+            </div>
+
+            {order.items && order.items.length > 0 && (
+              <ul className="divide-y divide-ink/10">
+                {order.items.map((item: any, i: number) => (
+                  <li key={i} className="py-2 flex justify-between text-sm">
+                    <span>{item.title} × {item.quantity}</span>
+                    <span className="text-ink-soft">${((item.price_cents * item.quantity) / 100).toFixed(2)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="flex items-center justify-between pt-2 border-t border-ink/10">
+              <span className="font-semibold">Total</span>
+              <span className="font-bold" style={{ fontFamily: "var(--font-stamp)" }}>
+                ${(order.total_cents / 100).toFixed(2)}
+              </span>
+            </div>
+
             <button
               onClick={handleRefresh}
               disabled={isFetching}
-              className="mt-2 bg-oxblood text-cream px-3 py-1 rounded hover:bg-oxblood/80 transition"
+              className="w-full mt-1 bg-oxblood text-cream px-3 py-2 rounded-lg hover:bg-oxblood/80 transition text-sm font-semibold"
             >
-              {isFetching ? "Refreshing…" : "Refresh Status"}
+              {isFetching ? "Refreshing…" : "↻ Refresh Status"}
             </button>
           </div>
         )}
