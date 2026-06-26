@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { GENRES } from "@/lib/constants";
 import type { Book } from "@/lib/types";
 import type { BookFormState } from "@/app/actions/admin-actions";
@@ -15,7 +15,41 @@ export default function BookForm({
   submitLabel: string;
 }) {
   const [state, formAction, isPending] = useActionState(action, undefined);
+  // State for image previews and errors
+  const [primaryPreview, setPrimaryPreview] = useState<string | null>(null);
+  const [primaryError, setPrimaryError] = useState<string | null>(null);
+  const [secondaryPreview, setSecondaryPreview] = useState<string | null>(null);
+  const [secondaryError, setSecondaryError] = useState<string | null>(null);
 
+  // Helper to validate and preview uploaded files
+  const handleFileUpload = (fieldName: string, setPreview: (url: string | null) => void, setError: (msg: string | null) => void) => {
+    const input = document.querySelector(`input[name="${fieldName}"]`) as HTMLInputElement;
+    if (!input?.files?.[0]) {
+      setError("Please select a file.");
+      return;
+    }
+    const file = input.files[0];
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setError("File must be JPG, PNG, or WEBP.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("File must be smaller than 2 MB.");
+      return;
+    }
+    setError(null);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    // Clear any existing URL text fields so the uploaded file takes precedence
+    if (fieldName === "cover_file") {
+      const primary = document.querySelector('input[name="cover_seed"]') as HTMLInputElement;
+      if (primary) primary.value = "";
+    } else if (fieldName === "cover_file_2") {
+      const secondary = document.querySelector('input[name="cover_seed_2"]') as HTMLInputElement;
+      if (secondary) secondary.value = "";
+    }
+  };
   return (
     <form action={formAction} className="space-y-5 max-w-xl">
       <Field label="Product Name" name="title" defaultValue={initial?.title} required />
@@ -90,18 +124,68 @@ export default function BookForm({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field
-          label="Primary Image URL / Seed"
-          name="cover_seed"
-          defaultValue={initial?.cover_seed}
-          placeholder="e.g. /images/peach_case.png"
-        />
-        <Field
-          label="Secondary Image URL / Seed"
-          name="cover_seed_2"
-          defaultValue={initial?.cover_seed_2 || ""}
-          placeholder="e.g. /images/peach_case_2.png"
-        />
+        <div ref={coverSeedRef}>
+          <Field
+            label="Primary Image URL"
+            name="cover_seed"
+            defaultValue={initial?.cover_seed}
+            placeholder="e.g. /images/peach_case.png"
+          />
+        </div>
+        <div ref={coverSeed2Ref}>
+          <Field
+            label="Secondary Image URL"
+            name="cover_seed_2"
+            defaultValue={initial?.cover_seed_2 || ""}
+            placeholder="e.g. /images/peach_case_2.png"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs tracking-[0.18em] uppercase text-ink-soft block mb-1.5" style={{ fontFamily: "var(--font-stamp)" }} htmlFor="cover_file">
+            Primary Cover Image (max 2MB)
+          </label>
+          <input
+            type="file"
+            id="cover_file"
+            name="cover_file"
+            accept="image/jpeg, image/png, image/webp"
+            className="w-full text-sm text-ink"
+          />
+          <button
+            type="button"
+            className="mt-2 px-4 py-1 rounded bg-oxblood text-cream hover:bg-oxblood-dark"
+            onClick={() => handleFileUpload('cover_file', setPrimaryPreview, setPrimaryError)}
+          >
+            Upload Primary Image
+          </button>
+          {primaryError && <p className="text-sm text-oxblood mt-1">{primaryError}</p>}
+          {primaryPreview && (
+            <img src={primaryPreview} alt="Primary preview" className="mt-2 max-h-48 object-contain" />
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs tracking-[0.18em] uppercase text-ink-soft block mb-1.5" style={{ fontFamily: "var(--font-stamp)" }} htmlFor="cover_file_2">
+            Secondary Cover Image (max 2MB)
+          </label>
+          <input
+            type="file"
+            id="cover_file_2"
+            name="cover_file_2"
+            accept="image/jpeg, image/png, image/webp"
+            className="w-full text-sm text-ink"
+          />
+          <button
+            type="button"
+            className="mt-2 px-4 py-1 rounded bg-oxblood text-cream hover:bg-oxblood-dark"
+            onClick={() => handleFileUpload('cover_file_2', setSecondaryPreview, setSecondaryError)}
+          >
+            Upload Secondary Image
+          </button>
+          {secondaryError && <p className="text-sm text-oxblood mt-1">{secondaryError}</p>}
+          {secondaryPreview && (
+            <img src={secondaryPreview} alt="Secondary preview" className="mt-2 max-h-48 object-contain" />
+          )}
+        </div>
       </div>
 
       {state?.error && <p className="text-sm text-oxblood">{state.error}</p>}

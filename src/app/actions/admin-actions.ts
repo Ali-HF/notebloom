@@ -1,5 +1,11 @@
 "use server";
 
+import path from "path";
+import { promises as fs } from "fs";
+import crypto from "crypto";
+import sharp from "sharp";
+
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -39,6 +45,26 @@ export async function createBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
+  // Process cover image uploads
+  const processUpload = async (file: any, fieldName: string) => {
+    if (!file || (file.size ?? 0) === 0) return undefined;
+    const allowed = ["image/jpeg", "image/png", "image/webp"]; 
+    if (!allowed.includes(file.type)) throw new Error(`${fieldName} must be JPG, PNG, or WEBP`);
+    if (file.size > 2 * 1024 * 1024) throw new Error(`${fieldName} exceeds 2 MB size limit`);
+    const ext = path.extname(file.name).toLowerCase();
+    const slug = parsed.data.title.replace(/\s+/g, "-").toLowerCase();
+    const filename = `${slug}-${crypto.randomUUID()}${ext}`;
+    const filepath = path.join(process.cwd(), "public", "uploads", filename);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const resized = await sharp(buffer).resize({ width: 800, withoutEnlargement: true }).toBuffer();
+    await fs.mkdir(path.dirname(filepath), { recursive: true });
+    await fs.writeFile(filepath, resized);
+    return "/uploads/" + filename;
+  };
+
+  const coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image");
+  const coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image");
+
   await createBook({
     title: parsed.data.title,
     author: parsed.data.author,
@@ -47,8 +73,8 @@ export async function createBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: parsed.data.cover_seed || undefined,
-    cover_seed_2: parsed.data.cover_seed_2 || null,
+    cover_seed: coverUrl || parsed.data.cover_seed || undefined,
+    cover_seed_2: coverUrl2 || parsed.data.cover_seed_2 || null,
   });
 
   revalidatePath("/admin");
@@ -68,6 +94,10 @@ export async function updateBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
+  // Process cover image uploads for update
+  const coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image");
+  const coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image");
+
   await updateBook(id, {
     title: parsed.data.title,
     author: parsed.data.author,
@@ -76,8 +106,8 @@ export async function updateBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: parsed.data.cover_seed || undefined,
-    cover_seed_2: parsed.data.cover_seed_2 || null,
+    cover_seed: coverUrl || parsed.data.cover_seed || undefined,
+    cover_seed_2: coverUrl2 || parsed.data.cover_seed_2 || null,
   });
 
   revalidatePath("/admin");

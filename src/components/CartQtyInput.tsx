@@ -8,42 +8,45 @@ export default function CartQtyInput({
   bookId,
   currentQty,
   stock,
+  onChange,
 }: {
   bookId: number;
   currentQty: number;
   stock: number;
+  onChange?: (newQty: number) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [optimisticQty, setOptimisticQty] = useOptimistic<number, number>(currentQty, (state, action) => action);
+
+  const pendingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleUpdate = (newQty: number) => {
+    if (pendingTimeout.current) clearTimeout(pendingTimeout.current);
+    pendingTimeout.current = setTimeout(() => {
+      const formData = new FormData();
+      formData.set("qty", String(newQty));
+      startTransition(async () => {
+        try {
+          await updateCartQtyAction(bookId, formData);
+        } catch (err) {
+          console.error("Failed to update cart quantity:", err);
+        }
+      });
+    }, 300);
+  };
 
   const handleDecrement = () => {
     if (optimisticQty <= 1) return;
     const newQty = optimisticQty - 1;
     setOptimisticQty(newQty);
-    const formData = new FormData();
-    formData.set("qty", String(newQty));
-    startTransition(async () => {
-      try {
-        await updateCartQtyAction(bookId, formData);
-      } catch (err) {
-        console.error("Failed to update cart quantity:", err);
-      }
-    });
+    if (onChange) onChange(newQty);
   };
 
   const handleIncrement = () => {
     if (optimisticQty >= stock) return;
     const newQty = optimisticQty + 1;
     setOptimisticQty(newQty);
-    const formData = new FormData();
-    formData.set("qty", String(newQty));
-    startTransition(async () => {
-      try {
-        await updateCartQtyAction(bookId, formData);
-      } catch (err) {
-        console.error("Failed to update cart quantity:", err);
-      }
-    });
+    if (onChange) onChange(newQty);
   };
 
   return (
@@ -57,7 +60,7 @@ export default function CartQtyInput({
           onClick={handleDecrement}
           disabled={optimisticQty <= 1}
           className={
-            `px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-r border-brass font-bold disabled:opacity-40 cursor-pointer ${isPending ? 'animate-pulse' : ''}`
+            `px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-r border-brass font-bold disabled:opacity-40 cursor-pointer`
           }
         >
           -
@@ -74,11 +77,6 @@ export default function CartQtyInput({
           +
         </button>
       </div>
-      {isPending && (
-        <span className="text-[10px] text-ink-soft animate-pulse" style={{ fontFamily: "var(--font-stamp)" }}>
-          ...
-        </span>
-      )}
     </div>
   );
 }
