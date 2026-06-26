@@ -18,7 +18,7 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
 
   return (
     <>
-      {/* Hamburger button — always visible */}
+      {/* Hamburger button */}
       <button
         onClick={toggleMenu}
         className="sm:hidden p-2 text-ink hover:text-oxblood transition-colors focus:outline-none cursor-pointer"
@@ -37,7 +37,7 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
         />
       )}
 
-      {/* Drawer — always in DOM, slides in/out */}
+      {/* Drawer */}
       <div
         className={`fixed top-0 right-0 z-[60] h-screen w-80 max-w-[90vw] bg-[#faf6ec]
                     shadow-2xl border-l border-ink/10 flex flex-col
@@ -84,12 +84,18 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
             </div>
           </form>
 
-          {/* Main nav links */}
+          {/* Nav links */}
           <nav className="flex flex-col" style={{ fontFamily: "var(--font-stamp)" }}>
 
             <Link href="/shop" onClick={closeMenu}
               className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
               <span>SHOP ALL</span>
+              <span className="text-ink/30 text-xs">→</span>
+            </Link>
+
+            <Link href="/my-orders" onClick={closeMenu}
+              className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
+              <span>MY ORDERS</span>
               <span className="text-ink/30 text-xs">→</span>
             </Link>
 
@@ -111,12 +117,6 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
                 <Link href="/account" onClick={closeMenu}
                   className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
                   <span>MY ACCOUNT</span>
-                  <span className="text-ink/30 text-xs">→</span>
-                </Link>
-
-                <Link href="/account/orders" onClick={closeMenu}
-                  className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>MY ORDERS</span>
                   <span className="text-ink/30 text-xs">→</span>
                 </Link>
 
