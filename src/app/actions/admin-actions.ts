@@ -35,19 +35,31 @@ const bookSchema = z.object({
 export type BookFormState = { error?: string } | undefined;
 
 async function processUpload(file: any, fieldName: string, titleSlug: string): Promise<string | undefined> {
-  if (!file || (file.size ?? 0) === 0) return undefined;
+  if (!file || !(file instanceof File) || file.size === 0) return undefined;
   const allowed = ["image/jpeg", "image/png", "image/webp"];
   if (!allowed.includes(file.type)) throw new Error(`${fieldName} must be JPG, PNG, or WEBP`);
   if (file.size > 2 * 1024 * 1024) throw new Error(`${fieldName} exceeds 2 MB size limit`);
+
   const ext = path.extname(file.name).toLowerCase();
   const slug = titleSlug.replace(/\s+/g, "-").toLowerCase();
   const filename = `${slug}-${crypto.randomUUID()}${ext}`;
-  const filepath = path.join(process.cwd(), "public", "uploads", filename);
+
+  // Resize with sharp
   const buffer = Buffer.from(await file.arrayBuffer());
   const resized = await sharp(buffer).resize({ width: 800, withoutEnlargement: true }).toBuffer();
-  await fs.mkdir(path.dirname(filepath), { recursive: true });
-  await fs.writeFile(filepath, resized);
-  return "/uploads/" + filename;
+
+  // Try Vercel Blob first, fall back to local filesystem (dev only)
+  try {
+    const { put } = await import("@vercel/blob");
+    const blob = await put(`uploads/${filename}`, resized, { access: "public" });
+    return blob.url;
+  } catch {
+    // Fallback: write to local public/uploads (works in dev, not on Vercel)
+    const filepath = path.join(process.cwd(), "public", "uploads", filename);
+    await fs.mkdir(path.dirname(filepath), { recursive: true });
+    await fs.writeFile(filepath, resized);
+    return "/uploads/" + filename;
+  }
 }
 
 export async function createBookAction(
@@ -62,8 +74,14 @@ export async function createBookAction(
   }
 
   // Process cover image uploads
-  const coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image", parsed.data.title);
-  const coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image", parsed.data.title);
+  let coverUrl: string | undefined;
+  let coverUrl2: string | undefined;
+  try {
+    coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image", parsed.data.title);
+    coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image", parsed.data.title);
+  } catch (err: any) {
+    return { error: err.message || "Image upload failed." };
+  }
 
   await createBook({
     title: parsed.data.title,
@@ -95,8 +113,14 @@ export async function updateBookAction(
   }
 
   // Process cover image uploads for update
-  const coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image", parsed.data.title);
-  const coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image", parsed.data.title);
+  let coverUrl: string | undefined;
+  let coverUrl2: string | undefined;
+  try {
+    coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image", parsed.data.title);
+    coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image", parsed.data.title);
+  } catch (err: any) {
+    return { error: err.message || "Image upload failed." };
+  }
 
   await updateBook(id, {
     title: parsed.data.title,
