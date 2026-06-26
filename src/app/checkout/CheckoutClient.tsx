@@ -80,12 +80,10 @@ export default function CheckoutClient({
     nav: {
       backgroundColor: "#faf6ec",
       borderBottom: "1px solid #ddd4c0",
-      padding: "0 2rem",
+      padding: "0.75rem 1.25rem",
       display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      height: "64px",
-      position: "relative" as const,
+      flexDirection: "column" as const,
+      gap: "0.5rem",
     },
     backBtn: {
       display: "flex",
@@ -447,10 +445,16 @@ export default function CheckoutClient({
     <div style={s.page}>
       {/* Nav */}
       <nav style={s.nav}>
-        <Link href="/cart" style={s.backBtn as React.CSSProperties}>
-          ← BACK TO CART
-        </Link>
-        <div style={s.navCenter}>
+        {/* Row 1: back + lock */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Link href="/cart" style={s.backBtn as React.CSSProperties}>
+            ← BACK TO CART
+          </Link>
+          <span style={s.lockIcon}>🔒</span>
+        </div>
+
+        {/* Row 2: logo + breadcrumb centered */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "4px" }}>
           <span style={s.navLogo}>🌸 Notebloom</span>
           <div style={s.breadcrumb}>
             <span style={s.breadcrumbStep(false)}>CART</span>
@@ -458,7 +462,6 @@ export default function CheckoutClient({
             <span style={s.breadcrumbStep(false)}>CONFIRMATION</span>
           </div>
         </div>
-        <span style={s.lockIcon}>🔒</span>
       </nav>
 
       <form action={formAction}>
