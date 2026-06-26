@@ -19,9 +19,9 @@ export default function CartQtyInput({
   const handleDecrement = () => {
     if (optimisticQty <= 1) return;
     const newQty = optimisticQty - 1;
-      setOptimisticQty(newQty);
-      const formData = new FormData();
-      formData.set("qty", String(newQty));
+    setOptimisticQty(newQty);
+    const formData = new FormData();
+    formData.set("qty", String(newQty));
     startTransition(async () => {
       try {
         await updateCartQtyAction(bookId, formData);
@@ -34,9 +34,9 @@ export default function CartQtyInput({
   const handleIncrement = () => {
     if (optimisticQty >= stock) return;
     const newQty = optimisticQty + 1;
-      setOptimisticQty(newQty);
-      const formData = new FormData();
-      formData.set("qty", String(newQty));
+    setOptimisticQty(newQty);
+    const formData = new FormData();
+    formData.set("qty", String(newQty));
     startTransition(async () => {
       try {
         await updateCartQtyAction(bookId, formData);
@@ -55,7 +55,7 @@ export default function CartQtyInput({
         <button
           type="button"
           onClick={handleDecrement}
-          disabled={currentQty <= 1 || isPending}
+          disabled={optimisticQty <= 1}
           className={
             `px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-r border-brass font-bold disabled:opacity-40 cursor-pointer ${isPending ? 'animate-pulse' : ''}`
           }
@@ -68,8 +68,8 @@ export default function CartQtyInput({
         <button
           type="button"
           onClick={handleIncrement}
-          disabled={currentQty >= stock || isPending}
-          className="px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-l border-brass font-bold disabled:opacity-40 cursor-pointer"
+          disabled={optimisticQty >= stock}
+          className={`px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-l border-brass font-bold disabled:opacity-40 cursor-pointer ${isPending ? 'animate-pulse' : ''}`}
         >
           +
         </button>
