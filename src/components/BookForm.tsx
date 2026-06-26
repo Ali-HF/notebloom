@@ -162,7 +162,10 @@ export default function BookForm({
             type="button"
             className="mt-2 px-4 py-2 rounded-md bg-oxblood text-cream hover:bg-oxblood-dark transition-colors text-xs uppercase tracking-wider cursor-pointer"
             style={{ fontFamily: "var(--font-stamp)" }}
-            onClick={() => primaryInputRef.current?.click()}
+            onClick={() => {
+              console.log('Primary upload button clicked');
+              primaryInputRef.current?.click();
+            }}
           >
             Upload Primary Image
           </button>
@@ -188,7 +191,10 @@ export default function BookForm({
             type="button"
             className="mt-2 px-4 py-2 rounded-md bg-oxblood text-cream hover:bg-oxblood-dark transition-colors text-xs uppercase tracking-wider cursor-pointer"
             style={{ fontFamily: "var(--font-stamp)" }}
-            onClick={() => secondaryInputRef.current?.click()}
+            onClick={() => {
+              console.log('Secondary upload button clicked');
+              secondaryInputRef.current?.click();
+            }}
           >
             Upload Secondary Image
           </button>
