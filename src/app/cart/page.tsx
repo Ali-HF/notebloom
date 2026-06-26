@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 
 export default async function CartPage() {
   const session = await auth();
-  
+
   let items: CartRow[] = [];
   let total = 0;
   const isGuest = !session?.user?.id;
@@ -18,7 +18,6 @@ export default async function CartPage() {
     const userId = Number(session.user.id);
     items = await getCart(userId);
   } else {
-    // Guest cart resolution from cookies
     try {
       const cookieStore = await cookies();
       const cartCookie = cookieStore.get("notebloom_cart")?.value;
@@ -37,7 +36,7 @@ export default async function CartPage() {
                 author: book.author,
                 price_cents: book.price_cents,
                 cover_seed: book.cover_seed,
-                stock: book.stock
+                stock: book.stock,
               });
             }
           }
@@ -51,7 +50,6 @@ export default async function CartPage() {
 
   total = items.reduce((sum, it) => sum + it.price_cents * it.quantity, 0);
 
-  // If no items in cart, show empty cart screen
   if (items.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24 text-center flex flex-col items-center gap-4">
@@ -86,7 +84,7 @@ export default async function CartPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 animate-fadeIn">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
       <h1
         className="text-4xl mb-8 font-semibold text-ink"
         style={{ fontFamily: "var(--font-display)" }}
@@ -94,12 +92,18 @@ export default async function CartPage() {
         Your cart
       </h1>
 
-      <div className="grid md:grid-cols-[1fr_320px] gap-8 items-start">
-        {/* Cart items list */}
-        <ul className="divide-y divide-ink/10 border-y border-ink/10">
+      <div className="flex flex-col md:grid md:grid-cols-[1fr_320px] gap-8 items-start">
+
+        {/* Cart items */}
+        <ul className="divide-y divide-ink/10 border-y border-ink/10 w-full">
           {items.map((item) => (
-            <li key={item.id} className="py-5 flex items-center justify-between gap-4">
-              <Link href={`/shop/${item.book_id}`} className="w-18 h-18 shrink-0 overflow-hidden rounded-md border border-ink/10 bg-cream">
+            <li key={item.id} className="py-5 flex gap-4">
+
+              {/* Image */}
+              <Link
+                href={`/shop/${item.book_id}`}
+                className="w-20 h-20 shrink-0 overflow-hidden rounded-md border border-ink/10 bg-cream"
+              >
                 <BookCover
                   title={item.title}
                   author={item.author}
@@ -109,50 +113,58 @@ export default async function CartPage() {
                 />
               </Link>
 
-              <div className="flex-1 min-w-0">
-                <Link href={`/shop/${item.book_id}`} className="hover:text-oxblood transition-colors">
-                  <h3 className="font-semibold text-base text-ink leading-snug" style={{ fontFamily: "var(--font-display)" }}>
-                    {item.title}
-                  </h3>
-                </Link>
-                <p className="text-xs text-ink-soft mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
-                  SKU: NB-00{item.book_id}
-                </p>
-                <p className="text-xs text-ink-soft mt-0.5" style={{ fontFamily: "var(--font-stamp)" }}>
-                  {formatPrice(item.price_cents)} each
-                </p>
-              </div>
+              {/* Details */}
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                {/* Title + remove */}
+                <div className="flex items-start justify-between gap-2">
+                  <Link href={`/shop/${item.book_id}`} className="hover:text-oxblood transition-colors">
+                    <h3
+                      className="font-semibold text-sm text-ink leading-snug"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {item.title}
+                    </h3>
+                  </Link>
 
-              <div className="flex items-center gap-6 shrink-0">
-                <CartQtyInput
-                  bookId={item.book_id}
-                  currentQty={item.quantity}
-                  stock={item.stock}
-                />
-
-                <div className="text-right font-semibold text-sm shrink-0 min-w-[70px]" style={{ fontFamily: "var(--font-stamp)" }}>
-                  {formatPrice(item.price_cents * item.quantity)}
+                  <form action={removeFromCartAction.bind(null, item.book_id)} className="shrink-0">
+                    <button
+                      type="submit"
+                      className="text-ink-soft hover:text-oxblood transition-colors cursor-pointer"
+                      aria-label="Remove item"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </form>
                 </div>
 
-                <form action={removeFromCartAction.bind(null, item.book_id)} className="shrink-0 ml-2">
-                  <button
-                    type="submit"
-                    className="flex flex-col items-center justify-center text-ink hover:text-oxblood transition-colors cursor-pointer group"
+                <p className="text-[11px] text-ink-soft" style={{ fontFamily: "var(--font-stamp)" }}>
+                  SKU: NB-00{item.book_id} · {formatPrice(item.price_cents)} each
+                </p>
+
+                {/* Qty + line total */}
+                <div className="flex items-center justify-between gap-4 mt-1">
+                  <CartQtyInput
+                    bookId={item.book_id}
+                    currentQty={item.quantity}
+                    stock={item.stock}
+                  />
+                  <span
+                    className="font-semibold text-sm text-ink"
                     style={{ fontFamily: "var(--font-stamp)" }}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="group-hover:scale-110 transition-transform">
-                      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                    <span className="text-[9px] mt-1 font-semibold tracking-wider uppercase">Remove</span>
-                  </button>
-                </form>
+                    {formatPrice(item.price_cents * item.quantity)}
+                  </span>
+                </div>
               </div>
+
             </li>
           ))}
         </ul>
 
-        {/* Sidebar Summary Card */}
-        <aside className="w-[320px] shrink-0 bg-cream border border-[#c8b090] rounded-lg p-6 shadow-sm">
+        {/* Order summary — full width on mobile, sidebar on desktop */}
+        <aside className="w-full bg-cream border border-[#c8b090] rounded-lg p-6 shadow-sm">
           <h2
             className="text-xs font-bold tracking-[0.08em] text-ink uppercase"
             style={{ fontFamily: "var(--font-stamp)" }}
@@ -171,9 +183,7 @@ export default async function CartPage() {
           <hr className="border-t border-[#c8b090]/50 my-4" />
           <div className="flex items-baseline justify-between mb-6" style={{ fontFamily: "var(--font-display)" }}>
             <span className="text-2xl font-bold text-ink">Total</span>
-            <span className="text-[26px] font-bold text-ink">
-              {formatPrice(total)}
-            </span>
+            <span className="text-[26px] font-bold text-ink">{formatPrice(total)}</span>
           </div>
 
           <Link
