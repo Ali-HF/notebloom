@@ -1,49 +1,49 @@
 import Link from "next/link";
 import BookCover from "./BookCover";
 import { formatPrice, type Book } from "@/lib/db";
-import AddToCartButton from "./AddToCartButton";
 
 export default function BookCard({ book }: { book: Book }) {
   return (
-    <div className="group flex flex-col">
-      <Link
-        href={`/shop/${book.id}`}
-        className="block rounded-xl overflow-hidden shadow-[0_6px_18px_-6px_rgba(34,29,24,0.35)]
-                   ring-1 ring-ink/10 transition-all duration-300 group-hover:-translate-y-1 
-                   group-hover:shadow-[0_12px_24px_-8px_rgba(34,29,24,0.45)]"
-      >
+    <div className="group flex flex-col bg-white border border-[#ddd0b8] rounded-[10px] overflow-hidden transition-all duration-200 hover:shadow-[0_4px_20px_rgba(32,40,58,0.12)] cursor-pointer">
+      <div className="relative w-full h-[180px] overflow-hidden shrink-0">
         <BookCover
           title={book.title}
           author={book.author}
           genre={book.genre}
           seed={book.cover_seed}
-          className="w-full h-auto"
+          className="w-full h-full object-cover"
         />
-      </Link>
+        <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <span className="text-white text-center px-4 text-sm font-bold font-display line-clamp-2 leading-tight">
+            {book.title}
+          </span>
+          <Link
+            href={`/shop/${book.id}`}
+            className="px-4 py-1.5 bg-white/15 border border-white rounded-[4px] text-white text-[11px] font-bold tracking-wider hover:bg-white/25 transition-colors uppercase"
+            style={{ fontFamily: "var(--font-stamp)" }}
+          >
+            VIEW DETAILS
+          </Link>
+        </div>
+      </div>
 
-      <div className="mt-3 flex-1 flex flex-col">
-        <Link href={`/shop/${book.id}`} className="trail-link">
+      <div className="p-3.5 flex-1 flex flex-col">
+        <Link href={`/shop/${book.id}`} className="block">
           <h3
-            className="text-base leading-snug"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+            className="text-[14px] font-bold text-ink leading-tight line-clamp-2 mb-1"
+            style={{ fontFamily: "var(--font-display)" }}
           >
             {book.title}
           </h3>
         </Link>
-        <p className="text-sm text-ink-soft mt-0.5">{book.author}</p>
+        <p className="text-[11px] text-ink-soft/80 italic mb-3">{book.author}</p>
 
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span
-            className="text-sm px-2 py-0.5 rounded-sm bg-parchment-dark text-ink"
-            style={{ fontFamily: "var(--font-stamp)" }}
-          >
+        <div className="mt-auto pt-1 flex items-center justify-between">
+          <div className="text-[13px] font-bold text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
             {formatPrice(book.price_cents)}
-          </span>
-
-          {book.stock > 0 ? (
-            <AddToCartButton bookId={book.id} bookTitle={book.title} />
-          ) : (
-            <span className="text-xs text-ink-soft/70" style={{ fontFamily: "var(--font-stamp)" }}>
+          </div>
+          {book.stock <= 0 && (
+            <span className="text-[10px] text-oxblood font-bold uppercase tracking-wider bg-oxblood/10 px-2 py-0.5 rounded" style={{ fontFamily: "var(--font-stamp)" }}>
               SOLD OUT
             </span>
           )}

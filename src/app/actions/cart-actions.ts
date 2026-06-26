@@ -15,7 +15,7 @@ import {
   getOrCreateGuestUser 
 } from "@/lib/db";
 import { sendWhatsappNotification } from "@/lib/whatsapp";
-import { sendEmailNotification, sendOrderConfirmationRequestEmail } from "@/lib/email";
+import { sendOrderConfirmationRequestEmail } from "@/lib/email";
 
 export async function addToCartAction(bookId: number, qty: number = 1) {
   const session = await auth();
@@ -30,7 +30,8 @@ export async function addToCartAction(bookId: number, qty: number = 1) {
       try {
         const parsed = JSON.parse(cartCookie);
         if (Array.isArray(parsed)) cart = parsed;
-      } catch (e) {}
+      } catch (_e) {
+      }
     }
     const idx = cart.findIndex((it) => it.book_id === bookId);
     if (idx >= 0) {
@@ -60,7 +61,8 @@ export async function addToCartWithQtyAction(bookId: number, formData: FormData)
       try {
         const parsed = JSON.parse(cartCookie);
         if (Array.isArray(parsed)) cart = parsed;
-      } catch (e) {}
+      } catch (_e) {
+      }
     }
     const idx = cart.findIndex((it) => it.book_id === bookId);
     if (idx >= 0) {
@@ -86,7 +88,7 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
     if (cartCookie) {
       try {
-        let cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+        const cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
         if (Array.isArray(cart)) {
           const idx = cart.findIndex((it) => it.book_id === bookId);
           if (idx >= 0) {
@@ -98,7 +100,8 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
             cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
           }
         }
-      } catch (e) {}
+      } catch (_e) {
+      }
     }
   }
   revalidatePath("/cart");
@@ -113,12 +116,13 @@ export async function removeFromCartAction(bookId: number) {
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
     if (cartCookie) {
       try {
-        let cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+        const cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
         if (Array.isArray(cart)) {
           const filtered = cart.filter((it) => it.book_id !== bookId);
           cookieStore.set("notebloom_cart", JSON.stringify(filtered), { maxAge: 86400 * 30, path: "/" });
         }
-      } catch (e) {}
+      } catch (_e) {
+      }
     }
   }
   revalidatePath("/cart");
@@ -193,6 +197,10 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   }
 
   // 4. Serialize shipping details
+  const delivery = (formData.get("delivery") as string) || "standard";
+  const shippingCost = delivery === "express" ? 350 : 150;
+  const shippingCents = shippingCost * 100;
+
   const shippingDetails = {
     fullName: fullName.trim(),
     phone: phone.trim(),
@@ -203,11 +211,13 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
     landmark: landmark.trim(),
     apartment: apartment.trim(),
     instructions: instructions.trim(),
+    delivery: delivery,
+    shippingCost: shippingCost,
   };
   const shippingJson = JSON.stringify(shippingDetails);
 
   // 5. Place order
-  const result = await placeOrder(userId, shippingJson, "cod", cartItems);
+  const result = await placeOrder(userId, shippingJson, "cod", cartItems, shippingCents);
   if ("error" in result) {
     return { error: result.error };
   }

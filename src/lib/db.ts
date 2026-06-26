@@ -558,7 +558,8 @@ export async function placeOrder(
   userId: number,
   shippingJson: string = "{}",
   paymentMethod: string = "cod",
-  items?: CartRow[]
+  items?: CartRow[],
+  shippingCents: number = 0
 ): Promise<{ orderId: number; total: number } | { error: string }> {
   const finalItems = items ?? await getCart(userId);
   if (finalItems.length === 0) return { error: "Your cart is empty." };
@@ -569,7 +570,7 @@ export async function placeOrder(
     }
   }
 
-  const total = finalItems.reduce((sum, it) => sum + it.price_cents * it.quantity, 0);
+  const total = finalItems.reduce((sum, it) => sum + it.price_cents * it.quantity, 0) + shippingCents;
 
   try {
     const result = await sql.begin(async (sql) => {

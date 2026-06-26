@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import BookCover from "@/components/BookCover";
 import ProductImageSlider from "@/components/ProductImageSlider";
 import StarRating from "@/components/StarRating";
 import ReviewForm from "@/components/ReviewForm";

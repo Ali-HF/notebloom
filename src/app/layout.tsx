@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ToastContainer from "@/components/ToastContainer";
+import CursorInk from "@/components/CursorInk";
 
 export const metadata: Metadata = {
   title: "Notebloom — Aesthetic Korean stationery, journals, and pens",
@@ -21,6 +22,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <CursorInk />
         <ToastContainer />
       </body>
     </html>
