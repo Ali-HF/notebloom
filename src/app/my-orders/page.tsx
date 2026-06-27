@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 const GUEST_ORDERS_KEY = "guestOrders";
 const EXPIRY_DAYS = 14;
 
-type SavedOrder = { id: string; savedAt: number };
+type SavedOrder = { id: string; savedAt: number; orderCode?: string };
 
 function getSavedOrders(): SavedOrder[] {
   if (typeof window === "undefined") return [];
@@ -80,7 +80,7 @@ export default function MyOrdersPage() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {orders.map(({ id, savedAt }) => (
+          {orders.map(({ id, savedAt, orderCode }) => (
             <li
               key={id}
               onClick={() => handleClick(id)}
@@ -91,7 +91,7 @@ export default function MyOrdersPage() {
                   className="font-bold text-oxblood"
                   style={{ fontFamily: "var(--font-stamp)" }}
                 >
-                  Order #{id}
+                  {orderCode ? `Order ${orderCode}` : `Order #${id}`}
                 </p>
                 <p className="text-xs text-ink-soft mt-0.5">
                   Expires in {daysLeft(savedAt)} day{daysLeft(savedAt) !== 1 ? "s" : ""}

@@ -55,7 +55,7 @@ export default async function OrderDetailPage({
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
       {showConfetti && <Confetti />}
-      <SaveGuestOrder orderId={orderId} />
+      <SaveGuestOrder orderId={orderId} orderCode={orderCode} />
 
       <div className="text-center mb-10">
         <BloomMark size={36} className="mx-auto mb-4" />

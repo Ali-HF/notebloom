@@ -44,7 +44,7 @@ export default async function AdminOrdersPage() {
             <li key={o.id} className="py-4 flex items-center justify-between">
               <div>
                 <p className="font-semibold" style={{ fontFamily: "var(--font-body)" }}>
-                  Order #{o.id} — {o.user_name}
+                  {o.order_code ?? `#${o.id}`} — {o.user_name}
                 </p>
                 <p className="text-sm text-ink-soft">
                   {o.user_email} ·{" "}
