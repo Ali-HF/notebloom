@@ -13,24 +13,19 @@ type MobileMenuProps = {
 export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   return (
-    <div className="sm:hidden flex items-center">
+    <>
       {/* Hamburger button */}
       <button
-        onClick={toggleMenu}
-        className="p-2 text-ink-soft hover:text-oxblood transition-colors focus:outline-none cursor-pointer"
+        onClick={() => setIsOpen(true)}
+        className="sm:hidden p-2 text-ink-soft hover:text-oxblood transition-colors focus:outline-none cursor-pointer"
         aria-label="Open navigation menu"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -40,36 +35,32 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
 
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-50 bg-[#221d18]/50 backdrop-blur-sm transition-opacity duration-300
+        className={`sm:hidden fixed inset-0 z-50 bg-[#221d18]/50 backdrop-blur-sm transition-opacity duration-300
                     ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         onClick={closeMenu}
       />
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 z-[60] h-full w-72 max-w-[85vw] bg-[#faf6ec]
+        className={`sm:hidden fixed top-0 right-0 z-[60] h-screen w-[300px] bg-[#faf6ec]
                     shadow-2xl border-l border-ink/10 flex flex-col
                     transition-transform duration-300 ease-in-out
                     ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 border-b border-ink/10 shrink-0">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-ink/10 shrink-0">
           <span className="font-bold text-xs tracking-widest text-ink-soft uppercase" style={{ fontFamily: "var(--font-stamp)" }}>
             Menu
           </span>
-          <button
-            onClick={closeMenu}
-            className="p-1 text-ink-soft hover:text-oxblood transition-colors cursor-pointer"
-            aria-label="Close menu"
-          >
+          <button onClick={closeMenu} className="p-1 text-ink-soft hover:text-oxblood transition-colors cursor-pointer">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-1">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col">
 
           {/* Search */}
           <form action="/shop" onSubmit={closeMenu} className="mb-6">
@@ -91,31 +82,26 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
 
           {/* Nav */}
           <nav className="flex flex-col" style={{ fontFamily: "var(--font-stamp)" }}>
-
             <Link href="/shop" onClick={closeMenu}
               className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-              <span>SHOP ALL</span>
-              <span className="text-ink/30 text-xs">→</span>
+              <span>SHOP ALL</span><span className="text-ink/30 text-xs">→</span>
             </Link>
 
             <Link href="/my-orders" onClick={closeMenu}
               className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-              <span>MY ORDERS</span>
-              <span className="text-ink/30 text-xs">→</span>
+              <span>MY ORDERS</span><span className="text-ink/30 text-xs">→</span>
             </Link>
 
             {session?.user ? (
               <>
                 <Link href="/account" onClick={closeMenu}
                   className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>MY ACCOUNT</span>
-                  <span className="text-ink/30 text-xs">→</span>
+                  <span>MY ACCOUNT</span><span className="text-ink/30 text-xs">→</span>
                 </Link>
                 {session.user.isAdmin && (
                   <Link href="/admin" onClick={closeMenu}
                     className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                    <span>ADMIN PANEL</span>
-                    <span className="text-ink/30 text-xs">→</span>
+                    <span>ADMIN PANEL</span><span className="text-ink/30 text-xs">→</span>
                   </Link>
                 )}
               </>
@@ -123,31 +109,22 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
               <>
                 <Link href="/login" onClick={closeMenu}
                   className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>LOG IN</span>
-                  <span className="text-ink/30 text-xs">→</span>
+                  <span>LOG IN</span><span className="text-ink/30 text-xs">→</span>
                 </Link>
                 <Link href="/signup" onClick={closeMenu}
                   className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>SIGN UP</span>
-                  <span className="text-ink/30 text-xs">→</span>
+                  <span>SIGN UP</span><span className="text-ink/30 text-xs">→</span>
                 </Link>
               </>
             )}
 
             {/* Categories */}
             <div className="mt-5">
-              <p className="text-[10px] font-bold tracking-widest text-ink-soft uppercase mb-3">
-                Shop by Category
-              </p>
+              <p className="text-[10px] font-bold tracking-widest text-ink-soft uppercase mb-3">Shop by Category</p>
               {GENRES.map((g) => (
-                <Link
-                  key={g}
-                  href={`/shop?genre=${encodeURIComponent(g)}`}
-                  onClick={closeMenu}
-                  className="flex items-center justify-between py-2.5 border-b border-ink/5 text-sm text-ink hover:text-oxblood transition-colors"
-                >
-                  <span>{g}</span>
-                  <span className="text-ink/25 text-xs">→</span>
+                <Link key={g} href={`/shop?genre=${encodeURIComponent(g)}`} onClick={closeMenu}
+                  className="flex items-center justify-between py-2.5 border-b border-ink/5 text-sm text-ink hover:text-oxblood transition-colors">
+                  <span>{g}</span><span className="text-ink/25 text-xs">→</span>
                 </Link>
               ))}
             </div>
@@ -158,8 +135,7 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
         {session?.user && (
           <div className="px-6 py-5 border-t border-ink/10 shrink-0">
             <form action={logoutAction}>
-              <button
-                type="submit"
+              <button type="submit"
                 className="w-full py-2.5 px-4 rounded-full border border-oxblood/30 text-oxblood
                            hover:bg-oxblood hover:text-cream transition-all text-sm font-semibold
                            flex items-center justify-center gap-2 cursor-pointer bg-transparent"
@@ -174,6 +150,6 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
