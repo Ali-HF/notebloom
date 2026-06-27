@@ -18,8 +18,8 @@ export default async function OrderReceiptPage({
   if (!order) notFound();
 
   const items = await getOrderItems(orderId);
+  const orderCode = (order as any).order_code ?? `#${order.id}`;
 
-  // Parse shipping details with fallbacks
   let shipping = {
     fullName: order.user_name || "Customer",
     phone: "N/A",
@@ -44,10 +44,8 @@ export default async function OrderReceiptPage({
     <div className="min-h-screen bg-cream-light py-10 print:bg-white print:py-0">
       <PrintTrigger />
 
-      {/* Main Voucher Container */}
       <div className="max-w-2xl mx-auto bg-cream p-8 sm:p-12 ring-1 ring-ink/10 rounded-xl shadow-sm print:ring-0 print:shadow-none print:bg-white print:p-0">
-        
-        {/* Header Section */}
+
         <div className="flex flex-col items-center text-center border-b border-ink/20 pb-6 mb-6">
           <BloomMark size={40} className="mb-2" />
           <h1
@@ -62,11 +60,11 @@ export default async function OrderReceiptPage({
           <p className="text-xs text-ink-soft/75 mt-1.5">Karachi, Pakistan · support@notebloom.shop</p>
         </div>
 
-        {/* Invoice Summary */}
         <div className="grid grid-cols-2 gap-4 text-sm mb-6 pb-6 border-b border-ink/10">
           <div>
             <p className="text-xs uppercase text-ink-soft tracking-wider" style={{ fontFamily: "var(--font-stamp)" }}>Order Reference</p>
-            <p className="font-semibold text-base mt-0.5 text-ink">Invoice #{order.id}</p>
+            <p className="font-semibold text-base mt-0.5 text-ink">{orderCode}</p>
+            <p className="text-xs text-ink-soft/60 mt-0.5">Internal ID: #{order.id}</p>
             <p className="text-xs text-ink-soft mt-1">
               Date: {new Date(order.created_at).toLocaleDateString(undefined, {
                 year: "numeric",
@@ -86,7 +84,6 @@ export default async function OrderReceiptPage({
           </div>
         </div>
 
-        {/* Shipment Details Section */}
         <div className="mb-8 p-4 bg-cream-dark/30 rounded-lg ring-1 ring-ink/5">
           <h2
             className="text-xs uppercase tracking-wider text-ink-soft mb-3 border-b border-ink/10 pb-1"
@@ -142,7 +139,6 @@ export default async function OrderReceiptPage({
           </div>
         </div>
 
-        {/* Itemized Order List */}
         <div className="mb-8">
           <h2
             className="text-xs uppercase tracking-wider text-ink-soft mb-3 border-b border-ink/10 pb-1"
@@ -179,7 +175,6 @@ export default async function OrderReceiptPage({
           </table>
         </div>
 
-        {/* Totals Section */}
         <div className="flex flex-col items-end text-sm gap-2 border-t border-ink/20 pt-4">
           <div className="flex justify-between w-64 text-ink-soft">
             <span>Subtotal</span>
@@ -195,7 +190,6 @@ export default async function OrderReceiptPage({
           </div>
         </div>
 
-        {/* Footer Notes */}
         <div className="text-center mt-12 text-xs text-ink-soft/70 border-t border-ink/10 pt-4">
           <p>Thank you for buying from Notebloom!</p>
           <p className="mt-1">Please retain this invoice as proof of purchase.</p>

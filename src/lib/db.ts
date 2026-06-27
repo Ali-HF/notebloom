@@ -37,6 +37,7 @@ export type CartRow = {
 
 export type Order = {
   id: number;
+  order_code: string;
   user_id: number;
   total_cents: number;
   status: string;
@@ -75,10 +76,10 @@ declare global {
 const connectionString = process.env.DATABASE_URL || "";
 
 function createSqlInstance(): postgres.Sql {
-  const isPlaceholder = 
-    !connectionString || 
-    connectionString.includes("[PROJECT-ID]") || 
-    connectionString.includes("[PASSWORD]") || 
+  const isPlaceholder =
+    !connectionString ||
+    connectionString.includes("[PROJECT-ID]") ||
+    connectionString.includes("[PASSWORD]") ||
     connectionString.includes("[REGION]");
 
   if (isPlaceholder) {
@@ -128,139 +129,158 @@ export async function seedIfEmpty() {
       `;
     }
 
-    const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
-    const count = countResult[0]?.c ?? 0;
-    
-    if (count === 0) {
-      console.log("Seeding Supabase Postgres database with initial stationery products...");
+  }
 
-      const seedBooks = [
-        {
-          title: "Strawberry Milk Washi Tape Set",
-          author: "Mochi Studios",
-          genre: "Washi Tape",
-          description: "A pack of 3 pastel pink washi tapes featuring retro strawberry milk designs and cherry blossoms. Perfect for journaling and decoration.",
-          price_cents: 599,
-          stock: 25,
-          isbn: "SKU-STW-001",
-          cover_seed: "/images/strawberry_washi.png",
-        },
-        {
-          title: "Cute Bear Weekly Planner",
-          author: "Bunny & Bear",
-          genre: "Planners",
-          description: "An undated weekly planner featuring cute bear illustrations on every page. Smooth 120gsm paper with lay-flat binding.",
-          price_cents: 1250,
-          stock: 15,
-          isbn: "SKU-CBP-002",
-          cover_seed: "/images/bear_planner.png",
-        },
-        {
-          title: "Fluffy Peach Pencil Case",
-          author: "Haru Goods",
-          genre: "Pencil Cases",
-          description: "A soft, plush pencil case in the shape of a happy peach. Spacious enough for all your pens with a cute custom zipper pull.",
-          price_cents: 899,
-          stock: 18,
-          isbn: "SKU-FPC-003",
-          cover_seed: "/images/peach_case.png",
-        },
-        {
-          title: "Boba Tea Gel Pen Pack",
-          author: "Bunny & Bear",
-          genre: "Pens",
-          description: "A set of 4 black gel ink pens with adorable miniature boba bubble tea charms dangling from the caps. 0.5mm fine point.",
-          price_cents: 799,
-          stock: 12,
-          isbn: "SKU-BGP-004",
-          cover_seed: "/images/boba_pens.png",
-        },
-        {
-          title: "Pastel Tulip Aesthetic Notebook",
-          author: "Haru Goods",
-          genre: "Notebooks",
-          description: "A grid-ruled notebook with a dreamy pastel tulip cover. Includes high-quality paper, ideal for scrapbooking and bullet journals.",
-          price_cents: 650,
-          stock: 22,
-          isbn: "SKU-PTN-005",
-          cover_seed: "/images/tulip_notebook.png",
-        },
-        {
-          title: "Shiba Inu Sticky Notes",
-          author: "Mochi Studios",
-          genre: "Sticky Notes",
-          description: "A pad of 50 self-adhesive sticky notes with an adorable smiling Shiba Inu checking in on your daily goals.",
-          price_cents: 299,
-          stock: 40,
-          isbn: "SKU-SIS-006",
-          cover_seed: "/images/shiba_notes.png",
-        },
-        {
-          title: "Retro Soda Acrylic Keyring",
-          author: "Mochi Studios",
-          genre: "Accessories",
-          description: "A cute acrylic charm keyring of a retro melon soda float. Decorate your backpack, airpod case, or pencil pouch.",
-          price_cents: 600,
-          stock: 10,
-          isbn: "SKU-RSA-007",
-          cover_seed: "/images/soda_keyring.png",
-        },
-        {
-          title: "Happy Cloud Desk Organizer",
-          author: "Haru Goods",
-          genre: "Desk Decor",
-          description: "A small, pastel-colored desk tidy shaped like a fluffy cloud, perfect for organizing your markers and memo pads.",
-          price_cents: 1499,
-          stock: 8,
-          isbn: "SKU-HCD-008",
-          cover_seed: "/images/cloud_organizer.png",
-        },
-        {
-          title: "Cherry Blossom Writing Set",
-          author: "Kyoto Petals",
-          genre: "Accessories",
-          description: "Traditional writing set with 10 cherry blossom patterned sheets and 5 matching envelopes. Delicate texture.",
-          price_cents: 499,
-          stock: 15,
-          isbn: "SKU-CBW-009",
-          cover_seed: "/images/cherry_letters.png",
-        },
-        {
-          title: "Cat Paw Correction Tape",
-          author: "Neko Stationery",
-          genre: "Accessories",
-          description: "Correction tape in a super cute cat-paw shaped dispenser. Compact, easy to hold, and leaves a neat white strip.",
-          price_cents: 350,
-          stock: 30,
-          isbn: "SKU-CPC-010",
-          cover_seed: "/images/cat_paw_tape.png",
-        },
-      ];
+    // Migrate: add order_code column if it doesn't exist
+    const orderCodeExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_name = 'orders' AND column_name = 'order_code'
+      )
+    `;
+  if (!orderCodeExists[0].exists) {
+    await sql`ALTER TABLE orders ADD COLUMN order_code TEXT`;
+    const existingOrders = await sql`SELECT id FROM orders WHERE order_code IS NULL`;
+    for (const o of existingOrders) {
+      const code = "NB-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+      await sql`UPDATE orders SET order_code = ${code} WHERE id = ${o.id}`;
+    }
+    await sql`ALTER TABLE orders ADD CONSTRAINT orders_order_code_unique UNIQUE (order_code)`;
+  }
 
-      for (const b of seedBooks) {
-        await sql`
+  const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
+  const count = countResult[0]?.c ?? 0;
+
+  if (count === 0) {
+    console.log("Seeding Supabase Postgres database with initial stationery products...");
+
+    const seedBooks = [
+      {
+        title: "Strawberry Milk Washi Tape Set",
+        author: "Mochi Studios",
+        genre: "Washi Tape",
+        description: "A pack of 3 pastel pink washi tapes featuring retro strawberry milk designs and cherry blossoms. Perfect for journaling and decoration.",
+        price_cents: 599,
+        stock: 25,
+        isbn: "SKU-STW-001",
+        cover_seed: "/images/strawberry_washi.png",
+      },
+      {
+        title: "Cute Bear Weekly Planner",
+        author: "Bunny & Bear",
+        genre: "Planners",
+        description: "An undated weekly planner featuring cute bear illustrations on every page. Smooth 120gsm paper with lay-flat binding.",
+        price_cents: 1250,
+        stock: 15,
+        isbn: "SKU-CBP-002",
+        cover_seed: "/images/bear_planner.png",
+      },
+      {
+        title: "Fluffy Peach Pencil Case",
+        author: "Haru Goods",
+        genre: "Pencil Cases",
+        description: "A soft, plush pencil case in the shape of a happy peach. Spacious enough for all your pens with a cute custom zipper pull.",
+        price_cents: 899,
+        stock: 18,
+        isbn: "SKU-FPC-003",
+        cover_seed: "/images/peach_case.png",
+      },
+      {
+        title: "Boba Tea Gel Pen Pack",
+        author: "Bunny & Bear",
+        genre: "Pens",
+        description: "A set of 4 black gel ink pens with adorable miniature boba bubble tea charms dangling from the caps. 0.5mm fine point.",
+        price_cents: 799,
+        stock: 12,
+        isbn: "SKU-BGP-004",
+        cover_seed: "/images/boba_pens.png",
+      },
+      {
+        title: "Pastel Tulip Aesthetic Notebook",
+        author: "Haru Goods",
+        genre: "Notebooks",
+        description: "A grid-ruled notebook with a dreamy pastel tulip cover. Includes high-quality paper, ideal for scrapbooking and bullet journals.",
+        price_cents: 650,
+        stock: 22,
+        isbn: "SKU-PTN-005",
+        cover_seed: "/images/tulip_notebook.png",
+      },
+      {
+        title: "Shiba Inu Sticky Notes",
+        author: "Mochi Studios",
+        genre: "Sticky Notes",
+        description: "A pad of 50 self-adhesive sticky notes with an adorable smiling Shiba Inu checking in on your daily goals.",
+        price_cents: 299,
+        stock: 40,
+        isbn: "SKU-SIS-006",
+        cover_seed: "/images/shiba_notes.png",
+      },
+      {
+        title: "Retro Soda Acrylic Keyring",
+        author: "Mochi Studios",
+        genre: "Accessories",
+        description: "A cute acrylic charm keyring of a retro melon soda float. Decorate your backpack, airpod case, or pencil pouch.",
+        price_cents: 600,
+        stock: 10,
+        isbn: "SKU-RSA-007",
+        cover_seed: "/images/soda_keyring.png",
+      },
+      {
+        title: "Happy Cloud Desk Organizer",
+        author: "Haru Goods",
+        genre: "Desk Decor",
+        description: "A small, pastel-colored desk tidy shaped like a fluffy cloud, perfect for organizing your markers and memo pads.",
+        price_cents: 1499,
+        stock: 8,
+        isbn: "SKU-HCD-008",
+        cover_seed: "/images/cloud_organizer.png",
+      },
+      {
+        title: "Cherry Blossom Writing Set",
+        author: "Kyoto Petals",
+        genre: "Accessories",
+        description: "Traditional writing set with 10 cherry blossom patterned sheets and 5 matching envelopes. Delicate texture.",
+        price_cents: 499,
+        stock: 15,
+        isbn: "SKU-CBW-009",
+        cover_seed: "/images/cherry_letters.png",
+      },
+      {
+        title: "Cat Paw Correction Tape",
+        author: "Neko Stationery",
+        genre: "Accessories",
+        description: "Correction tape in a super cute cat-paw shaped dispenser. Compact, easy to hold, and leaves a neat white strip.",
+        price_cents: 350,
+        stock: 30,
+        isbn: "SKU-CPC-010",
+        cover_seed: "/images/cat_paw_tape.png",
+      },
+    ];
+
+    for (const b of seedBooks) {
+      await sql`
           INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed)
           VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${b.cover_seed})
         `;
-      }
-      console.log("Database books seeding completed.");
     }
+    console.log("Database books seeding completed.");
+  }
 
-    // Always ensure the demo admin account is seeded
-    const adminExists = await sql`SELECT id FROM users WHERE email = 'admin@notebloom.shop'`;
-    if (adminExists.length === 0) {
-      console.log("Seeding demo admin account...");
-      const adminHash = bcrypt.hashSync("notebloom123", 10);
-      await sql`
+  // Always ensure the demo admin account is seeded
+  const adminExists = await sql`SELECT id FROM users WHERE email = 'admin@notebloom.shop'`;
+  if (adminExists.length === 0) {
+    console.log("Seeding demo admin account...");
+    const adminHash = bcrypt.hashSync("notebloom123", 10);
+    await sql`
         INSERT INTO users (name, email, password_hash, is_admin)
         VALUES ('Notebloom Admin', 'admin@notebloom.shop', ${adminHash}, 1)
         ON CONFLICT (email) DO NOTHING
       `;
-      console.log("Demo admin account seeded.");
-    }
-  } catch (error) {
-    console.error("Error seeding database:", error);
+    console.log("Demo admin account seeded.");
   }
+} catch (error) {
+  console.error("Error seeding database:", error);
+}
 }
 
 // Kick off seeding in the background
@@ -575,9 +595,10 @@ export async function placeOrder(
   try {
     const result = await sql.begin(async (sql) => {
       // 1. Create order (Default COD orders to 'Pending')
+      const orderCode = "NB-" + crypto.randomBytes(4).toString("hex").toUpperCase();
       const orderResult = await sql`
-        INSERT INTO orders (user_id, total_cents, status, shipping_json, payment_method) 
-        VALUES (${userId}, ${total}, 'Pending', ${shippingJson}, ${paymentMethod})
+        INSERT INTO orders (user_id, total_cents, status, shipping_json, payment_method, order_code) 
+        VALUES (${userId}, ${total}, 'Pending', ${shippingJson}, ${paymentMethod}, ${orderCode})
         RETURNING id
       `;
       const orderId = orderResult[0].id;
@@ -682,14 +703,14 @@ export async function hasUserPurchasedBook(userId: number, bookId: number): Prom
 export async function checkAndIncrementOtpRateLimit(email: string): Promise<{ allowed: boolean; remaining: number; resetInMinutes: number }> {
   const trimmedEmail = email.toLowerCase().trim();
   const now = new Date();
-  
+
   // 1. Fetch current limit record
   const result = await sql`
     SELECT attempts, last_attempt_at 
     FROM otp_resend_limits 
     WHERE email = ${trimmedEmail}
   `;
-  
+
   if (result.length === 0) {
     // No record yet, create one
     await sql`
@@ -700,12 +721,12 @@ export async function checkAndIncrementOtpRateLimit(email: string): Promise<{ al
     `;
     return { allowed: true, remaining: 2, resetInMinutes: 10 };
   }
-  
+
   const record = result[0];
   const lastAttemptAt = new Date(record.last_attempt_at);
   const diffMs = now.getTime() - lastAttemptAt.getTime();
   const diffMinutes = diffMs / (1000 * 60);
-  
+
   if (diffMinutes >= 10) {
     // Window has expired, reset attempts
     await sql`
@@ -715,13 +736,13 @@ export async function checkAndIncrementOtpRateLimit(email: string): Promise<{ al
     `;
     return { allowed: true, remaining: 2, resetInMinutes: 10 };
   }
-  
+
   if (record.attempts >= 3) {
     // Over the limit
     const remainingTime = Math.ceil(10 - diffMinutes);
     return { allowed: false, remaining: 0, resetInMinutes: remainingTime };
   }
-  
+
   // Increment attempts
   const newAttempts = record.attempts + 1;
   await sql`
@@ -729,7 +750,7 @@ export async function checkAndIncrementOtpRateLimit(email: string): Promise<{ al
     SET attempts = ${newAttempts}, last_attempt_at = ${now}
     WHERE email = ${trimmedEmail}
   `;
-  
+
   return { allowed: true, remaining: 3 - newAttempts, resetInMinutes: Math.ceil(10 - diffMinutes) };
 }
 
@@ -770,12 +791,12 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
       // Transitioning TO Shipped/Delivered: Decrement stock
       for (const item of items) {
         if (!item.book_id) continue;
-        
+
         // Fetch current book stock
         const bookResult = await sql`SELECT stock FROM books WHERE id = ${item.book_id}`;
         if (bookResult.length === 0) continue;
         const currentStock = bookResult[0].stock;
-        
+
         if (currentStock < item.quantity) {
           throw new Error(`Insufficient stock for "${item.title}". Available: ${currentStock}, Required: ${item.quantity}.`);
         }
@@ -791,7 +812,7 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
       // Transitioning FROM Shipped/Delivered: Restore stock
       for (const item of items) {
         if (!item.book_id) continue;
-        
+
         // Increment stock back
         await sql`
           UPDATE books 

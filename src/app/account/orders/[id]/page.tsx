@@ -8,7 +8,6 @@ import { cookies } from "next/headers";
 import Confetti from "@/components/Confetti";
 import CancelOrderButton from "@/components/CancelOrderButton";
 import SaveGuestOrder from "@/components/SaveGuestOrder";
-import GuestOrderNumber from "@/components/GuestOrderNumber";
 
 export default async function OrderDetailPage({
   params,
@@ -28,27 +27,19 @@ export default async function OrderDetailPage({
   const hasGuestAccess = cookieStore.get(`guest_order_access_${orderId}`)?.value === "true";
 
   let order;
-  let userOrderNumber: number | null = null;
-  const isGuest = !session?.user?.id;
 
   if (session?.user?.id) {
     const userOrders = await getOrdersForUser(Number(session.user.id));
     order = userOrders.find((o) => o.id === orderId);
-    if (order) {
-      const sorted = [...userOrders].sort(
-        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-      userOrderNumber = sorted.findIndex((o) => o.id === orderId) + 1;
-    }
   } else if (hasGuestAccess) {
     order = await getOrder(orderId);
   }
 
-  if (!order) {
-    redirect("/login");
-  }
+  if (!order) redirect("/login");
 
+  const isGuest = !session?.user?.id;
   const items = await getOrderItems(orderId);
+  const orderCode = (order as any).order_code ?? `#${order.id}`;
 
   const statusConfig: Record<string, { color: string; bg: string; icon: string; heading: string }> = {
     Pending: { color: "text-amber-700", bg: "bg-amber-100", icon: "⏳", heading: "We've received your order!" },
@@ -61,18 +52,6 @@ export default async function OrderDetailPage({
 
   const cfg = statusConfig[order.status] || statusConfig.Pending;
 
-  // Determine order label
-  let orderLabel: React.ReactNode;
-  if (session?.user?.isAdmin) {
-    orderLabel = `Order #${order.id}`;
-  } else if (userOrderNumber) {
-    orderLabel = `Your order #${userOrderNumber}`;
-  } else if (isGuest) {
-    orderLabel = <GuestOrderNumber orderId={orderId} />;
-  } else {
-    orderLabel = `Order #${order.id}`;
-  }
-
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
       {showConfetti && <Confetti />}
@@ -84,7 +63,7 @@ export default async function OrderDetailPage({
           className="text-xs tracking-[0.22em] uppercase text-oxblood mb-2"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
-          {orderLabel}
+          Order {orderCode}
         </p>
         <h1
           className="text-3xl"
@@ -111,7 +90,6 @@ export default async function OrderDetailPage({
         </div>
       </div>
 
-      {/* Pending — call confirmation */}
       {order.status === "Pending" && (
         <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-5">
           <div className="flex items-start gap-3">
@@ -121,8 +99,7 @@ export default async function OrderDetailPage({
                 We'll be in touch soon!
               </p>
               <p className="text-sm text-amber-800 leading-relaxed">
-                Our team will give you a call shortly to confirm your order and arrange delivery.
-                Please keep your phone handy.
+                Our team will give you a call shortly to confirm your order and arrange delivery. Please keep your phone handy.
               </p>
               <p className="text-xs text-amber-600 mt-2">
                 If you don't hear from us within 24 hours, feel free to reach out to us directly.
@@ -135,7 +112,6 @@ export default async function OrderDetailPage({
         </div>
       )}
 
-      {/* Confirmed banner */}
       {order.status === "Confirmed" && (
         <div className="mb-8 rounded-lg border border-emerald-200 bg-emerald-50 p-5">
           <div className="flex items-start gap-3">
@@ -152,7 +128,6 @@ export default async function OrderDetailPage({
         </div>
       )}
 
-      {/* Cancelled banner */}
       {order.status === "Cancelled" && (
         <div className="mb-8 rounded-lg border border-red-200 bg-red-50 p-5">
           <div className="flex items-start gap-3">
@@ -169,7 +144,6 @@ export default async function OrderDetailPage({
         </div>
       )}
 
-      {/* Order items */}
       <ul className="divide-y divide-ink/10 mb-8">
         {items.map((item) => (
           <li key={item.id} className="py-4 flex gap-4">
