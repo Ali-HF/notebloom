@@ -16,7 +16,6 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
-  // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -46,10 +45,10 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
         onClick={closeMenu}
       />
 
-      {/* Drawer — always in DOM, slides in/out */}
+      {/* Drawer */}
       <div
         className={`fixed top-0 right-0 z-[60] h-full w-72 max-w-[85vw] bg-[#faf6ec]
-                    shadow-2xl border-l border-ink/10 flex flex-col overflow-y-auto
+                    shadow-2xl border-l border-ink/10 flex flex-col
                     transition-transform duration-300 ease-in-out
                     ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
