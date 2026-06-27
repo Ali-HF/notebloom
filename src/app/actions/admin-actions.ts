@@ -2,7 +2,6 @@
 
 import path from "path";
 import crypto from "crypto";
-import sharp from "sharp";
 import { put } from "@vercel/blob";
 
 import { revalidatePath } from "next/cache";
@@ -43,12 +42,8 @@ async function processUpload(file: any, fieldName: string, titleSlug: string): P
   const slug = titleSlug.replace(/\s+/g, "-").toLowerCase();
   const filename = `${slug}-${crypto.randomUUID()}${ext}`;
 
-  // Resize with sharp
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const resized = await sharp(buffer).resize({ width: 800, withoutEnlargement: true }).toBuffer();
-
-  // Upload to Vercel Blob
-  const blob = await put(`uploads/${filename}`, resized, { access: "public" });
+  // Upload directly without sharp resize (avoids SharedArrayBuffer restriction on Vercel)
+  const blob = await put(`uploads/${filename}`, file, { access: "public" });
   return blob.url;
 }
 
@@ -155,7 +150,7 @@ export async function updateOrderStatusAction(orderId: number, formData: FormDat
     if (order) {
       const items = await getOrderItems(orderId);
       const shipping = order.shipping_json ? JSON.parse(order.shipping_json) : {};
-      
+
       const email = order.user_email || shipping.email || "";
       const customerName = shipping.fullName || order.user_name || "Customer";
 
