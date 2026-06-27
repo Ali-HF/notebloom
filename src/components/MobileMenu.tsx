@@ -7,10 +7,9 @@ import { GENRES } from "@/lib/constants";
 
 type MobileMenuProps = {
   session: any;
-  count: number;
 };
 
-export default function MobileMenu({ session, count }: MobileMenuProps) {
+export default function MobileMenu({ session }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -97,19 +96,6 @@ export default function MobileMenu({ session, count }: MobileMenuProps) {
               className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
               <span>MY ORDERS</span>
               <span className="text-ink/30 text-xs">→</span>
-            </Link>
-
-            <Link href="/cart" onClick={closeMenu}
-              className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-              <span>CART</span>
-              <div className="flex items-center gap-2">
-                {count > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full bg-oxblood text-cream text-[10px] px-1.5 font-bold">
-                    {count}
-                  </span>
-                )}
-                <span className="text-ink/30 text-xs">→</span>
-              </div>
             </Link>
 
             {session?.user ? (
