@@ -122,14 +122,13 @@ export async function seedIfEmpty() {
     if (!tableExists[0].exists) {
       await sql`
         CREATE TABLE otp_resend_limits (
-          email VARCHAR(255) PRIMARY KEY,
-          attempts INT DEFAULT 0,
-          last_attempt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          id SERIAL PRIMARY KEY,
+          email TEXT NOT NULL,
+          last_otp_sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          request_count INT DEFAULT 1
         )
       `;
     }
-
-  }
 
     // Migrate: add order_code column if it doesn't exist
     const orderCodeExists = await sql`
@@ -138,23 +137,23 @@ export async function seedIfEmpty() {
         WHERE table_name = 'orders' AND column_name = 'order_code'
       )
     `;
-  if (!orderCodeExists[0].exists) {
-    await sql`ALTER TABLE orders ADD COLUMN order_code TEXT`;
-    const existingOrders = await sql`SELECT id FROM orders WHERE order_code IS NULL`;
-    for (const o of existingOrders) {
-      const code = "NB-" + crypto.randomBytes(4).toString("hex").toUpperCase();
-      await sql`UPDATE orders SET order_code = ${code} WHERE id = ${o.id}`;
+    if (!orderCodeExists[0].exists) {
+      await sql`ALTER TABLE orders ADD COLUMN order_code TEXT`;
+      const existingOrders = await sql`SELECT id FROM orders WHERE order_code IS NULL`;
+      for (const o of existingOrders) {
+        const code = "NB-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+        await sql`UPDATE orders SET order_code = ${code} WHERE id = ${o.id}`;
+      }
+      await sql`ALTER TABLE orders ADD CONSTRAINT orders_order_code_unique UNIQUE (order_code)`;
     }
-    await sql`ALTER TABLE orders ADD CONSTRAINT orders_order_code_unique UNIQUE (order_code)`;
-  }
 
-  const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
-  const count = countResult[0]?.c ?? 0;
+    const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
+    const count = countResult[0]?.c ?? 0;
 
-  if (count === 0) {
-    console.log("Seeding Supabase Postgres database with initial stationery products...");
+    if (count === 0) {
+      console.log("Seeding Supabase Postgres database with initial stationery products...");
 
-    const seedBooks = [
+      const seedBooks = [
       {
         title: "Strawberry Milk Washi Tape Set",
         author: "Mochi Studios",
@@ -264,23 +263,23 @@ export async function seedIfEmpty() {
         `;
     }
     console.log("Database books seeding completed.");
-  }
+    }
 
-  // Always ensure the demo admin account is seeded
-  const adminExists = await sql`SELECT id FROM users WHERE email = 'admin@notebloom.shop'`;
-  if (adminExists.length === 0) {
-    console.log("Seeding demo admin account...");
-    const adminHash = bcrypt.hashSync("notebloom123", 10);
-    await sql`
+    // Always ensure the demo admin account is seeded
+    const adminExists = await sql`SELECT id FROM users WHERE email = 'admin@notebloom.shop'`;
+    if (adminExists.length === 0) {
+      console.log("Seeding demo admin account...");
+      const adminHash = bcrypt.hashSync("notebloom123", 10);
+      await sql`
         INSERT INTO users (name, email, password_hash, is_admin)
         VALUES ('Notebloom Admin', 'admin@notebloom.shop', ${adminHash}, 1)
         ON CONFLICT (email) DO NOTHING
       `;
-    console.log("Demo admin account seeded.");
+      console.log("Demo admin account seeded.");
+    }
+  } catch (error) {
+    console.error("Error seeding database:", error);
   }
-} catch (error) {
-  console.error("Error seeding database:", error);
-}
 }
 
 // Kick off seeding in the background
