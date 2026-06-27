@@ -31,14 +31,14 @@ export default function MobileMenu({ session }: MobileMenuProps) {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 bg-[#221d18]/50 backdrop-blur-sm"
+          className="sm:hidden fixed inset-0 z-50 bg-[#221d18]/50 backdrop-blur-sm"
           onClick={closeMenu}
         />
       )}
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 z-[60] h-screen w-80 max-w-[90vw] bg-[#faf6ec]
+        className={`sm:hidden fixed top-0 right-0 z-[60] h-screen w-80 max-w-[90vw] bg-[#faf6ec]
                     shadow-2xl border-l border-ink/10 flex flex-col
                     transition-transform duration-300 ease-in-out
                     ${isOpen ? "translate-x-0" : "translate-x-full"}`}
