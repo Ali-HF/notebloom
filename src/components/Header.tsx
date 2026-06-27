@@ -92,6 +92,17 @@ export default async function Header() {
               </Link>
             )}
 
+            {/* Cart icon — mobile only */}
+            <Link href="/cart" className="relative sm:hidden flex items-center" aria-label="Cart">
+              <CartIcon />
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 inline-flex items-center justify-center
+                     min-w-[16px] h-[16px] rounded-full bg-oxblood text-cream text-[10px] px-1">
+                  {count}
+                </span>
+              )}
+            </Link>
+
             <MobileMenu session={session} />
           </nav>
         </div>
