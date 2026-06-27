@@ -8,7 +8,7 @@ import MobileMenu from "./MobileMenu";
 
 export default async function Header() {
   const session = await auth();
-  
+
   let count = 0;
   if (session?.user?.id) {
     count = await cartCount(Number(session.user.id));
@@ -92,7 +92,7 @@ export default async function Header() {
               </Link>
             )}
 
-            <MobileMenu session={session} count={count} />
+            <MobileMenu session={session} />
           </nav>
         </div>
       </div>
