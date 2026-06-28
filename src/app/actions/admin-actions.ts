@@ -154,6 +154,8 @@ export async function updateOrderStatusAction(orderId: number, formData: FormDat
       const email = order.user_email || shipping.email || "";
       const customerName = shipping.fullName || order.user_name || "Customer";
 
+      console.log(`[EMAIL DEBUG] orderId=${orderId} status=${status} email="${email}" shipping_keys=${Object.keys(shipping).join(",")} user_email="${order.user_email}"`);
+
       if (email) {
         if (status === "Shipped") {
           await sendOrderShippedEmail(email, orderId, customerName, items, order.total_cents, {
