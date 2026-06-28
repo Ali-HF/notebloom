@@ -59,7 +59,7 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
           </button>
         </div>
 
-        {/* Scrollable content */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col">
 
           {/* Search */}
@@ -82,6 +82,7 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
 
           {/* Nav */}
           <nav className="flex flex-col" style={{ fontFamily: "var(--font-stamp)" }}>
+
             <Link href="/shop" onClick={closeMenu}
               className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
               <span>SHOP ALL</span><span className="text-ink/30 text-xs">→</span>
@@ -92,50 +93,44 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
               <span>MY ORDERS</span><span className="text-ink/30 text-xs">→</span>
             </Link>
 
-            {session?.user ? (
-              <>
-                <Link href="/account" onClick={closeMenu}
-                  className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>MY ACCOUNT</span><span className="text-ink/30 text-xs">→</span>
-                </Link>
-                {session.user.isAdmin && (
-                  <Link href="/admin" onClick={closeMenu}
-                    className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                    <span>ADMIN PANEL</span><span className="text-ink/30 text-xs">→</span>
-                  </Link>
-                )}
-              </>
+            {session?.user?.isAdmin ? (
+              <Link href="/admin" onClick={closeMenu}
+                className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
+                <span>ADMIN PANEL</span><span className="text-ink/30 text-xs">→</span>
+              </Link>
             ) : (
-              <>
-                <Link href="/login" onClick={closeMenu}
-                  className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>LOG IN</span><span className="text-ink/30 text-xs">→</span>
-                </Link>
-                <Link href="/signup" onClick={closeMenu}
-                  className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                  <span>SIGN UP</span><span className="text-ink/30 text-xs">→</span>
-                </Link>
-              </>
+              <Link href="/login?next=/admin" onClick={closeMenu}
+                className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink-soft/50 hover:text-oxblood transition-colors">
+                <span>ADMIN</span><span className="text-ink/20 text-xs">→</span>
+              </Link>
             )}
 
             {/* Categories */}
             <div className="mt-5">
-              <p className="text-[10px] font-bold tracking-widest text-ink-soft uppercase mb-3">Shop by Category</p>
+              <p className="text-[10px] font-bold tracking-widest text-ink-soft uppercase mb-3">
+                Shop by Category
+              </p>
               {GENRES.map((g) => (
-                <Link key={g} href={`/shop?genre=${encodeURIComponent(g)}`} onClick={closeMenu}
-                  className="flex items-center justify-between py-2.5 border-b border-ink/5 text-sm text-ink hover:text-oxblood transition-colors">
-                  <span>{g}</span><span className="text-ink/25 text-xs">→</span>
+                <Link
+                  key={g}
+                  href={`/shop?genre=${encodeURIComponent(g)}`}
+                  onClick={closeMenu}
+                  className="flex items-center justify-between py-2.5 border-b border-ink/5 text-sm text-ink hover:text-oxblood transition-colors"
+                >
+                  <span>{g}</span>
+                  <span className="text-ink/25 text-xs">→</span>
                 </Link>
               ))}
             </div>
           </nav>
         </div>
 
-        {/* Log out pinned to bottom */}
-        {session?.user && (
+        {/* Log out — only if admin is logged in */}
+        {session?.user?.isAdmin && (
           <div className="px-6 py-5 border-t border-ink/10 shrink-0">
             <form action={logoutAction}>
-              <button type="submit"
+              <button
+                type="submit"
                 className="w-full py-2.5 px-4 rounded-full border border-oxblood/30 text-oxblood
                            hover:bg-oxblood hover:text-cream transition-all text-sm font-semibold
                            flex items-center justify-center gap-2 cursor-pointer bg-transparent"
