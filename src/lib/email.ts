@@ -1,94 +1,47 @@
 /**
- * Utility to send email notifications via Nodemailer SMTP or Resend API
+ * Utility to send email notifications via Brevo API
  */
-import nodemailer from "nodemailer";
 import { type CartRow, type OrderItem } from "./db";
 
-let transporter: nodemailer.Transporter | null = null;
-
-function getTransporter() {
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPassword = process.env.SMTP_PASSWORD;
-
-  if (!transporter && smtpUser && smtpPassword) {
-    transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: smtpUser,
-        pass: smtpPassword,
-      },
-    });
-  }
-  return transporter;
-}
-
 export async function sendEmailNotification(to: string, subject: string, htmlContent: string): Promise<boolean> {
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPassword = process.env.SMTP_PASSWORD;
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || "notebloom@gmail.com";
+  const senderName = process.env.BREVO_SENDER_NAME || "Notebloom";
 
-  if (smtpUser && smtpPassword) {
-    try {
-      const mailTransporter = getTransporter();
-      if (!mailTransporter) {
-        throw new Error("Failed to initialize Nodemailer transporter");
-      }
-
-      await mailTransporter.sendMail({
-        from: `"Notebloom" <${smtpUser}>`,
-        to: to,
-        subject: subject,
-        html: htmlContent,
-      });
-
-      console.log(`Email successfully sent to ${to} via Gmail SMTP.`);
-      return true;
-    } catch (error) {
-      console.error("Failed to send email via Gmail SMTP:", error);
-      return false;
-    }
-  }
-
-  const apiKey = process.env.RESEND_API_KEY;
-  const isPlaceholder = !apiKey || apiKey.startsWith("re_xxxx") || apiKey === "";
-
-  if (isPlaceholder) {
-    console.log("\n--- SIMULATED EMAIL NOTIFICATION (RESEND/SMTP NOT CONFIGURED) ---");
+  if (!apiKey) {
+    console.log("\n--- SIMULATED EMAIL (BREVO NOT CONFIGURED) ---");
     console.log(`To:      ${to}`);
     console.log(`Subject: ${subject}`);
-    console.log("Content:");
-    console.log(htmlContent);
-    console.log("----------------------------------------------------------------\n");
+    console.log("----------------------------------------------\n");
     return true;
   }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "api-key": apiKey,
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        from: "Notebloom <onboarding@resend.dev>",
-        to: to,
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: to }],
         subject: subject,
-        html: htmlContent,
+        htmlContent: htmlContent,
       }),
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error(`Resend API Error: status=${res.status}, response=${errText}`);
+      console.error(`Brevo API Error: status=${res.status}, response=${errText}`);
       return false;
     }
 
-    const data = await res.json();
-    console.log(`Email successfully sent to ${to} via Resend. ID: ${data.id}`);
+    console.log(`Email successfully sent to ${to} via Brevo.`);
     return true;
   } catch (error) {
-    console.error("Failed to send email via Resend:", error);
+    console.error("Failed to send email via Brevo:", error);
     return false;
   }
 }
@@ -677,7 +630,7 @@ export async function sendOrderDeliveredEmail(
   items: OrderItem[]
 ): Promise<boolean> {
   const baseUrl = getBaseUrl();
-  
+
   // Create review links for each item
   const itemsListHtml = items
     .map(
