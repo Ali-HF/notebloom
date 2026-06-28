@@ -56,41 +56,37 @@ export default async function Header() {
               MY ORDERS
             </Link>
 
-            {/* Cart — desktop only; mobile version is inside the hamburger drawer */}
+            {/* Cart — desktop */}
             <Link href="/cart" className="trail-link relative hidden sm:flex items-center gap-1.5" aria-label="Cart">
               <CartIcon />
               <span className="hidden sm:inline">CART</span>
               {count > 0 && (
-                <span
-                  className="absolute -top-2 -right-3 sm:static sm:-mt-0 inline-flex items-center justify-center
-                             min-w-[18px] h-[18px] rounded-full bg-oxblood text-cream text-[10px] px-1"
-                >
+                <span className="absolute -top-2 -right-3 sm:static sm:-mt-0 inline-flex items-center justify-center
+                                 min-w-[18px] h-[18px] rounded-full bg-oxblood text-cream text-[10px] px-1">
                   {count}
                 </span>
               )}
             </Link>
 
-            {session?.user ? (
-              <div className="hidden sm:flex items-center gap-4">
-                {session.user.isAdmin && (
+            {/* Admin section — desktop */}
+            <div className="hidden sm:flex items-center gap-4">
+              {session?.user?.isAdmin ? (
+                <>
                   <Link href="/admin" className="trail-link">
                     ADMIN
                   </Link>
-                )}
-                <Link href="/account" className="trail-link">
-                  ACCOUNT
+                  <form action={logoutAction}>
+                    <button type="submit" className="trail-link cursor-pointer">
+                      LOG OUT
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <Link href="/login?next=/admin" className="trail-link text-ink-soft/60 hover:text-ink transition-colors text-xs">
+                  ADMIN
                 </Link>
-                <form action={logoutAction}>
-                  <button type="submit" className="trail-link cursor-pointer">
-                    LOG OUT
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <Link href="/login" className="trail-link hidden sm:inline">
-                LOG IN
-              </Link>
-            )}
+              )}
+            </div>
 
             {/* Cart icon — mobile only */}
             <Link href="/cart" className="relative sm:hidden flex items-center" aria-label="Cart">
