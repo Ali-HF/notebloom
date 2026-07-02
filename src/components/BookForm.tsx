@@ -15,43 +15,81 @@ export default function BookForm({
   submitLabel: string;
 }) {
   const [state, formAction, isPending] = useActionState(action, undefined);
-  // State for image previews and errors
-  const [primaryPreview, setPrimaryPreview] = useState<string | null>(null);
-  const [primaryError, setPrimaryError] = useState<string | null>(null);
-  const [secondaryPreview, setSecondaryPreview] = useState<string | null>(null);
-  const primaryInputRef = useRef<HTMLInputElement>(null);
-  const secondaryInputRef = useRef<HTMLInputElement>(null);
-  const [secondaryError, setSecondaryError] = useState<string | null>(null);
 
-  // Helper to validate and preview uploaded files
-  const handleFileUpload = (fieldName: string, setPreview: (url: string | null) => void, setError: (msg: string | null) => void) => {
-    const input = document.querySelector(`input[name="${fieldName}"]`) as HTMLInputElement;
-    if (!input?.files?.[0]) {
-      setError("Please select a file.");
-      return;
-    }
-    const file = input.files[0];
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowed.includes(file.type)) {
-      setError("File must be JPG, PNG, or WEBP.");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setError("File must be smaller than 2 MB.");
-      return;
-    }
-    setError(null);
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    // Clear any existing URL text fields so the uploaded file takes precedence
-    if (fieldName === "cover_file") {
-      const primary = document.querySelector('input[name="cover_seed"]') as HTMLInputElement;
-      if (primary) primary.value = "";
-    } else if (fieldName === "cover_file_2") {
-      const secondary = document.querySelector('input[name="cover_seed_2"]') as HTMLInputElement;
-      if (secondary) secondary.value = "";
-    }
+  // Parse color images array from initial data
+  type ColorImageItem = {
+    id: string;
+    url?: string;
+    file?: File;
+    color: string;
+    previewUrl?: string;
   };
+
+  const parsedColorImages: ColorImageItem[] = [];
+  if (initial?.color_images) {
+    try {
+      const arr = JSON.parse(initial.color_images);
+      if (Array.isArray(arr)) {
+        arr.forEach((item, idx) => {
+          parsedColorImages.push({
+            id: `existing_${idx}`,
+            url: item.url,
+            color: item.color,
+            previewUrl: item.url
+          });
+        });
+      }
+    } catch (e) {
+      console.error("Failed to parse color_images JSON:", e);
+    }
+  }
+
+  // Backwards compatibility fallback: if color_images is empty, read cover_seed and cover_seed_2
+  if (parsedColorImages.length === 0) {
+    if (initial?.cover_seed) {
+      parsedColorImages.push({
+        id: `existing_0`,
+        url: initial.cover_seed,
+        color: "Default",
+        previewUrl: initial.cover_seed
+      });
+    }
+    if (initial?.cover_seed_2) {
+      parsedColorImages.push({
+        id: `existing_1`,
+        url: initial.cover_seed_2,
+        color: "Secondary",
+        previewUrl: initial.cover_seed_2
+      });
+    }
+  }
+
+  const [colorImages, setColorImages] = useState<ColorImageItem[]>(parsedColorImages);
+
+  const addColorImage = () => {
+    setColorImages(p => [
+      ...p,
+      {
+        id: `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        color: "",
+      }
+    ]);
+  };
+
+  const handleColorChange = (id: string, color: string) => {
+    setColorImages(p => p.map(item => item.id === id ? { ...item, color } : item));
+  };
+
+  const handleFileChange = (id: string, file: File | null) => {
+    if (!file) return;
+    const previewUrl = URL.createObjectURL(file);
+    setColorImages(p => p.map(item => item.id === id ? { ...item, file, previewUrl } : item));
+  };
+
+  const deleteColorImage = (id: string) => {
+    setColorImages(p => p.filter(item => item.id !== id));
+  };
+
   return (
     <form action={formAction} encType="multipart/form-data" className="space-y-5 max-w-xl">
       <Field label="Product Name" name="title" defaultValue={initial?.title} required />
@@ -125,93 +163,113 @@ export default function BookForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Field
-            label="Primary Image URL"
-            name="cover_seed"
-            defaultValue={initial?.cover_seed}
-            placeholder="e.g. /images/peach_case.png"
-          />
-        </div>
-        <div>
-          <Field
-            label="Secondary Image URL"
-            name="cover_seed_2"
-            defaultValue={initial?.cover_seed_2 || ""}
-            placeholder="e.g. /images/peach_case_2.png"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2 rounded-md border border-ink/10 p-4">
-          <label className="text-xs tracking-[0.18em] uppercase text-ink-soft block mb-1.5" style={{ fontFamily: "var(--font-stamp)" }} htmlFor="cover_file">
-            Upload Primary Image (max 2MB)
-          </label>
-          <input
-            type="file"
-            id="cover_file"
-            name="cover_file"
-            accept="image/jpeg, image/png, image/webp"
-            className="w-full text-sm text-ink"
-            ref={primaryInputRef}
-            onChange={() => handleFileUpload('cover_file', setPrimaryPreview, setPrimaryError)}
-          />
+      {/* Color Images Management Section */}
+      <div className="space-y-4 rounded-xl border border-ink/10 p-5 bg-parchment/30">
+        <div className="flex justify-between items-center border-b border-ink/10 pb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-ink uppercase tracking-wider" style={{ fontFamily: "var(--font-stamp)" }}>
+              Product Color Images
+            </h3>
+            <p className="text-[11px] text-ink-soft mt-0.5">Upload images and specify their corresponding color family.</p>
+          </div>
           <button
             type="button"
-            className="mt-2 px-4 py-2 rounded-md bg-oxblood text-cream hover:bg-oxblood-dark transition-colors text-xs uppercase tracking-wider cursor-pointer"
+            onClick={addColorImage}
+            className="px-3.5 py-1.5 rounded-full bg-moss text-cream hover:bg-moss-dark transition-all text-xs uppercase tracking-wider cursor-pointer font-medium"
             style={{ fontFamily: "var(--font-stamp)" }}
-            onClick={() => {
-              console.log('Primary upload button clicked');
-              primaryInputRef.current?.click();
-            }}
           >
-            Upload Primary Image
+            + Add Color
           </button>
-          {primaryError && <p className="text-sm text-oxblood mt-1">{primaryError}</p>}
-          {primaryPreview && (
-            <img src={primaryPreview} alt="Primary preview" className="mt-2 max-h-48 rounded object-contain border border-ink/10" />
-          )}
         </div>
-        <div className="space-y-2 rounded-md border border-ink/10 p-4">
-          <label className="text-xs tracking-[0.18em] uppercase text-ink-soft block mb-1.5" style={{ fontFamily: "var(--font-stamp)" }} htmlFor="cover_file_2">
-            Upload Secondary Image (max 2MB)
-          </label>
-          <input
-            type="file"
-            id="cover_file_2"
-            name="cover_file_2"
-            accept="image/jpeg, image/png, image/webp"
-            className="w-full text-sm text-ink"
-            ref={secondaryInputRef}
-            onChange={() => handleFileUpload('cover_file_2', setSecondaryPreview, setSecondaryError)}
-          />
-          <button
-            type="button"
-            className="mt-2 px-4 py-2 rounded-md bg-oxblood text-cream hover:bg-oxblood-dark transition-colors text-xs uppercase tracking-wider cursor-pointer"
-            style={{ fontFamily: "var(--font-stamp)" }}
-            onClick={() => {
-              console.log('Secondary upload button clicked');
-              secondaryInputRef.current?.click();
-            }}
-          >
-            Upload Secondary Image
-          </button>
-          {secondaryError && <p className="text-sm text-oxblood mt-1">{secondaryError}</p>}
-          {secondaryPreview && (
-            <img src={secondaryPreview} alt="Secondary preview" className="mt-2 max-h-48 rounded object-contain border border-ink/10" />
-          )}
-        </div>
+
+        {/* Hidden inputs to track keys & values for Next Server Action */}
+        <input type="hidden" name="color_image_keys" value={colorImages.map(ci => ci.id).join(",")} />
+
+        {colorImages.length === 0 ? (
+          <p className="text-xs text-ink-soft/70 py-4 text-center italic">No color images added. Add at least one image.</p>
+        ) : (
+          <div className="space-y-4">
+            {colorImages.map((item, idx) => (
+              <div key={item.id} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-cream p-4 rounded-lg border border-ink/5 relative group hover:border-ink/15 transition-all">
+                {/* Preview Thumbnail */}
+                <div className="w-16 h-16 rounded-md bg-parchment border border-ink/10 overflow-hidden shrink-0 flex items-center justify-center relative">
+                  {item.previewUrl ? (
+                    <img src={item.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] text-ink-soft uppercase text-center font-bold" style={{ fontFamily: "var(--font-stamp)" }}>No Image</span>
+                  )}
+                </div>
+
+                {/* Form Inputs */}
+                <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] tracking-wider uppercase text-ink-soft block mb-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                      Color Label
+                    </label>
+                    <input
+                      type="text"
+                      name={`color_image_color_${item.id}`}
+                      value={item.color}
+                      required
+                      placeholder="e.g. Peach, Mint, Lilac"
+                      onChange={(e) => handleColorChange(item.id, e.target.value)}
+                      className="w-full rounded border border-ink/20 bg-cream px-2.5 py-1.5 text-xs focus:border-oxblood transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] tracking-wider uppercase text-ink-soft block mb-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                      Image URL / Path (fallback)
+                    </label>
+                    <input
+                      type="text"
+                      name={`color_image_url_${item.id}`}
+                      value={item.url || ""}
+                      placeholder="e.g. /images/peach_case.png"
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        setColorImages(p => p.map(x => x.id === item.id ? { ...x, url, previewUrl: url } : x));
+                      }}
+                      className="w-full rounded border border-ink/20 bg-cream px-2.5 py-1.5 text-xs focus:border-oxblood transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] tracking-wider uppercase text-ink-soft block mb-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                      Upload Image File (Optional)
+                    </label>
+                    <input
+                      type="file"
+                      name={`color_image_file_${item.id}`}
+                      accept="image/jpeg, image/png, image/webp"
+                      onChange={(e) => handleFileChange(item.id, e.target.files?.[0] || null)}
+                      className="w-full text-xs text-ink file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-oxblood/10 file:text-oxblood hover:file:bg-oxblood/20 file:cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Delete Button */}
+                <button
+                  type="button"
+                  onClick={() => deleteColorImage(item.id)}
+                  className="absolute sm:static right-2 top-2 p-1.5 rounded-full text-oxblood/60 hover:text-oxblood hover:bg-oxblood/10 transition-colors cursor-pointer shrink-0"
+                  aria-label="Delete color image"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {state?.error && <p className="text-sm text-oxblood">{state.error}</p>}
+      {state?.error && <p className="text-sm text-oxblood font-semibold">{state.error}</p>}
 
       <button
         type="submit"
         disabled={isPending}
         className="px-6 py-2.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark
-                   transition-colors text-sm disabled:opacity-60 cursor-pointer"
+                   transition-colors text-sm disabled:opacity-60 cursor-pointer font-semibold uppercase tracking-wider"
         style={{ fontFamily: "var(--font-stamp)" }}
       >
         {isPending ? "SAVING…" : submitLabel}

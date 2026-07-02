@@ -159,7 +159,7 @@ export default async function OrderReceiptPage({
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-ink/10 text-ink">
                   <td className="py-2.5 pr-2 font-medium">
-                    {item.title}
+                    {item.title} {item.color ? `(${item.color})` : ""}
                     <span className="block text-xs font-normal text-ink-soft">{item.author}</span>
                   </td>
                   <td className="py-2.5 text-right" style={{ fontFamily: "var(--font-stamp)" }}>

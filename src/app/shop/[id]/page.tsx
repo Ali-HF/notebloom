@@ -54,6 +54,7 @@ export default async function BookDetailPage({
             genre={book.genre}
             coverSeed={book.cover_seed}
             coverSeed2={book.cover_seed_2}
+            colorImages={book.color_images}
           />
         </div>
 

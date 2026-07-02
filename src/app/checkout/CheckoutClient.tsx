@@ -14,6 +14,7 @@ type CartRow = {
   price_cents: number;
   cover_seed: string;
   stock: number;
+  color_images?: string | null;
 };
 
 type ShippingDetails = {
@@ -42,6 +43,24 @@ export default function CheckoutClient({
   isGuest: boolean;
 }) {
   const [state, formAction, isPending] = useActionState(checkoutAction, undefined);
+
+  // Initialize selected colors for each item
+  const [selectedColors, setSelectedColors] = useState<Record<number, string>>(() => {
+    const initialColors: Record<number, string> = {};
+    items.forEach((item) => {
+      if (item.color_images) {
+        try {
+          const parsed = JSON.parse(item.color_images);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            initialColors[item.book_id] = parsed[0].color;
+          }
+        } catch (e) {
+          console.error("Failed to parse color_images:", e);
+        }
+      }
+    });
+    return initialColors;
+  });
 
   const [form, setForm] = useState({
     fullName: savedShipping?.fullName || "",
@@ -693,26 +712,75 @@ export default function CheckoutClient({
               <div style={s.summaryTitle}>Order Summary</div>
 
               <div className="max-h-[300px] overflow-y-auto pr-1">
-                {items.map((item) => (
-                  <div key={item.id} style={s.summaryItem}>
-                    <div style={s.summaryImg} className="overflow-hidden bg-cream flex items-center justify-center">
-                      <BookCover
-                        title={item.title}
-                        author={item.author}
-                        genre=""
-                        seed={item.cover_seed}
-                        className="w-full h-full object-cover"
+                {items.map((item) => {
+                  let currentSeed = item.cover_seed;
+                  let colorsList: Array<{ url: string; color: string }> = [];
+                  if (item.color_images) {
+                    try {
+                      colorsList = JSON.parse(item.color_images);
+                      const selectedColor = selectedColors[item.book_id];
+                      const found = colorsList.find((ci) => ci.color === selectedColor);
+                      if (found) {
+                        currentSeed = found.url;
+                      }
+                    } catch (e) {}
+                  }
+
+                  return (
+                    <div key={item.id} style={{ ...s.summaryItem, height: "auto", minHeight: "80px", alignItems: "flex-start", padding: "0.75rem 0" }}>
+                      <input
+                        type="hidden"
+                        name={`color_${item.book_id}`}
+                        value={selectedColors[item.book_id] || ""}
                       />
-                    </div>
-                    <div style={s.summaryItemInfo}>
-                      <div style={s.summaryItemName}>
-                        {item.title} {item.quantity > 1 ? `x${item.quantity}` : ""}
+                      <div style={s.summaryImg} className="overflow-hidden bg-cream flex items-center justify-center shrink-0">
+                        <BookCover
+                          title={item.title}
+                          author={item.author}
+                          genre=""
+                          seed={currentSeed}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div style={s.summaryItemSku}>SKU: NB-00{item.book_id}</div>
+                      <div style={s.summaryItemInfo} className="flex-1 min-w-0 pr-2">
+                        <div style={s.summaryItemName} className="truncate">
+                          {item.title} {item.quantity > 1 ? `x${item.quantity}` : ""}
+                        </div>
+                        <div style={s.summaryItemSku}>SKU: NB-00{item.book_id}</div>
+                        
+                        {/* Dynamic Color Selector Pills */}
+                        {colorsList.length > 0 && (
+                          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-[9px] tracking-wider text-ink-soft uppercase block mb-1 font-bold" style={{ fontFamily: "var(--font-stamp)" }}>
+                              Color: {selectedColors[item.book_id] || "None"}
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {colorsList.map((ci) => {
+                                const isSelected = selectedColors[item.book_id] === ci.color;
+                                return (
+                                  <button
+                                    key={ci.color}
+                                    type="button"
+                                    onClick={() => setSelectedColors((prev) => ({ ...prev, [item.book_id]: ci.color }))}
+                                    className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer border ${
+                                      isSelected
+                                        ? "bg-oxblood text-cream border-oxblood shadow-sm scale-105"
+                                        : "bg-cream text-ink-soft border-ink/10 hover:border-ink/30"
+                                    }`}
+                                    style={{ fontFamily: "var(--font-stamp)" }}
+                                  >
+                                    {ci.color}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <span style={s.summaryItemPrice} className="shrink-0">{formatPrice(item.price_cents * item.quantity)}</span>
                     </div>
-                    <span style={s.summaryItemPrice}>{formatPrice(item.price_cents * item.quantity)}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div style={s.promoToggle} onClick={() => set("promoOpen", !form.promoOpen)}>

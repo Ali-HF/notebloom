@@ -33,6 +33,7 @@ export type CartRow = {
   price_cents: number;
   cover_seed: string;
   stock: number;
+  color?: string | null;
 };
 
 export type Order = {
@@ -55,6 +56,7 @@ export type OrderItem = {
   price_cents: number;
   quantity: number;
   cover_seed: string;
+  color?: string | null;
 };
 
 export type Review = {
@@ -349,13 +351,14 @@ export async function checkAndNotifyLowStock(bookId: number): Promise<void> {
 }
 
 export async function createBook(
-  b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2"> & { cover_seed?: string; cover_seed_2?: string | null }
+  b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2" | "color_images"> & { cover_seed?: string; cover_seed_2?: string | null; color_images?: string | null }
 ): Promise<number> {
   const coverSeed = b.cover_seed || (slug(b.title) + "-" + Date.now());
   const coverSeed2 = b.cover_seed_2 || null;
+  const colorImages = b.color_images || "[]";
   const result = await sql`
-    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2)
-    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2})
+    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2, color_images)
+    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2}, ${colorImages})
     RETURNING id
   `;
   return Number(result[0].id);
@@ -363,12 +366,14 @@ export async function createBook(
 
 export async function updateBook(
   id: number,
-  b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2"> & { cover_seed?: string; cover_seed_2?: string | null }
+  b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2" | "color_images"> & { cover_seed?: string; cover_seed_2?: string | null; color_images?: string | null }
 ): Promise<void> {
   await sql`
     UPDATE books 
     SET title=${b.title}, author=${b.author}, description=${b.description}, genre=${b.genre}, price_cents=${b.price_cents}, stock=${b.stock}, isbn=${b.isbn},
-        cover_seed=${b.cover_seed || sql`cover_seed`}, cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`}
+        cover_seed=${b.cover_seed || sql`cover_seed`}, 
+        cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`},
+        color_images=${b.color_images !== undefined ? b.color_images : sql`color_images`}
     WHERE id=${id}
   `;
   checkAndNotifyLowStock(id).catch(console.error);
@@ -525,7 +530,7 @@ export async function getUserSavedShipping(userId: number): Promise<string | nul
 
 export async function getCart(userId: number): Promise<CartRow[]> {
   const result = await sql`
-    SELECT ci.id, ci.book_id, ci.quantity, b.title, b.author, b.price_cents, b.cover_seed, b.stock
+    SELECT ci.id, ci.book_id, ci.quantity, b.title, b.author, b.price_cents, b.cover_seed, b.stock, b.color_images
     FROM cart_items ci JOIN books b ON b.id = ci.book_id
     WHERE ci.user_id = ${userId}
     ORDER BY ci.id DESC
@@ -605,8 +610,8 @@ export async function placeOrder(
       // 2. Add order items & decrement stock
       for (const it of finalItems) {
         await sql`
-          INSERT INTO order_items (order_id, book_id, title, author, price_cents, quantity, cover_seed)
-          VALUES (${orderId}, ${it.book_id}, ${it.title}, ${it.author}, ${it.price_cents}, ${it.quantity}, ${it.cover_seed})
+          INSERT INTO order_items (order_id, book_id, title, author, price_cents, quantity, cover_seed, color)
+          VALUES (${orderId}, ${it.book_id}, ${it.title}, ${it.author}, ${it.price_cents}, ${it.quantity}, ${it.cover_seed}, ${it.color || null})
         `;
         await sql`
           UPDATE books 
@@ -851,6 +856,60 @@ export async function getAdminStats() {
 
 export function formatPrice(cents: number): string {
   return `PKR ${(cents / 100).toFixed(2)}`;
+}
+
+let migrated = false;
+async function runAutoMigration() {
+  if (migrated) return;
+  migrated = true;
+  try {
+    // 1. Add color_images to books table
+    const columnExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'books' AND column_name = 'color_images'
+      )
+    `;
+    if (!columnExists[0].exists) {
+      await sql`ALTER TABLE books ADD COLUMN color_images TEXT;`;
+      console.log("Auto-Migration: added color_images column to books table.");
+    }
+
+    // 2. Add color to order_items table
+    const orderItemColumnExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'order_items' AND column_name = 'color'
+      )
+    `;
+    if (!orderItemColumnExists[0].exists) {
+      await sql`ALTER TABLE order_items ADD COLUMN color TEXT;`;
+      console.log("Auto-Migration: added color column to order_items table.");
+    }
+
+    // 3. Migrate existing books
+    const books = await sql`SELECT id, cover_seed, cover_seed_2, color_images FROM books`;
+    for (const book of books) {
+      if (!book.color_images || book.color_images === "[]") {
+        const list: Array<{ url: string; color: string }> = [];
+        if (book.cover_seed) {
+          list.push({ url: book.cover_seed, color: "Default" });
+        }
+        if (book.cover_seed_2) {
+          list.push({ url: book.cover_seed_2, color: "Secondary" });
+        }
+        const json = JSON.stringify(list);
+        await sql`UPDATE books SET color_images = ${json} WHERE id = ${book.id}`;
+        console.log(`Auto-Migration: Migrated book #${book.id} to use color_images list: ${json}`);
+      }
+    }
+  } catch (err) {
+    console.error("Auto-Migration failed:", err);
+  }
+}
+
+if (connectionString) {
+  runAutoMigration().catch(console.error);
 }
 
 export default sql;

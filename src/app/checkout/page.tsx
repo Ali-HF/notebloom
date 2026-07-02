@@ -34,7 +34,8 @@ export default async function CheckoutPage() {
                 author: book.author,
                 price_cents: book.price_cents,
                 cover_seed: book.cover_seed,
-                stock: book.stock
+                stock: book.stock,
+                color_images: book.color_images
               });
             }
           }

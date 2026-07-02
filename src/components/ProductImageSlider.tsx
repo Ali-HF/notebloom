@@ -10,6 +10,7 @@ type ProductImageSliderProps = {
   genre: string;
   coverSeed: string;
   coverSeed2?: string | null;
+  colorImages?: string | null;
 };
 
 function isUrl(value: string) {
@@ -55,13 +56,31 @@ export default function ProductImageSlider({
   genre,
   coverSeed,
   coverSeed2,
+  colorImages,
 }: ProductImageSliderProps) {
   const [index, setIndex] = useState(0);
 
-  const slides = [
+  let slides: Array<{ seed: string; label?: string; isSecondary?: boolean }> = [
     { seed: coverSeed },
-    { seed: coverSeed2 || coverSeed, isSecondary: !coverSeed2 },
   ];
+  
+  if (coverSeed2) {
+    slides.push({ seed: coverSeed2 });
+  }
+
+  if (colorImages) {
+    try {
+      const parsed = JSON.parse(colorImages);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        slides = parsed.map((item: any) => ({
+          seed: item.url,
+          label: item.color,
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to parse color images in slider:", e);
+    }
+  }
 
   const totalSlides = slides.length;
 
@@ -119,6 +138,13 @@ export default function ProductImageSlider({
           />
         ))}
       </div>
+
+      {/* Slide Label / Color Family name */}
+      {slides[index]?.label && (
+        <span className="text-[10px] tracking-[0.15em] uppercase text-ink-soft/80 mt-2.5 font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
+          Color: {slides[index].label}
+        </span>
+      )}
     </div>
   );
 }

@@ -161,7 +161,7 @@ export default async function OrderDetailPage({
                 {item.title}
               </p>
               <p className="text-sm text-ink-soft">
-                {item.author} · Qty {item.quantity}
+                {item.author} · Qty {item.quantity} {item.color ? `· Color: ${item.color}` : ""}
               </p>
             </div>
             <div style={{ fontFamily: "var(--font-stamp)" }}>

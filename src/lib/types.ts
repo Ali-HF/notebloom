@@ -9,5 +9,6 @@ export type Book = {
   isbn: string;
   cover_seed: string;
   cover_seed_2?: string | null;
+  color_images?: string | null;
   created_at: string;
 };

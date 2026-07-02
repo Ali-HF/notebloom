@@ -167,7 +167,11 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
   // 3. Resolve cart items (from database for logged-in users, or from cookies for guests)
   let cartItems;
   if (session?.user?.id) {
-    cartItems = await getCart(userId);
+    const rawItems = await getCart(userId);
+    cartItems = rawItems.map(item => ({
+      ...item,
+      color: (formData.get(`color_${item.book_id}`) as string) || null,
+    }));
   } else {
     const cookieStore = await cookies();
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
@@ -186,6 +190,8 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
           price_cents: book.price_cents,
           cover_seed: book.cover_seed,
           stock: book.stock,
+          color: (formData.get(`color_${book.id}`) as string) || null,
+          color_images: book.color_images,
         });
       }
     }

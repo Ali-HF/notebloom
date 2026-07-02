@@ -58,7 +58,7 @@ export async function createBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  // Process cover image uploads
+  // Process cover image uploads (traditional/backup inputs)
   let coverUrl: string | undefined;
   let coverUrl2: string | undefined;
   try {
@@ -68,6 +68,45 @@ export async function createBookAction(
     return { error: err.message || "Image upload failed." };
   }
 
+  // Process dynamic color image files and urls
+  const keysStr = formData.get("color_image_keys") as string || "";
+  const keys = keysStr.split(",").filter(Boolean);
+  const colorImages: Array<{ url: string; color: string }> = [];
+
+  try {
+    for (const key of keys) {
+      if (key.startsWith("existing_")) {
+        const url = formData.get(`color_image_url_${key}`) as string;
+        const color = formData.get(`color_image_color_${key}`) as string;
+        if (url && color) {
+          colorImages.push({ url, color });
+        }
+      } else if (key.startsWith("new_")) {
+        const file = formData.get(`color_image_file_${key}`);
+        const url = formData.get(`color_image_url_${key}`) as string;
+        const color = formData.get(`color_image_color_${key}`) as string;
+
+        let imageUrl = url || "";
+        if (file && (file as File).size > 0) {
+          const uploadedUrl = await processUpload(file, `Color image (${color})`, parsed.data.title);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        }
+
+        if (imageUrl && color) {
+          colorImages.push({ url: imageUrl, color });
+        }
+      }
+    }
+  } catch (err: any) {
+    return { error: err.message || "Dynamic color images upload failed." };
+  }
+
+  // Use the first color image as primary, second as secondary for backwards compatibility
+  const primaryUrl = colorImages[0]?.url || coverUrl || parsed.data.cover_seed || undefined;
+  const secondaryUrl = colorImages[1]?.url || coverUrl2 || parsed.data.cover_seed_2 || null;
+
   await createBook({
     title: parsed.data.title,
     author: parsed.data.author,
@@ -76,8 +115,9 @@ export async function createBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: coverUrl || parsed.data.cover_seed || undefined,
-    cover_seed_2: coverUrl2 || parsed.data.cover_seed_2 || null,
+    cover_seed: primaryUrl,
+    cover_seed_2: secondaryUrl,
+    color_images: JSON.stringify(colorImages),
   });
 
   revalidatePath("/admin");
@@ -107,6 +147,45 @@ export async function updateBookAction(
     return { error: err.message || "Image upload failed." };
   }
 
+  // Process dynamic color image files and urls
+  const keysStr = formData.get("color_image_keys") as string || "";
+  const keys = keysStr.split(",").filter(Boolean);
+  const colorImages: Array<{ url: string; color: string }> = [];
+
+  try {
+    for (const key of keys) {
+      if (key.startsWith("existing_")) {
+        const url = formData.get(`color_image_url_${key}`) as string;
+        const color = formData.get(`color_image_color_${key}`) as string;
+        if (url && color) {
+          colorImages.push({ url, color });
+        }
+      } else if (key.startsWith("new_")) {
+        const file = formData.get(`color_image_file_${key}`);
+        const url = formData.get(`color_image_url_${key}`) as string;
+        const color = formData.get(`color_image_color_${key}`) as string;
+
+        let imageUrl = url || "";
+        if (file && (file as File).size > 0) {
+          const uploadedUrl = await processUpload(file, `Color image (${color})`, parsed.data.title);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        }
+
+        if (imageUrl && color) {
+          colorImages.push({ url: imageUrl, color });
+        }
+      }
+    }
+  } catch (err: any) {
+    return { error: err.message || "Dynamic color images upload failed." };
+  }
+
+  // Use the first color image as primary, second as secondary for backwards compatibility
+  const primaryUrl = colorImages[0]?.url || coverUrl || parsed.data.cover_seed || undefined;
+  const secondaryUrl = colorImages[1]?.url || coverUrl2 || parsed.data.cover_seed_2 || null;
+
   await updateBook(id, {
     title: parsed.data.title,
     author: parsed.data.author,
@@ -115,8 +194,9 @@ export async function updateBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: coverUrl || parsed.data.cover_seed || undefined,
-    cover_seed_2: coverUrl2 || parsed.data.cover_seed_2 || null,
+    cover_seed: primaryUrl,
+    cover_seed_2: secondaryUrl,
+    color_images: JSON.stringify(colorImages),
   });
 
   revalidatePath("/admin");
