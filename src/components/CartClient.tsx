@@ -72,49 +72,51 @@ export default function CartClient({
         {/* Cart items */}
         <ul className="divide-y divide-ink/10 border-y border-ink/10 w-full">
           {items.map((item) => (
-            <li key={item.id} className="py-5 flex gap-4">
-              {/* Image */}
-              <Link href={`/shop/${item.book_id}`} className="w-20 h-20 shrink-0 overflow-hidden rounded-md border border-ink/10 bg-cream">
-                <BookCover
-                  title={item.title}
-                  author={item.author}
-                  genre=""
-                  seed={item.cover_seed}
-                  className="w-full h-full object-cover"
-                />
-              </Link>
-
-              {/* Details */}
-              <div className="flex-1 min-w-0 flex flex-col gap-2">
-                {/* Title + remove */}
-                <div className="flex items-start justify-between gap-2">
-                  <Link href={`/shop/${item.book_id}`} className="hover:text-oxblood transition-colors">
-                    <h3 className="font-semibold text-sm text-ink leading-snug" style={{ fontFamily: "var(--font-display)" }}>
-                      {item.title}
-                    </h3>
-                  </Link>
-                  <form action={removeFromCartAction.bind(null, item.book_id)} className="shrink-0">
-                    <button type="submit" className="text-ink-soft hover:text-oxblood transition-colors cursor-pointer" aria-label="Remove item">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                        <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                      </svg>
-                    </button>
-                  </form>
-                </div>
-                <p className="text-[11px] text-ink-soft" style={{ fontFamily: "var(--font-stamp)" }}>
-                  SKU: NB-00{item.book_id} · {formatPrice(item.price_cents)} each
-                </p>
-                {/* Qty + line total */}
-                <div className="flex items-center justify-between gap-4 mt-1">
-                  <CartQtyInput
-                    bookId={item.book_id}
-                    currentQty={item.quantity}
-                    stock={item.stock}
-                    onChange={(newQty) => handleQtyChange(item.id, newQty)}
+            <li key={item.id} className="py-6 flex flex-col sm:flex-row gap-5 sm:gap-6">
+              <div className="flex gap-4 sm:gap-6 flex-1">
+                {/* Image */}
+                <Link href={`/shop/${item.book_id}`} className="w-24 h-28 sm:w-28 sm:h-32 shrink-0 overflow-hidden rounded-md border border-ink/10 bg-cream">
+                  <BookCover
+                    title={item.title}
+                    author={item.author}
+                    genre=""
+                    seed={item.cover_seed}
+                    className="w-full h-full object-cover"
                   />
-                  <span className="font-semibold text-sm text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
-                    {formatPrice(item.price_cents * (quantities[item.id] ?? item.quantity))}
-                  </span>
+                </Link>
+
+                {/* Details */}
+                <div className="flex-1 min-w-0 flex flex-col">
+                  {/* Title + remove */}
+                  <div className="flex items-start justify-between gap-3">
+                    <Link href={`/shop/${item.book_id}`} className="hover:text-oxblood transition-colors pr-2">
+                      <h3 className="font-semibold text-base sm:text-lg text-ink leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+                        {item.title}
+                      </h3>
+                    </Link>
+                    <form action={removeFromCartAction.bind(null, item.book_id)} className="shrink-0">
+                      <button type="submit" className="p-2 -mr-2 -mt-2 text-ink-soft hover:text-oxblood active:scale-90 active:opacity-75 transition-all cursor-pointer rounded-full" aria-label="Remove item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
+                  <p className="text-xs text-ink-soft mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                    SKU: NB-00{item.book_id} · {formatPrice(item.price_cents)} each
+                  </p>
+                  
+                  <div className="mt-auto pt-4 flex flex-wrap items-center justify-between gap-4">
+                    <CartQtyInput
+                      bookId={item.book_id}
+                      currentQty={item.quantity}
+                      stock={item.stock}
+                      onChange={(newQty) => handleQtyChange(item.id, newQty)}
+                    />
+                    <span className="font-semibold text-base text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
+                      {formatPrice(item.price_cents * (quantities[item.id] ?? item.quantity))}
+                    </span>
+                  </div>
                 </div>
               </div>
             </li>

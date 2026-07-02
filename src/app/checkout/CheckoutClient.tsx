@@ -498,7 +498,7 @@ export default function CheckoutClient({
                 <span style={s.cardTitle}>Contact Information</span>
               </div>
               <div style={s.row2}>
-                <div style={s.fieldWrap}>
+                <label style={s.fieldWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>Full Name *</span>
                   <input
                     style={s.fieldInput}
@@ -507,8 +507,8 @@ export default function CheckoutClient({
                     value={form.fullName}
                     onChange={(e) => set("fullName", e.target.value)}
                   />
-                </div>
-                <div style={{ ...s.fieldWrap, position: "relative" }}>
+                </label>
+                <label style={{ ...s.fieldWrap, position: "relative" }} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>Email Address *</span>
                   <input
                     style={s.fieldInput}
@@ -520,9 +520,9 @@ export default function CheckoutClient({
                     disabled={!isGuest}
                   />
                   <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem" }}>🔒</span>
-                </div>
+                </label>
               </div>
-              <div style={s.phoneWrap}>
+              <label style={s.phoneWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                 <div style={s.phonePrefix}>
                   <span style={s.fieldLabel}>Phone Number *</span>
                   <span style={{ fontSize: "0.88rem", color: "var(--color-ink)" }}>+92</span>
@@ -537,7 +537,7 @@ export default function CheckoutClient({
                     onChange={(e) => set("phone", e.target.value)}
                   />
                 </div>
-              </div>
+              </label>
               {state?.error && state.error.toLowerCase().includes("phone") && (
                 <div style={s.errorText}>{state.error.toUpperCase()}</div>
               )}
@@ -565,7 +565,7 @@ export default function CheckoutClient({
                   🗂 STUDIO
                 </button>
               </div>
-              <div style={{ ...s.fieldWrap, marginBottom: "0.75rem" }}>
+              <label style={{ ...s.fieldWrap, marginBottom: "0.75rem" }} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                 <span style={s.fieldLabel}>Street Address *</span>
                 <input
                   style={s.fieldInput}
@@ -574,9 +574,9 @@ export default function CheckoutClient({
                   value={form.street}
                   onChange={(e) => set("street", e.target.value)}
                 />
-              </div>
+              </label>
               <div style={{ ...s.row2, marginBottom: "0.75rem" }}>
-                <div style={s.fieldWrap}>
+                <label style={s.fieldWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>Apartment / Suite (Optional)</span>
                   <input
                     style={s.fieldInput}
@@ -584,8 +584,8 @@ export default function CheckoutClient({
                     value={form.apartment}
                     onChange={(e) => set("apartment", e.target.value)}
                   />
-                </div>
-                <div style={s.fieldWrap}>
+                </label>
+                <label style={s.fieldWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>Area / Neighbourhood *</span>
                   <input
                     style={s.fieldInput}
@@ -595,10 +595,10 @@ export default function CheckoutClient({
                     onChange={(e) => set("area", e.target.value)}
                     placeholder="e.g. DHA Phase 5"
                   />
-                </div>
+                </label>
               </div>
               <div style={s.row2}>
-                <div style={s.fieldWrap}>
+                <label style={s.fieldWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>City *</span>
                   <select
                     style={s.select}
@@ -612,8 +612,8 @@ export default function CheckoutClient({
                     <option value="Rawalpindi">Rawalpindi, Punjab</option>
                     <option value="Faisalabad">Faisalabad, Punjab</option>
                   </select>
-                </div>
-                <div style={s.fieldWrap}>
+                </label>
+                <label style={s.fieldWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>Landmark (Optional)</span>
                   <input
                     style={s.fieldInput}
@@ -621,7 +621,7 @@ export default function CheckoutClient({
                     value={form.landmark}
                     onChange={(e) => set("landmark", e.target.value)}
                   />
-                </div>
+                </label>
               </div>
               <label className="flex items-center gap-2 cursor-pointer mt-4 select-none">
                 <input
@@ -754,7 +754,7 @@ export default function CheckoutClient({
                             <span className="text-[9px] tracking-wider text-ink-soft uppercase block mb-1 font-bold" style={{ fontFamily: "var(--font-stamp)" }}>
                               Color: {selectedColors[item.book_id] || "None"}
                             </span>
-                            <div className="flex flex-wrap gap-1 mt-1">
+                            <div className="flex flex-wrap gap-2 mt-2">
                               {colorsList.map((ci) => {
                                 const isSelected = selectedColors[item.book_id] === ci.color;
                                 return (
@@ -762,12 +762,12 @@ export default function CheckoutClient({
                                     key={ci.color}
                                     type="button"
                                     onClick={() => setSelectedColors((prev) => ({ ...prev, [item.book_id]: ci.color }))}
-                                    className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer border ${
+                                    className={`px-3 py-1.5 sm:px-2 sm:py-0.5 rounded-full text-[10px] sm:text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer border active:scale-95 touch-manipulation select-none ${
                                       isSelected
                                         ? "bg-oxblood text-cream border-oxblood shadow-sm scale-105"
-                                        : "bg-cream text-ink-soft border-ink/10 hover:border-ink/30"
+                                        : "bg-cream text-ink-soft border-ink/20 hover:border-ink/40 active:bg-ink/5"
                                     }`}
-                                    style={{ fontFamily: "var(--font-stamp)" }}
+                                    style={{ fontFamily: "var(--font-stamp)", minWidth: "44px", minHeight: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
                                   >
                                     {ci.color}
                                   </button>
@@ -788,7 +788,7 @@ export default function CheckoutClient({
                 <span>{form.promoOpen ? "▲" : "▾"}</span>
               </div>
               {form.promoOpen && (
-                <div style={{ ...s.fieldWrap, marginBottom: "0.9rem" }}>
+                <label style={{ ...s.fieldWrap, marginBottom: "0.9rem" }} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                   <span style={s.fieldLabel}>Promo Code</span>
                   <input
                     style={s.fieldInput}
@@ -796,7 +796,7 @@ export default function CheckoutClient({
                     value={form.promo}
                     onChange={(e) => set("promo", e.target.value)}
                   />
-                </div>
+                </label>
               )}
 
               <div style={s.summaryRow}>

@@ -27,11 +27,11 @@ export default function AddToCartButton({
 
     startTransition(async () => {
       setOptimisticAdded(true);
+      showToast(`Adding "${bookTitle}" to cart...`, "success"); // Optimistic immediate toast
+      
       try {
         await addToCartAction(bookId, qty);
-          router.refresh();
-        // Optimistic success already shown, keep toast for confirmation
-        showToast(`"${bookTitle}" added to cart!`, "success");
+        router.refresh();
       } catch (err) {
         // Revert optimistic state on failure
         setOptimisticAdded(false);
@@ -61,8 +61,8 @@ export default function AddToCartButton({
         <button
           type="submit"
           disabled={isPending || optimisticAdded}
-          className="px-6 py-2.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark
-                     transition-colors text-sm cursor-pointer disabled:opacity-60 font-semibold"
+          className="px-6 py-2.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark active:scale-95 active:opacity-90
+                     transition-all text-sm cursor-pointer disabled:opacity-60 font-semibold"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
           {optimisticAdded ? "Added!" : (isPending ? "ADDING..." : "ADD TO CART")}
@@ -76,8 +76,8 @@ export default function AddToCartButton({
       <button
         type="submit"
         disabled={isPending || optimisticAdded}
-        className="text-xs px-3 py-1.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark
-                   transition-colors cursor-pointer disabled:opacity-60 font-semibold"
+        className="text-xs px-3 py-1.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark active:scale-95 active:opacity-90
+                   transition-all cursor-pointer disabled:opacity-60 font-semibold min-h-[36px] min-w-[70px]"
         style={{ fontFamily: "var(--font-stamp)" }}
       >
         {optimisticAdded ? "Added!" : (isPending ? "..." : "ADD")}

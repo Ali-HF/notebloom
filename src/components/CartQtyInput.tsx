@@ -40,6 +40,7 @@ export default function CartQtyInput({
     const newQty = optimisticQty - 1;
     setOptimisticQty(newQty);
     if (onChange) onChange(newQty);
+    scheduleUpdate(newQty);
   };
 
   const handleIncrement = () => {
@@ -47,6 +48,7 @@ export default function CartQtyInput({
     const newQty = optimisticQty + 1;
     setOptimisticQty(newQty);
     if (onChange) onChange(newQty);
+    scheduleUpdate(newQty);
   };
 
   return (
@@ -60,7 +62,7 @@ export default function CartQtyInput({
           onClick={handleDecrement}
           disabled={optimisticQty <= 1}
           className={
-            `px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-r border-brass font-bold disabled:opacity-40 cursor-pointer`
+            `px-3 py-1.5 hover:bg-parchment-dark/30 active:scale-95 active:bg-parchment-dark/50 transition-all text-ink text-sm border-r border-brass font-bold disabled:opacity-40 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center`
           }
         >
           -
@@ -72,7 +74,7 @@ export default function CartQtyInput({
           type="button"
           onClick={handleIncrement}
           disabled={optimisticQty >= stock}
-          className={`px-3 py-1.5 hover:bg-parchment-dark/30 transition-colors text-ink text-sm border-l border-brass font-bold disabled:opacity-40 cursor-pointer ${isPending ? 'animate-pulse' : ''}`}
+          className={`px-3 py-1.5 hover:bg-parchment-dark/30 active:scale-95 active:bg-parchment-dark/50 transition-all text-ink text-sm border-l border-brass font-bold disabled:opacity-40 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center ${isPending ? 'animate-pulse' : ''}`}
         >
           +
         </button>
