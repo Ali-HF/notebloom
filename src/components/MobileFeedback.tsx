@@ -99,7 +99,9 @@ function FeedbackManager() {
 
       const submitter = (e.submitter || form.querySelector('button[type="submit"], input[type="submit"]')) as HTMLElement;
       if (submitter) {
-        submitter.classList.add("btn-loading");
+        if (!form.hasAttribute("data-no-loading")) {
+          submitter.classList.add("btn-loading");
+        }
         
         if (!form.hasAttribute("data-no-progress")) {
           startProgress();
