@@ -2,6 +2,7 @@
 
 import { useState, useActionState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { checkoutAction } from "@/app/actions/cart-actions";
 import BookCover from "@/components/BookCover";
 import { parseProductMedia } from "@/lib/cart-utils";
@@ -470,8 +471,16 @@ export default function CheckoutClient({
         </div>
 
         {/* Row 2: logo + breadcrumb centered */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "4px" }}>
-          <span style={s.navLogo}>🌸 Notebloom</span>
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "6px" }}>
+          <div className="relative h-9 w-36 shrink-0">
+            <Image
+              src="/logo-transparent.png"
+              alt="Notebloom Logo"
+              fill
+              priority
+              className="object-contain"
+            />
+          </div>
           <div style={s.breadcrumb}>
             <span style={s.breadcrumbStep(false)}>CART</span>
             <span style={s.breadcrumbStep(true)}>CHECKOUT</span>
@@ -834,7 +843,14 @@ export default function CheckoutClient({
       {/* Footer */}
       <footer style={s.footer}>
         <div>
-          <div style={s.footerLogo}>🌸 Notebloom</div>
+          <div className="relative h-7 w-28 shrink-0 mb-1">
+            <Image
+              src="/logo-transparent.png"
+              alt="Notebloom Logo"
+              fill
+              className="object-contain"
+            />
+          </div>
           <div style={s.footerSub}>© 2026 Notebloom Stationery. Crafted for focus.</div>
         </div>
         <div style={s.footerLinks}>

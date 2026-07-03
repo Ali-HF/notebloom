@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import BloomMark from "./BloomMark";
 import { GENRES } from "@/lib/db";
 
@@ -9,12 +10,15 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2.5">
             <BloomMark size={24} />
-            <span
-              className="text-xl"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
-            >
-              Notebloom
-            </span>
+            <div className="relative h-8 w-32 shrink-0">
+              <Image
+                src="/logo-transparent.png"
+                alt="Notebloom Logo"
+                fill
+                className="object-contain object-left"
+                style={{ filter: "brightness(0) invert(0.95)" }}
+              />
+            </div>
           </div>
           <p className="mt-3 text-sm text-parchment/70 max-w-xs">
             An independent shop for aesthetic stationery, planners, journals, and pens. Beautiful tools to help your ideas bloom.
