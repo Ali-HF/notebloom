@@ -25,10 +25,41 @@ export default function ProductDetailsClient({
     media.categories[0]?.name || ""
   );
 
+  const variationSelector = media.categories.length > 0 && (
+    <div className="border-y border-ink/10 py-4 my-2 sm:my-6">
+      <h3
+        className="text-[10px] sm:text-[11px] font-bold tracking-[0.15em] text-ink uppercase mb-2.5"
+        style={{ fontFamily: "var(--font-stamp)" }}
+      >
+        Select Variation / Color
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {media.categories.map((cat) => {
+          const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
+          return (
+            <button
+              key={cat.name}
+              type="button"
+              onClick={() => setSelectedCategory(cat.name)}
+              className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all border active:scale-95 cursor-pointer shadow-sm select-none ${
+                isSelected
+                  ? "bg-oxblood text-cream border-oxblood scale-105"
+                  : "bg-cream text-ink-soft border-ink/15 hover:border-ink/30 active:bg-ink/5"
+              }`}
+              style={{ fontFamily: "var(--font-stamp)" }}
+            >
+              {cat.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="mt-6 grid sm:grid-cols-[350px_1fr] md:grid-cols-[400px_1fr] gap-12">
+    <div className="mt-4 sm:mt-6 grid sm:grid-cols-[350px_1fr] md:grid-cols-[400px_1fr] gap-6 sm:gap-12">
       {/* Left Column: Image Slider */}
-      <div className="w-full h-fit">
+      <div className="w-full h-fit flex flex-col gap-2">
         <ProductImageSlider
           title={book.title}
           author={book.author}
@@ -38,10 +69,14 @@ export default function ProductDetailsClient({
           colorImages={book.color_images}
           selectedCategory={selectedCategory}
         />
+        {/* Mobile-only Variation Selector: directly below picture */}
+        <div className="block sm:hidden">
+          {variationSelector}
+        </div>
       </div>
 
       {/* Right Column: Details & Actions */}
-      <div className="flex flex-col">
+      <div className="flex flex-col bg-cream border border-ink/10 rounded-2xl p-5 sm:p-0 sm:bg-transparent sm:border-0 shadow-sm sm:shadow-none">
         {/* Genre Pill */}
         <span
           className="w-fit inline-block px-3 py-1 bg-oxblood text-cream text-[10px] tracking-[0.18em] uppercase rounded-full mb-3 font-semibold"
@@ -52,69 +87,40 @@ export default function ProductDetailsClient({
 
         {/* Title */}
         <h1
-          className="mt-1 text-3xl sm:text-4xl leading-tight font-semibold text-ink"
+          className="mt-1 text-2xl sm:text-4xl leading-tight font-semibold text-ink"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {book.title}
         </h1>
 
         {/* Author */}
-        <p className="mt-1 text-lg text-ink-soft">{book.author}</p>
+        <p className="mt-1 text-base sm:text-lg text-ink-soft">{book.author}</p>
 
         {/* Ratings */}
         <div className="mt-3 flex items-center gap-2">
           <StarRating value={summary.avg} size={14} />
-          <span className="text-sm text-ink-soft">
+          <span className="text-xs sm:text-sm text-ink-soft">
             {summary.count > 0
               ? `${summary.avg.toFixed(1)} (${summary.count} ${summary.count === 1 ? "review" : "reviews"})`
               : "No reviews yet"}
           </span>
         </div>
 
-
-
         {/* Price */}
         <div
-          className="mt-6 text-2xl font-semibold text-ink"
+          className="mt-4 sm:mt-6 text-xl sm:text-2xl font-semibold text-ink"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
           {formatPrice(book.price_cents)}
         </div>
 
-        {/* Category Option Selector (e.g. Colors) */}
-        {media.categories.length > 0 && (
-          <div className="mt-6 border-y border-ink/10 py-5">
-            <h3
-              className="text-[11px] font-bold tracking-[0.15em] text-ink uppercase mb-3"
-              style={{ fontFamily: "var(--font-stamp)" }}
-            >
-              Select Variation / Color
-            </h3>
-            <div className="flex flex-wrap gap-2.5">
-              {media.categories.map((cat) => {
-                const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
-                return (
-                  <button
-                    key={cat.name}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.name)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border active:scale-95 cursor-pointer shadow-sm select-none ${
-                      isSelected
-                        ? "bg-oxblood text-cream border-oxblood scale-105"
-                        : "bg-cream text-ink-soft border-ink/15 hover:border-ink/30 active:bg-ink/5"
-                    }`}
-                    style={{ fontFamily: "var(--font-stamp)" }}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Desktop-only Variation Selector */}
+        <div className="hidden sm:block">
+          {variationSelector}
+        </div>
 
         {/* Stock status & Add to Cart */}
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           {(() => {
             const activeCat = media.categories.find(
               (c) => c.name.toLowerCase() === selectedCategory.toLowerCase()
@@ -135,7 +141,7 @@ export default function ProductDetailsClient({
                 </div>
 
                 {isAvailable ? (
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <AddToCartButton
                       bookId={book.id}
                       bookTitle={book.title}
@@ -143,7 +149,7 @@ export default function ProductDetailsClient({
                       maxQty={computedMaxQty}
                       selectedCategory={selectedCategory}
                     />
-                    <span className="text-xs text-ink-soft font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
+                    <span className="text-xs text-ink-soft/80 font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
                       {activeStock} units available
                     </span>
                   </div>
