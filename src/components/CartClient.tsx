@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
 import BookCover from "@/components/BookCover";
 import BloomMark from "@/components/BloomMark";
 import CartQtyInput from "@/components/CartQtyInput";
 import { formatPrice, type CartRow } from "@/lib/db";
-import { removeFromCartAction } from "@/app/actions/cart-actions";
+import { removeFromCartAction, updateCartQtyAction } from "@/app/actions/cart-actions";
 
 export default function CartClient({
   items,
@@ -17,17 +17,47 @@ export default function CartClient({
 }) {
   const [cartItems, setCartItems] = useState<CartRow[]>(items);
   const [isPending, startTransition] = useTransition();
+  const qtyTimeouts = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   // Sync state with props when prop updates (e.g. from background revalidation)
   useEffect(() => {
     setCartItems(items);
   }, [items]);
 
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(qtyTimeouts.current).forEach(clearTimeout);
+    };
+  }, []);
+
   const handleQtyChange = (bookId: number, newQty: number) => {
+    // Instantly update UI state
     setCartItems((prev) =>
       prev.map((it) => (it.book_id === bookId ? { ...it, quantity: newQty } : it))
     );
+
+    // Clear previous timeout for this item
+    if (qtyTimeouts.current[bookId]) {
+      clearTimeout(qtyTimeouts.current[bookId]);
+    }
+
+    // Set a new timeout to update the database
+    qtyTimeouts.current[bookId] = setTimeout(() => {
+      const formData = new FormData();
+      formData.set("qty", String(newQty));
+      startTransition(async () => {
+        try {
+          await updateCartQtyAction(bookId, formData);
+        } catch (err) {
+          console.error("Failed to update qty:", err);
+          // Revert on error
+          setCartItems(items);
+        }
+      });
+    }, 300);
   };
+
 
   const handleRemove = (bookId: number) => {
     // Instantly remove from UI
