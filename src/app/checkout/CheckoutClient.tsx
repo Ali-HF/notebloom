@@ -472,13 +472,13 @@ export default function CheckoutClient({
 
         {/* Row 2: logo + breadcrumb centered */}
         <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "6px" }}>
-          <div className="relative h-9 w-36 shrink-0">
+          <div className="relative h-16 w-52 shrink-0 -my-4">
             <Image
               src="/logo-transparent.png"
               alt="Notebloom Logo"
               fill
               priority
-              className="object-contain"
+              className="object-contain scale-125 origin-center"
             />
           </div>
           <div style={s.breadcrumb}>

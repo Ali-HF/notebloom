@@ -7,13 +7,13 @@ export default function Logo({ tagline = false }: { tagline?: boolean }) {
       href="/"
       className="flex flex-col focus-visible:outline-none focus-visible:rounded-sm hover:opacity-85 transition-opacity"
     >
-      <div className="relative h-10 w-44 shrink-0">
+      <div className="relative h-16 w-52 sm:h-20 sm:w-60 shrink-0 -my-4 sm:-my-5">
         <Image
           src="/logo-transparent.png"
           alt="Notebloom Logo"
           fill
           priority
-          className="object-contain object-left"
+          className="object-contain object-left scale-125 sm:scale-135 origin-left"
         />
       </div>
       {tagline && (
