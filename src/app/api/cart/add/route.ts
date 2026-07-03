@@ -5,7 +5,7 @@ import { addToCart } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    const { bookId, qty = 1 } = await request.json();
+    const { bookId, qty = 1, color } = await request.json();
 
     if (!bookId || !Number.isFinite(bookId)) {
       return NextResponse.json({ error: "Invalid bookId" }, { status: 400 });
@@ -15,11 +15,11 @@ export async function POST(request: Request) {
     const session = await auth();
 
     if (session?.user?.id) {
-      await addToCart(Number(session.user.id), bookId, cleanQty);
+      await addToCart(Number(session.user.id), bookId, cleanQty, color);
     } else {
       const cookieStore = await cookies();
       const cartCookie = cookieStore.get("notebloom_cart")?.value;
-      let cart: Array<{ book_id: number; quantity: number }> = [];
+      let cart: Array<{ book_id: number; quantity: number; color?: string | null }> = [];
       if (cartCookie) {
         try {
           const parsed = JSON.parse(cartCookie);
@@ -31,8 +31,11 @@ export async function POST(request: Request) {
       const idx = cart.findIndex((it) => it.book_id === bookId);
       if (idx >= 0) {
         cart[idx].quantity += cleanQty;
+        if (color) {
+          cart[idx].color = color;
+        }
       } else {
-        cart.push({ book_id: bookId, quantity: cleanQty });
+        cart.push({ book_id: bookId, quantity: cleanQty, color: color || null });
       }
       cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
     }

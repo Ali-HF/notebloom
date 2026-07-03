@@ -530,7 +530,7 @@ export async function getUserSavedShipping(userId: number): Promise<string | nul
 
 export async function getCart(userId: number): Promise<CartRow[]> {
   const result = await sql`
-    SELECT ci.id, ci.book_id, ci.quantity, b.title, b.author, b.price_cents, b.cover_seed, b.stock, b.color_images
+    SELECT ci.id, ci.book_id, ci.quantity, b.title, b.author, b.price_cents, b.cover_seed, b.stock, b.color_images, ci.color
     FROM cart_items ci JOIN books b ON b.id = ci.book_id
     WHERE ci.user_id = ${userId}
     ORDER BY ci.id DESC
@@ -538,12 +538,12 @@ export async function getCart(userId: number): Promise<CartRow[]> {
   return result as unknown as CartRow[];
 }
 
-export async function addToCart(userId: number, bookId: number, qty: number = 1): Promise<void> {
+export async function addToCart(userId: number, bookId: number, quantity: number, color?: string): Promise<void> {
   await sql`
-    INSERT INTO cart_items (user_id, book_id, quantity) 
-    VALUES (${userId}, ${bookId}, ${qty})
-    ON CONFLICT(user_id, book_id) 
-    DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity
+    INSERT INTO cart_items (user_id, book_id, quantity, color) 
+    VALUES (${userId}, ${bookId}, ${quantity}, ${color || null})
+    ON CONFLICT (user_id, book_id) 
+    DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity, color = EXCLUDED.color
   `;
 }
 
@@ -919,6 +919,18 @@ async function runAutoMigration() {
     if (!orderItemColumnExists[0].exists) {
       await sql`ALTER TABLE order_items ADD COLUMN color TEXT;`;
       console.log("Auto-Migration: added color column to order_items table.");
+    }
+
+    // 2b. Add color to cart_items table
+    const cartItemColumnExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'cart_items' AND column_name = 'color'
+      )
+    `;
+    if (!cartItemColumnExists[0].exists) {
+      await sql`ALTER TABLE cart_items ADD COLUMN color TEXT;`;
+      console.log("Auto-Migration: added color column to cart_items table.");
     }
 
     // 3. Migrate existing books

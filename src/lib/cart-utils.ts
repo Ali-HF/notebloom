@@ -13,6 +13,7 @@ export type CartRow = {
   cover_seed: string;
   stock: number;
   color?: string | null;
+  color_images?: string | null;
 };
 
 export function formatPrice(cents: number): string {

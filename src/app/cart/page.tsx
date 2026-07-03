@@ -33,6 +33,8 @@ export default async function CartPage() {
                 price_cents: book.price_cents,
                 cover_seed: book.cover_seed,
                 stock: book.stock,
+                color: it.color || null,
+                color_images: book.color_images,
               });
             }
           }

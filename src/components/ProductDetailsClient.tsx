@@ -144,6 +144,7 @@ export default function ProductDetailsClient({
                       bookTitle={book.title}
                       showQtySelect={true}
                       maxQty={computedMaxQty}
+                      selectedCategory={selectedCategory}
                     />
                     <span className="text-xs text-ink-soft font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
                       {activeStock} units available

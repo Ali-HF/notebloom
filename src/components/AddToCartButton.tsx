@@ -8,11 +8,13 @@ export default function AddToCartButton({
   bookTitle,
   showQtySelect = false,
   maxQty = 10,
+  selectedCategory,
 }: {
   bookId: number;
   bookTitle: string;
   showQtySelect?: boolean;
   maxQty?: number;
+  selectedCategory?: string;
 }) {
   const [status, setStatus] = useState<"idle" | "adding" | "added">("idle");
 
@@ -34,7 +36,7 @@ export default function AddToCartButton({
     fetch("/api/cart/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookId, qty }),
+      body: JSON.stringify({ bookId, qty, color: selectedCategory }),
     }).catch((err) => {
       console.error("Failed to add to cart:", err);
       showToast("Failed to add item to cart.", "error");
