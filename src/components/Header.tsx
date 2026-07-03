@@ -5,6 +5,7 @@ import Logo from "./Logo";
 import { logoutAction } from "@/app/actions/auth-actions";
 import { cookies } from "next/headers";
 import MobileMenu from "./MobileMenu";
+import CartBadge from "./CartBadge";
 
 export default async function Header() {
   const session = await auth();
@@ -60,12 +61,7 @@ export default async function Header() {
             <Link href="/cart" className="trail-link relative hidden sm:flex items-center gap-1.5" aria-label="Cart">
               <CartIcon />
               <span className="hidden sm:inline">CART</span>
-              {count > 0 && (
-                <span className="absolute -top-2 -right-3 sm:static sm:-mt-0 inline-flex items-center justify-center
-                                 min-w-[18px] h-[18px] rounded-full bg-oxblood text-cream text-[10px] px-1">
-                  {count}
-                </span>
-              )}
+              <CartBadge initialCount={count} />
             </Link>
 
             {/* Admin section — desktop */}
@@ -91,12 +87,9 @@ export default async function Header() {
             {/* Cart icon — mobile only */}
             <Link href="/cart" className="relative sm:hidden flex items-center" aria-label="Cart">
               <CartIcon />
-              {count > 0 && (
-                <span className="absolute -top-2 -right-2 inline-flex items-center justify-center
-                     min-w-[16px] h-[16px] rounded-full bg-oxblood text-cream text-[10px] px-1">
-                  {count}
-                </span>
-              )}
+              <div className="absolute -top-2 -right-2">
+                <CartBadge initialCount={count} />
+              </div>
             </Link>
 
             <MobileMenu session={session} />

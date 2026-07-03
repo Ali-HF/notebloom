@@ -1,8 +1,6 @@
 "use client";
 
-import { useTransition, useOptimistic } from "react";
-import { useRouter } from "next/navigation";
-import { addToCartAction } from "@/app/actions/cart-actions";
+import { useState } from "react";
 import { showToast } from "@/lib/toast";
 
 export default function AddToCartButton({
@@ -16,28 +14,37 @@ export default function AddToCartButton({
   showQtySelect?: boolean;
   maxQty?: number;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const [optimisticAdded, setOptimisticAdded] = useOptimistic<boolean, boolean>(false, (state, action) => action);
+  const [status, setStatus] = useState<"idle" | "adding" | "added">("idle");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const qty = showQtySelect ? Number(formData.get("qty")) : 1;
+    if (status !== "idle") return;
 
-    startTransition(async () => {
-      setOptimisticAdded(true);
-      showToast(`Adding "${bookTitle}" to cart...`, "success"); // Optimistic immediate toast
-      
-      try {
-        await addToCartAction(bookId, qty);
-        router.refresh();
-      } catch (err) {
-        // Revert optimistic state on failure
-        setOptimisticAdded(false);
-        showToast("Failed to add item to cart.", "error");
-      }
+    const formData = new FormData(e.currentTarget);
+    const qty = showQtySelect ? Number(formData.get("qty")) || 1 : 1;
+
+    // Instant UI feedback
+    setStatus("added");
+    showToast(`"${bookTitle}" added to cart!`, "success");
+
+    // Update the header cart badge instantly
+    window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: qty } }));
+
+    // Fire-and-forget background sync
+    fetch("/api/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookId, qty }),
+    }).catch((err) => {
+      console.error("Failed to add to cart:", err);
+      showToast("Failed to add item to cart.", "error");
+      // Revert badge
+      window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -qty } }));
+      setStatus("idle");
     });
+
+    // Reset the button after 2 seconds so user can add again
+    setTimeout(() => setStatus("idle"), 2000);
   };
 
   if (showQtySelect) {
@@ -60,12 +67,12 @@ export default function AddToCartButton({
         </select>
         <button
           type="submit"
-          disabled={isPending || optimisticAdded}
+          disabled={status === "adding"}
           className="px-6 py-2.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark active:scale-95 active:opacity-90
                      transition-all text-sm cursor-pointer disabled:opacity-60 font-semibold"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
-          {optimisticAdded ? "Added!" : (isPending ? "ADDING..." : "ADD TO CART")}
+          {status === "added" ? "Added!" : "ADD TO CART"}
         </button>
       </form>
     );
@@ -75,12 +82,12 @@ export default function AddToCartButton({
     <form onSubmit={handleSubmit} data-no-progress>
       <button
         type="submit"
-        disabled={isPending || optimisticAdded}
+        disabled={status === "adding"}
         className="text-xs px-3 py-1.5 rounded-full bg-oxblood text-cream hover:bg-oxblood-dark active:scale-95 active:opacity-90
                    transition-all cursor-pointer disabled:opacity-60 font-semibold min-h-[36px] min-w-[70px]"
         style={{ fontFamily: "var(--font-stamp)" }}
       >
-        {optimisticAdded ? "Added!" : (isPending ? "..." : "ADD")}
+        {status === "added" ? "Added!" : "ADD"}
       </button>
     </form>
   );

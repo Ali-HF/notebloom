@@ -30,10 +30,17 @@ export default function CartClient({
   }, []);
 
   const handleQtyChange = (bookId: number, newQty: number) => {
+    const oldItem = cartItems.find((it) => it.book_id === bookId);
+    const oldQty = oldItem ? oldItem.quantity : 0;
+    const delta = newQty - oldQty;
+
     // Instantly update UI state — zero delay
     setCartItems((prev) =>
       prev.map((it) => (it.book_id === bookId ? { ...it, quantity: newQty } : it))
     );
+
+    // Update global cart badge instantly
+    window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta } }));
 
     // Debounce the background sync
     if (qtyTimeouts.current[bookId]) {
@@ -52,6 +59,12 @@ export default function CartClient({
   };
 
   const handleRemove = (bookId: number) => {
+    const item = cartItems.find((it) => it.book_id === bookId);
+    if (item) {
+      // Update global cart badge instantly
+      window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -item.quantity } }));
+    }
+
     // Instantly remove from UI
     setCartItems((prev) => prev.filter((it) => it.book_id !== bookId));
 
