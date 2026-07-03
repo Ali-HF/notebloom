@@ -25,7 +25,7 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
       {/* Hamburger button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="sm:hidden p-2 text-ink-soft hover:text-oxblood transition-colors focus:outline-none cursor-pointer"
+        className="sm:hidden mobile-menu-btn p-2 text-ink-soft hover:text-oxblood transition-colors focus:outline-none cursor-pointer"
         aria-label="Open navigation menu"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -35,8 +35,7 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
 
       {/* Overlay */}
       <div
-        className={`sm:hidden fixed inset-0 z-50 bg-[#221d18]/50 backdrop-blur-sm transition-opacity duration-300
-                    ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        className={`sm:hidden mobile-overlay ${isOpen ? "is-open" : ""}`}
         onClick={closeMenu}
       />
 

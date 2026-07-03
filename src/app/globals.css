@@ -180,7 +180,7 @@ button.btn-loading::after, a.btn-loading::after {
   pointer-events: none;
 }
 
-/* Vanilla CSS Mobile Drawer Menu */
+/* Vanilla CSS Mobile Drawer Menu & Overlay */
 .mobile-drawer {
   position: fixed !important;
   top: 0 !important;
@@ -194,5 +194,34 @@ button.btn-loading::after, a.btn-loading::after {
   flex-direction: column !important;
   box-shadow: -4px 0 24px rgba(32, 40, 58, 0.15) !important;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.mobile-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(34, 29, 24, 0.45) !important; /* Semi-transparent dark charcoal */
+  backdrop-filter: blur(4px) !important;
+  z-index: 99 !important; /* Right below drawer */
+  transition: opacity 0.3s ease !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+.mobile-overlay.is-open {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.mobile-menu-btn {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .mobile-overlay, .mobile-drawer, .mobile-menu-btn {
+    display: none !important;
+  }
 }
 
