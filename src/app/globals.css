@@ -93,3 +93,90 @@ body {
 .animate-slideIn {
   animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ─── Mobile Feedback & Loaders ───────────────────────────────────────────── */
+
+/* Contained ripple host and ripple element */
+.mobile-ripple-host {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.mobile-ripple-span {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background-color: rgba(175, 138, 79, 0.25); /* Semi-transparent brass */
+  pointer-events: none;
+  animation: mobile-ripple 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes mobile-ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Free-floating touch bloom ripple */
+@keyframes mobile-touch-bloom {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  60% {
+    opacity: 0.8;
+  }
+  100% {
+    width: 3rem;
+    height: 3rem;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Button & Link loading spinner */
+button.btn-loading, a.btn-loading {
+  position: relative !important;
+  color: transparent !important;
+  pointer-events: none !important;
+}
+
+button.btn-loading > *, a.btn-loading > * {
+  opacity: 0 !important;
+}
+
+button.btn-loading::after, a.btn-loading::after {
+  content: "";
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  top: calc(50% - 0.625rem);
+  left: calc(50% - 0.625rem);
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Top Progress Bar Loader */
+#top-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-oxblood);
+  z-index: 10001;
+  transition: width 0.25s ease, opacity 0.4s ease;
+  box-shadow: 0 0 10px rgba(124, 47, 47, 0.6);
+  pointer-events: none;
+}
+
