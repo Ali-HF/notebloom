@@ -180,3 +180,19 @@ button.btn-loading::after, a.btn-loading::after {
   pointer-events: none;
 }
 
+/* Vanilla CSS Mobile Drawer Menu */
+.mobile-drawer {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 100 !important;
+  height: 100vh !important;
+  width: 300px !important;
+  background-color: #faf6ec !important;
+  border-left: 1px solid rgba(32, 40, 58, 0.1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: -4px 0 24px rgba(32, 40, 58, 0.15) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+

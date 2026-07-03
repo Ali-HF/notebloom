@@ -103,10 +103,41 @@ export default function ProductImageSlider({
 
   const totalSlides = slides.length;
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 40;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      setIndex((prev) => (prev + 1) % totalSlides);
+    } else if (isRightSwipe) {
+      setIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+    }
+  };
+
   return (
     <div className="relative group w-full flex flex-col items-center">
       {/* Slider viewport */}
-      <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-parchment shadow-md ring-1 ring-ink/10">
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="relative w-full aspect-square overflow-hidden rounded-xl bg-parchment shadow-md ring-1 ring-ink/10 select-none touch-pan-y"
+      >
         <div
           className="flex w-full h-full transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${index * 100}%)` }}

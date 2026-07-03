@@ -71,10 +71,7 @@ export default function ProductDetailsClient({
           </span>
         </div>
 
-        {/* Description */}
-        <p className="mt-6 text-base leading-relaxed text-ink-soft max-w-prose">
-          {book.description}
-        </p>
+
 
         {/* Price */}
         <div
@@ -161,9 +158,19 @@ export default function ProductDetailsClient({
         </div>
 
         {/* SKU */}
-        <p className="mt-5 text-[10px] text-ink-soft/60" style={{ fontFamily: "var(--font-stamp)" }}>
+        <p className="mt-5 text-[10px] text-ink-soft/60 border-b border-ink/10 pb-4 mb-4" style={{ fontFamily: "var(--font-stamp)" }}>
           SKU: NB-00{book.id} · {book.isbn}
         </p>
+
+        {/* Description */}
+        <div className="mt-2">
+          <h4 className="text-[10px] font-bold tracking-widest text-ink uppercase mb-2" style={{ fontFamily: "var(--font-stamp)" }}>
+            Product Description
+          </h4>
+          <p className="text-sm leading-relaxed text-ink-soft max-w-prose">
+            {book.description}
+          </p>
+        </div>
       </div>
     </div>
   );

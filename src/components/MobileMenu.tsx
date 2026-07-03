@@ -42,10 +42,10 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
 
       {/* Drawer */}
       <div
-        className={`sm:hidden fixed top-0 right-0 z-[60] h-screen w-[300px] bg-[#faf6ec]
-                    shadow-2xl border-l border-ink/10 flex flex-col
-                    transition-transform duration-300 ease-in-out
-                    ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className="sm:hidden mobile-drawer"
+        style={{
+          transform: isOpen ? "translateX(0)" : "translateX(100%)",
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-ink/10 shrink-0">
