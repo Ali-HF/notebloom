@@ -4,6 +4,7 @@ import { useState, useActionState } from "react";
 import Link from "next/link";
 import { checkoutAction } from "@/app/actions/cart-actions";
 import BookCover from "@/components/BookCover";
+import { parseProductMedia } from "@/lib/cart-utils";
 
 type CartRow = {
   id: number;
@@ -49,13 +50,9 @@ export default function CheckoutClient({
     const initialColors: Record<number, string> = {};
     items.forEach((item) => {
       if (item.color_images) {
-        try {
-          const parsed = JSON.parse(item.color_images);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            initialColors[item.book_id] = parsed[0].color;
-          }
-        } catch (e) {
-          console.error("Failed to parse color_images:", e);
+        const media = parseProductMedia(item.color_images);
+        if (media.categories.length > 0) {
+          initialColors[item.book_id] = media.categories[0].name;
         }
       }
     });
@@ -716,14 +713,16 @@ export default function CheckoutClient({
                   let currentSeed = item.cover_seed;
                   let colorsList: Array<{ url: string; color: string }> = [];
                   if (item.color_images) {
-                    try {
-                      colorsList = JSON.parse(item.color_images);
-                      const selectedColor = selectedColors[item.book_id];
-                      const found = colorsList.find((ci) => ci.color === selectedColor);
-                      if (found) {
-                        currentSeed = found.url;
-                      }
-                    } catch (e) {}
+                    const media = parseProductMedia(item.color_images);
+                    colorsList = media.categories.map((c) => ({
+                      color: c.name,
+                      url: c.images[0] || item.cover_seed,
+                    }));
+                    const selectedColor = selectedColors[item.book_id];
+                    const found = colorsList.find((ci) => ci.color === selectedColor);
+                    if (found) {
+                      currentSeed = found.url;
+                    }
                   }
 
                   return (

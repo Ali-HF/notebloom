@@ -58,54 +58,90 @@ export async function createBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  // Process cover image uploads (traditional/backup inputs)
+  // Process primary thumbnail/cover image upload
   let coverUrl: string | undefined;
-  let coverUrl2: string | undefined;
   try {
-    coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image", parsed.data.title);
-    coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image", parsed.data.title);
+    coverUrl = await processUpload(formData.get("cover_file"), "Thumbnail image", parsed.data.title);
   } catch (err: any) {
-    return { error: err.message || "Image upload failed." };
+    return { error: err.message || "Thumbnail upload failed." };
   }
 
-  // Process dynamic color image files and urls
-  const keysStr = formData.get("color_image_keys") as string || "";
-  const keys = keysStr.split(",").filter(Boolean);
-  const colorImages: Array<{ url: string; color: string }> = [];
+  const coverSeedInput = formData.get("cover_seed") as string;
+  let resolvedThumbnail = coverUrl || coverSeedInput || "";
+
+  // 1. Process Generic Pictures
+  const genericKeysStr = formData.get("generic_picture_keys") as string || "";
+  const genericKeys = genericKeysStr.split(",").filter(Boolean);
+  const genericPictures: string[] = [];
 
   try {
-    for (const key of keys) {
-      if (key.startsWith("existing_")) {
-        const url = formData.get(`color_image_url_${key}`) as string;
-        const color = formData.get(`color_image_color_${key}`) as string;
-        if (url && color) {
-          colorImages.push({ url, color });
+    for (const key of genericKeys) {
+      const file = formData.get(`generic_file_${key}`);
+      const url = formData.get(`generic_url_${key}`) as string;
+
+      let imageUrl = url || "";
+      if (file && (file as File).size > 0) {
+        const uploadedUrl = await processUpload(file, "Generic picture", parsed.data.title);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
         }
-      } else if (key.startsWith("new_")) {
-        const file = formData.get(`color_image_file_${key}`);
-        const url = formData.get(`color_image_url_${key}`) as string;
-        const color = formData.get(`color_image_color_${key}`) as string;
+      }
+      if (imageUrl) {
+        genericPictures.push(imageUrl);
+      }
+    }
+  } catch (err: any) {
+    return { error: err.message || "Generic pictures upload failed." };
+  }
+
+  // 2. Process Categories
+  const categoryKeysStr = formData.get("category_keys") as string || "";
+  const categoryKeys = categoryKeysStr.split(",").filter(Boolean);
+  const categoriesList: Array<{ name: string; images: string[] }> = [];
+
+  try {
+    for (const catKey of categoryKeys) {
+      const name = (formData.get(`category_name_${catKey}`) as string || "").trim();
+      if (!name) continue;
+
+      const imgKeysStr = formData.get(`category_${catKey}_picture_keys`) as string || "";
+      const imgKeys = imgKeysStr.split(",").filter(Boolean);
+      const categoryImages: string[] = [];
+
+      for (const imgKey of imgKeys) {
+        const file = formData.get(`category_${catKey}_file_${imgKey}`);
+        const url = formData.get(`category_${catKey}_url_${imgKey}`) as string;
 
         let imageUrl = url || "";
         if (file && (file as File).size > 0) {
-          const uploadedUrl = await processUpload(file, `Color image (${color})`, parsed.data.title);
+          const uploadedUrl = await processUpload(file, `Category (${name}) picture`, parsed.data.title);
           if (uploadedUrl) {
             imageUrl = uploadedUrl;
           }
         }
-
-        if (imageUrl && color) {
-          colorImages.push({ url: imageUrl, color });
+        if (imageUrl) {
+          categoryImages.push(imageUrl);
         }
       }
+
+      categoriesList.push({
+        name,
+        images: categoryImages
+      });
     }
   } catch (err: any) {
-    return { error: err.message || "Dynamic color images upload failed." };
+    return { error: err.message || "Category pictures upload failed." };
   }
 
-  // Use the first color image as primary, second as secondary for backwards compatibility
-  const primaryUrl = colorImages[0]?.url || coverUrl || parsed.data.cover_seed || undefined;
-  const secondaryUrl = colorImages[1]?.url || coverUrl2 || parsed.data.cover_seed_2 || null;
+  // Backwards compatibility fallback for thumbnail
+  if (!resolvedThumbnail) {
+    resolvedThumbnail = genericPictures[0] || categoriesList[0]?.images[0] || "/images/placeholder.png";
+  }
+
+  const mediaJson = JSON.stringify({
+    generic_pictures: genericPictures,
+    categories: categoriesList
+  });
 
   await createBook({
     title: parsed.data.title,
@@ -115,9 +151,9 @@ export async function createBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: primaryUrl,
-    cover_seed_2: secondaryUrl,
-    color_images: JSON.stringify(colorImages),
+    cover_seed: resolvedThumbnail,
+    cover_seed_2: genericPictures[0] || null,
+    color_images: mediaJson,
   });
 
   revalidatePath("/admin");
@@ -137,54 +173,100 @@ export async function updateBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  // Process cover image uploads for update
+  // Process primary thumbnail/cover image upload
   let coverUrl: string | undefined;
-  let coverUrl2: string | undefined;
   try {
-    coverUrl = await processUpload(formData.get("cover_file"), "Primary cover image", parsed.data.title);
-    coverUrl2 = await processUpload(formData.get("cover_file_2"), "Secondary cover image", parsed.data.title);
+    coverUrl = await processUpload(formData.get("cover_file"), "Thumbnail image", parsed.data.title);
   } catch (err: any) {
-    return { error: err.message || "Image upload failed." };
+    return { error: err.message || "Thumbnail upload failed." };
   }
 
-  // Process dynamic color image files and urls
-  const keysStr = formData.get("color_image_keys") as string || "";
-  const keys = keysStr.split(",").filter(Boolean);
-  const colorImages: Array<{ url: string; color: string }> = [];
+  const coverSeedInput = formData.get("cover_seed") as string;
+  let resolvedThumbnail = coverUrl || coverSeedInput || undefined;
+
+  // 1. Process Generic Pictures
+  const genericKeysStr = formData.get("generic_picture_keys") as string || "";
+  const genericKeys = genericKeysStr.split(",").filter(Boolean);
+  const genericPictures: string[] = [];
 
   try {
-    for (const key of keys) {
+    for (const key of genericKeys) {
       if (key.startsWith("existing_")) {
-        const url = formData.get(`color_image_url_${key}`) as string;
-        const color = formData.get(`color_image_color_${key}`) as string;
-        if (url && color) {
-          colorImages.push({ url, color });
-        }
-      } else if (key.startsWith("new_")) {
-        const file = formData.get(`color_image_file_${key}`);
-        const url = formData.get(`color_image_url_${key}`) as string;
-        const color = formData.get(`color_image_color_${key}`) as string;
+        const url = formData.get(`generic_url_${key}`) as string;
+        if (url) genericPictures.push(url);
+      } else {
+        const file = formData.get(`generic_file_${key}`);
+        const url = formData.get(`generic_url_${key}`) as string;
 
         let imageUrl = url || "";
         if (file && (file as File).size > 0) {
-          const uploadedUrl = await processUpload(file, `Color image (${color})`, parsed.data.title);
+          const uploadedUrl = await processUpload(file, "Generic picture", parsed.data.title);
           if (uploadedUrl) {
             imageUrl = uploadedUrl;
           }
         }
-
-        if (imageUrl && color) {
-          colorImages.push({ url: imageUrl, color });
+        if (imageUrl) {
+          genericPictures.push(imageUrl);
         }
       }
     }
   } catch (err: any) {
-    return { error: err.message || "Dynamic color images upload failed." };
+    return { error: err.message || "Generic pictures upload failed." };
   }
 
-  // Use the first color image as primary, second as secondary for backwards compatibility
-  const primaryUrl = colorImages[0]?.url || coverUrl || parsed.data.cover_seed || undefined;
-  const secondaryUrl = colorImages[1]?.url || coverUrl2 || parsed.data.cover_seed_2 || null;
+  // 2. Process Categories
+  const categoryKeysStr = formData.get("category_keys") as string || "";
+  const categoryKeys = categoryKeysStr.split(",").filter(Boolean);
+  const categoriesList: Array<{ name: string; images: string[] }> = [];
+
+  try {
+    for (const catKey of categoryKeys) {
+      const name = (formData.get(`category_name_${catKey}`) as string || "").trim();
+      if (!name) continue;
+
+      const imgKeysStr = formData.get(`category_${catKey}_picture_keys`) as string || "";
+      const imgKeys = imgKeysStr.split(",").filter(Boolean);
+      const categoryImages: string[] = [];
+
+      for (const imgKey of imgKeys) {
+        if (imgKey.startsWith("existing_")) {
+          const url = formData.get(`category_${catKey}_url_${imgKey}`) as string;
+          if (url) categoryImages.push(url);
+        } else {
+          const file = formData.get(`category_${catKey}_file_${imgKey}`);
+          const url = formData.get(`category_${catKey}_url_${imgKey}`) as string;
+
+          let imageUrl = url || "";
+          if (file && (file as File).size > 0) {
+            const uploadedUrl = await processUpload(file, `Category (${name}) picture`, parsed.data.title);
+            if (uploadedUrl) {
+              imageUrl = uploadedUrl;
+            }
+          }
+          if (imageUrl) {
+            categoryImages.push(imageUrl);
+          }
+        }
+      }
+
+      categoriesList.push({
+        name,
+        images: categoryImages
+      });
+    }
+  } catch (err: any) {
+    return { error: err.message || "Category pictures upload failed." };
+  }
+
+  // Backwards compatibility fallback for thumbnail
+  if (!resolvedThumbnail) {
+    resolvedThumbnail = coverUrl || coverSeedInput || genericPictures[0] || categoriesList[0]?.images[0] || undefined;
+  }
+
+  const mediaJson = JSON.stringify({
+    generic_pictures: genericPictures,
+    categories: categoriesList
+  });
 
   await updateBook(id, {
     title: parsed.data.title,
@@ -194,9 +276,9 @@ export async function updateBookAction(
     price_cents: Math.round(parsed.data.price * 100),
     stock: parsed.data.stock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: primaryUrl,
-    cover_seed_2: secondaryUrl,
-    color_images: JSON.stringify(colorImages),
+    cover_seed: resolvedThumbnail,
+    cover_seed_2: genericPictures[0] || null,
+    color_images: mediaJson,
   });
 
   revalidatePath("/admin");

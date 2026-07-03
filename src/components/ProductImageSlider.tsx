@@ -1,8 +1,7 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BookCover from "./BookCover";
 import Image from "next/image";
+import { parseProductMedia } from "@/lib/cart-utils";
 
 type ProductImageSliderProps = {
   title: string;
@@ -11,6 +10,7 @@ type ProductImageSliderProps = {
   coverSeed: string;
   coverSeed2?: string | null;
   colorImages?: string | null;
+  selectedCategory?: string;
 };
 
 function isUrl(value: string) {
@@ -57,28 +57,47 @@ export default function ProductImageSlider({
   coverSeed,
   coverSeed2,
   colorImages,
+  selectedCategory,
 }: ProductImageSliderProps) {
   const [index, setIndex] = useState(0);
 
-  let slides: Array<{ seed: string; label?: string; isSecondary?: boolean }> = [
-    { seed: coverSeed },
-  ];
-  
-  if (coverSeed2) {
-    slides.push({ seed: coverSeed2 });
+  // Reset slider index when category changes
+  useEffect(() => {
+    setIndex(0);
+  }, [selectedCategory]);
+
+  const media = parseProductMedia(colorImages);
+  let slides: Array<{ seed: string; label?: string; isSecondary?: boolean }> = [];
+
+  // Generic pictures come first
+  media.generic_pictures.forEach((url) => {
+    slides.push({ seed: url, label: "Generic" });
+  });
+
+  // Then add unique category pictures
+  if (selectedCategory) {
+    const activeCat = media.categories.find(
+      (c) => c.name.toLowerCase() === selectedCategory.toLowerCase()
+    );
+    if (activeCat) {
+      activeCat.images.forEach((url) => {
+        slides.push({ seed: url, label: activeCat.name });
+      });
+    }
+  } else {
+    // Show all category pictures
+    media.categories.forEach((cat) => {
+      cat.images.forEach((url) => {
+        slides.push({ seed: url, label: cat.name });
+      });
+    });
   }
 
-  if (colorImages) {
-    try {
-      const parsed = JSON.parse(colorImages);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        slides = parsed.map((item: any) => ({
-          seed: item.url,
-          label: item.color,
-        }));
-      }
-    } catch (e) {
-      console.error("Failed to parse color images in slider:", e);
+  // Fallback to cover seeds if no images resolved
+  if (slides.length === 0) {
+    slides.push({ seed: coverSeed });
+    if (coverSeed2) {
+      slides.push({ seed: coverSeed2 });
     }
   }
 

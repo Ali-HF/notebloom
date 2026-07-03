@@ -1,17 +1,15 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import ProductImageSlider from "@/components/ProductImageSlider";
-import StarRating from "@/components/StarRating";
 import ReviewForm from "@/components/ReviewForm";
 import BloomDivider from "@/components/BloomDivider";
+import StarRating from "@/components/StarRating";
 import {
   getBook,
-  formatPrice,
   getReviewsForBook,
   getRatingSummary,
   hasUserPurchasedBook,
 } from "@/lib/db";
-import AddToCartButton from "@/components/AddToCartButton";
+import ProductDetailsClient from "@/components/ProductDetailsClient";
 import { auth } from "@/lib/auth";
 
 export default async function BookDetailPage({
@@ -46,82 +44,7 @@ export default async function BookDetailPage({
         <span className="text-ink truncate max-w-[200px]">{book.title}</span>
       </div>
 
-      <div className="mt-6 grid sm:grid-cols-[300px_1fr] gap-12">
-        <div className="w-full h-fit">
-          <ProductImageSlider
-            title={book.title}
-            author={book.author}
-            genre={book.genre}
-            coverSeed={book.cover_seed}
-            coverSeed2={book.cover_seed_2}
-            colorImages={book.color_images}
-          />
-        </div>
-
-        <div>
-          {/* Rebranded category pill badge */}
-          <span
-            className="inline-block px-3 py-1 bg-oxblood text-cream text-[10px] tracking-[0.18em] uppercase rounded-full mb-3"
-            style={{ fontFamily: "var(--font-stamp)" }}
-          >
-            {book.genre}
-          </span>
-          
-          <h1
-            className="mt-1 text-4xl leading-tight font-semibold text-ink"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {book.title}
-          </h1>
-          <p className="mt-1.5 text-lg text-ink-soft">{book.author}</p>
-
-          <div className="mt-3 flex items-center gap-2">
-            <StarRating value={summary.avg} size={14} />
-            <span className="text-sm text-ink-soft">
-              {summary.count > 0
-                ? `${summary.avg.toFixed(1)} (${summary.count} ${summary.count === 1 ? "review" : "reviews"})`
-                : "No reviews yet"}
-            </span>
-          </div>
-
-          <p className="mt-6 text-base leading-relaxed text-ink-soft max-w-prose">
-            {book.description}
-          </p>
-
-          <div
-            className="mt-6 text-2xl font-semibold text-ink"
-            style={{ fontFamily: "var(--font-stamp)" }}
-          >
-            {formatPrice(book.price_cents)}
-          </div>
-
-          {/* Product stock indicator text */}
-          <div className="mt-2 text-xs">
-            <span className={`font-semibold ${book.stock > 0 ? "text-moss" : "text-oxblood"}`} style={{ fontFamily: "var(--font-stamp)" }}>
-              {book.stock > 0 ? "In-stock" : "Out of stock"}
-            </span>
-          </div>
-
-          <div className="mt-6">
-            {book.stock > 0 ? (
-              <div className="flex items-center gap-4">
-                <AddToCartButton bookId={book.id} bookTitle={book.title} showQtySelect={true} maxQty={maxQty} />
-                <span className="text-xs text-ink-soft" style={{ fontFamily: "var(--font-stamp)" }}>
-                  {book.stock} left
-                </span>
-              </div>
-            ) : (
-              <p className="text-oxblood text-sm font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
-                SOLD OUT
-              </p>
-            )}
-          </div>
-
-          <p className="mt-4 text-[10px] text-ink-soft/60" style={{ fontFamily: "var(--font-stamp)" }}>
-            SKU {book.isbn}
-          </p>
-        </div>
-      </div>
+      <ProductDetailsClient book={book} summary={summary} maxQty={maxQty} />
 
       <BloomDivider className="my-14" />
 
