@@ -42,7 +42,7 @@ export default function AddToCartButton({
 
   if (showQtySelect) {
     return (
-      <form onSubmit={handleSubmit} className="flex items-center gap-3">
+      <form onSubmit={handleSubmit} className="flex items-center gap-3" data-no-progress>
         <label htmlFor="qty" className="sr-only">
           Quantity
         </label>
@@ -72,7 +72,7 @@ export default function AddToCartButton({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} data-no-progress>
       <button
         type="submit"
         disabled={isPending || optimisticAdded}

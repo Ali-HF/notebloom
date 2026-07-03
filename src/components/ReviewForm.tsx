@@ -10,7 +10,7 @@ export default function ReviewForm({ bookId }: { bookId: number }) {
   );
 
   return (
-    <form action={formAction} className="space-y-3 max-w-md">
+    <form action={formAction} className="space-y-3 max-w-md" data-no-progress>
       <div className="flex items-center gap-3">
         <label
           htmlFor="rating"

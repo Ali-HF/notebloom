@@ -100,7 +100,10 @@ function FeedbackManager() {
       const submitter = (e.submitter || form.querySelector('button[type="submit"], input[type="submit"]')) as HTMLElement;
       if (submitter) {
         submitter.classList.add("btn-loading");
-        startProgress();
+        
+        if (!form.hasAttribute("data-no-progress")) {
+          startProgress();
+        }
 
         // 8s automatic fallback in case page doesn't reload
         setTimeout(() => {

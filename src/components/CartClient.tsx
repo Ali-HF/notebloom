@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import BookCover from "@/components/BookCover";
 import BloomMark from "@/components/BloomMark";
@@ -15,24 +15,42 @@ export default function CartClient({
   items: CartRow[];
   isGuest: boolean;
 }) {
-  // Optimistic quantity map
-  const [quantities, setQuantities] = useState<Record<number, number>>(() =>
-    items.reduce((acc, it) => {
-      acc[it.id] = it.quantity;
-      return acc;
-    }, {} as Record<number, number>)
-  );
+  const [cartItems, setCartItems] = useState<CartRow[]>(items);
+  const [isPending, startTransition] = useTransition();
 
-  const handleQtyChange = (id: number, newQty: number) => {
-    setQuantities((prev) => ({ ...prev, [id]: newQty }));
+  // Sync state with props when prop updates (e.g. from background revalidation)
+  useEffect(() => {
+    setCartItems(items);
+  }, [items]);
+
+  const handleQtyChange = (bookId: number, newQty: number) => {
+    setCartItems((prev) =>
+      prev.map((it) => (it.book_id === bookId ? { ...it, quantity: newQty } : it))
+    );
   };
 
-  const computedTotal = items.reduce(
-    (sum, it) => sum + it.price_cents * (quantities[it.id] ?? it.quantity),
+  const handleRemove = (bookId: number) => {
+    // Instantly remove from UI
+    setCartItems((prev) => prev.filter((it) => it.book_id !== bookId));
+
+    // Call server action in the background
+    startTransition(async () => {
+      try {
+        await removeFromCartAction(bookId);
+      } catch (err) {
+        console.error("Failed to remove item:", err);
+        // Revert on error
+        setCartItems(items);
+      }
+    });
+  };
+
+  const computedTotal = cartItems.reduce(
+    (sum, it) => sum + it.price_cents * it.quantity,
     0
   );
 
-  if (items.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24 text-center flex flex-col items-center gap-4">
         <BloomMark size={40} />
@@ -71,7 +89,7 @@ export default function CartClient({
       <div className="flex flex-col md:grid md:grid-cols-[1fr_320px] gap-8 items-start">
         {/* Cart items */}
         <ul className="divide-y divide-ink/10 border-y border-ink/10 w-full">
-          {items.map((item) => (
+          {cartItems.map((item) => (
             <li key={item.id} className="py-6 flex flex-col sm:flex-row gap-5 sm:gap-6">
               <div className="flex gap-4 sm:gap-6 flex-1">
                 {/* Image */}
@@ -94,13 +112,18 @@ export default function CartClient({
                         {item.title}
                       </h3>
                     </Link>
-                    <form action={removeFromCartAction.bind(null, item.book_id)} className="shrink-0">
-                      <button type="submit" className="p-2 -mr-2 -mt-2 text-ink-soft hover:text-oxblood active:scale-90 active:opacity-75 transition-all cursor-pointer rounded-full" aria-label="Remove item">
+                    <div className="shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(item.book_id)}
+                        className="p-2 -mr-2 -mt-2 text-ink-soft hover:text-oxblood active:scale-90 active:opacity-75 transition-all cursor-pointer rounded-full"
+                        aria-label="Remove item"
+                      >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                           <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                         </svg>
                       </button>
-                    </form>
+                    </div>
                   </div>
                   <p className="text-xs text-ink-soft mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
                     SKU: NB-00{item.book_id} · {formatPrice(item.price_cents)} each
@@ -111,10 +134,10 @@ export default function CartClient({
                       bookId={item.book_id}
                       currentQty={item.quantity}
                       stock={item.stock}
-                      onChange={(newQty) => handleQtyChange(item.id, newQty)}
+                      onChange={(newQty) => handleQtyChange(item.book_id, newQty)}
                     />
                     <span className="font-semibold text-base text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
-                      {formatPrice(item.price_cents * (quantities[item.id] ?? item.quantity))}
+                      {formatPrice(item.price_cents * item.quantity)}
                     </span>
                   </div>
                 </div>
