@@ -104,7 +104,6 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
       }
     }
   }
-  revalidatePath("/cart");
 }
 
 export async function removeFromCartAction(bookId: number) {
@@ -125,7 +124,6 @@ export async function removeFromCartAction(bookId: number) {
       }
     }
   }
-  revalidatePath("/cart");
 }
 
 export async function checkoutAction(prevState: unknown, formData: FormData): Promise<{ error?: string }> {

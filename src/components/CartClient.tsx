@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useTransition, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import BookCover from "@/components/BookCover";
 import BloomMark from "@/components/BloomMark";
 import CartQtyInput from "@/components/CartQtyInput";
-import { formatPrice, type CartRow } from "@/lib/db";
-import { removeFromCartAction, updateCartQtyAction } from "@/app/actions/cart-actions";
+import { formatPrice, type CartRow } from "@/lib/cart-utils";
 
 export default function CartClient({
   items,
@@ -16,10 +15,9 @@ export default function CartClient({
   isGuest: boolean;
 }) {
   const [cartItems, setCartItems] = useState<CartRow[]>(items);
-  const [isPending, startTransition] = useTransition();
   const qtyTimeouts = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
-  // Sync state with props when prop updates (e.g. from background revalidation)
+  // Sync state with props when server re-renders (e.g. full page navigation)
   useEffect(() => {
     setCartItems(items);
   }, [items]);
@@ -32,46 +30,38 @@ export default function CartClient({
   }, []);
 
   const handleQtyChange = (bookId: number, newQty: number) => {
-    // Instantly update UI state
+    // Instantly update UI state — zero delay
     setCartItems((prev) =>
       prev.map((it) => (it.book_id === bookId ? { ...it, quantity: newQty } : it))
     );
 
-    // Clear previous timeout for this item
+    // Debounce the background sync
     if (qtyTimeouts.current[bookId]) {
       clearTimeout(qtyTimeouts.current[bookId]);
     }
 
-    // Set a new timeout to update the database
     qtyTimeouts.current[bookId] = setTimeout(() => {
-      const formData = new FormData();
-      formData.set("qty", String(newQty));
-      startTransition(async () => {
-        try {
-          await updateCartQtyAction(bookId, formData);
-        } catch (err) {
-          console.error("Failed to update qty:", err);
-          // Revert on error
-          setCartItems(items);
-        }
+      fetch("/api/cart/update-qty", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, qty: newQty }),
+      }).catch((err) => {
+        console.error("Failed to sync qty:", err);
       });
-    }, 300);
+    }, 400);
   };
-
 
   const handleRemove = (bookId: number) => {
     // Instantly remove from UI
     setCartItems((prev) => prev.filter((it) => it.book_id !== bookId));
 
-    // Call server action in the background
-    startTransition(async () => {
-      try {
-        await removeFromCartAction(bookId);
-      } catch (err) {
-        console.error("Failed to remove item:", err);
-        // Revert on error
-        setCartItems(items);
-      }
+    // Fire-and-forget background sync
+    fetch("/api/cart/remove", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookId }),
+    }).catch((err) => {
+      console.error("Failed to sync remove:", err);
     });
   };
 
