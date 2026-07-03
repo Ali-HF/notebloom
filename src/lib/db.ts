@@ -380,7 +380,16 @@ export async function updateBook(
 }
 
 export async function deleteBook(id: number): Promise<void> {
-  await sql`DELETE FROM books WHERE id = ${id}`;
+  await sql.begin(async (sql) => {
+    // 1. Delete associated cart items
+    await sql`DELETE FROM cart_items WHERE book_id = ${id}`;
+    // 2. Delete associated reviews
+    await sql`DELETE FROM reviews WHERE book_id = ${id}`;
+    // 3. Detach historical order items to avoid foreign key violations
+    await sql`UPDATE order_items SET book_id = NULL WHERE book_id = ${id}`;
+    // 4. Finally delete the book
+    await sql`DELETE FROM books WHERE id = ${id}`;
+  });
 }
 
 // users
