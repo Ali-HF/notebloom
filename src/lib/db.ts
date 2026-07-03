@@ -578,6 +578,34 @@ export async function cartCount(userId: number): Promise<number> {
 
 // orders
 
+async function adjustCategoryStock(
+  sqlConn: any,
+  bookId: number,
+  quantityDelta: number,
+  colorName: string | null | undefined
+) {
+  if (!colorName) return;
+
+  const result = await sqlConn`SELECT color_images FROM books WHERE id = ${bookId}`;
+  if (result.length === 0 || !result[0].color_images) return;
+
+  try {
+    const parsed = JSON.parse(result[0].color_images);
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+      const cat = parsed.categories.find(
+        (c: any) => c.name.toLowerCase() === colorName.toLowerCase()
+      );
+      if (cat) {
+        cat.stock = Math.max(0, (cat.stock || 0) + quantityDelta);
+        const updatedJson = JSON.stringify(parsed);
+        await sqlConn`UPDATE books SET color_images = ${updatedJson} WHERE id = ${bookId}`;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to adjust category stock:", err);
+  }
+}
+
 export async function placeOrder(
   userId: number,
   shippingJson: string = "{}",
@@ -618,6 +646,8 @@ export async function placeOrder(
           SET stock = stock - ${it.quantity} 
           WHERE id = ${it.book_id}
         `;
+        // Deduct stock of the specific selected category/variant color
+        await adjustCategoryStock(sql, it.book_id, -it.quantity, it.color);
       }
 
       // 3. Clear cart
@@ -788,8 +818,8 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
       return;
     }
 
-    // Fetch order items
-    const items = await sql`SELECT book_id, quantity, title FROM order_items WHERE order_id = ${orderId}`;
+    // Fetch order items (including color selection)
+    const items = await sql`SELECT book_id, quantity, title, color FROM order_items WHERE order_id = ${orderId}`;
 
     if (newIsDeducted && !oldIsDeducted) {
       // Transitioning TO Shipped/Delivered: Decrement stock
@@ -805,24 +835,28 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
           throw new Error(`Insufficient stock for "${item.title}". Available: ${currentStock}, Required: ${item.quantity}.`);
         }
 
-        // Decrement stock
+        // Decrement overall stock
         await sql`
           UPDATE books 
           SET stock = stock - ${item.quantity} 
           WHERE id = ${item.book_id}
         `;
+        // Decrement specific variant category stock
+        await adjustCategoryStock(sql, item.book_id, -item.quantity, item.color);
       }
     } else if (!newIsDeducted && oldIsDeducted) {
       // Transitioning FROM Shipped/Delivered: Restore stock
       for (const item of items) {
         if (!item.book_id) continue;
 
-        // Increment stock back
+        // Increment overall stock back
         await sql`
           UPDATE books 
           SET stock = stock + ${item.quantity} 
           WHERE id = ${item.book_id}
         `;
+        // Restore specific variant category stock
+        await adjustCategoryStock(sql, item.book_id, item.quantity, item.color);
       }
     }
   });

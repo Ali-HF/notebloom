@@ -711,12 +711,13 @@ export default function CheckoutClient({
               <div className="max-h-[300px] overflow-y-auto pr-1">
                 {items.map((item) => {
                   let currentSeed = item.cover_seed;
-                  let colorsList: Array<{ url: string; color: string }> = [];
+                  let colorsList: Array<{ url: string; color: string; stock: number }> = [];
                   if (item.color_images) {
                     const media = parseProductMedia(item.color_images);
                     colorsList = media.categories.map((c) => ({
                       color: c.name,
                       url: c.images[0] || item.cover_seed,
+                      stock: c.stock,
                     }));
                     const selectedColor = selectedColors[item.book_id];
                     const found = colorsList.find((ci) => ci.color === selectedColor);
@@ -756,19 +757,23 @@ export default function CheckoutClient({
                             <div className="flex flex-wrap gap-2 mt-2">
                               {colorsList.map((ci) => {
                                 const isSelected = selectedColors[item.book_id] === ci.color;
+                                const isOutOfStock = ci.stock <= 0;
                                 return (
                                   <button
                                     key={ci.color}
                                     type="button"
+                                    disabled={isOutOfStock && !isSelected}
                                     onClick={() => setSelectedColors((prev) => ({ ...prev, [item.book_id]: ci.color }))}
-                                    className={`px-3 py-1.5 sm:px-2 sm:py-0.5 rounded-full text-[10px] sm:text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer border active:scale-95 touch-manipulation select-none ${
+                                    className={`px-3 py-1.5 sm:px-2 sm:py-0.5 rounded-full text-[10px] sm:text-[9px] uppercase font-bold tracking-wider transition-all border active:scale-95 touch-manipulation select-none ${
                                       isSelected
                                         ? "bg-oxblood text-cream border-oxblood shadow-sm scale-105"
+                                        : isOutOfStock
+                                        ? "bg-ink/5 text-ink-soft/40 border-ink/10 line-through cursor-not-allowed opacity-50"
                                         : "bg-cream text-ink-soft border-ink/20 hover:border-ink/40 active:bg-ink/5"
                                     }`}
                                     style={{ fontFamily: "var(--font-stamp)", minWidth: "44px", minHeight: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
                                   >
-                                    {ci.color}
+                                    {ci.color} {isOutOfStock ? "(SOLD OUT)" : `(${ci.stock})`}
                                   </button>
                                 );
                               })}

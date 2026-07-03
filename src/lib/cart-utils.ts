@@ -21,10 +21,13 @@ export function formatPrice(cents: number): string {
 
 export interface ProductMedia {
   generic_pictures: string[];
-  categories: Array<{ name: string; images: string[] }>;
+  categories: Array<{ name: string; stock: number; images: string[] }>;
 }
 
-export function parseProductMedia(colorImagesJson: string | null | undefined): ProductMedia {
+export function parseProductMedia(
+  colorImagesJson: string | null | undefined,
+  overallStock: number = 0
+): ProductMedia {
   const defaultMedia: ProductMedia = { generic_pictures: [], categories: [] };
   if (!colorImagesJson) return defaultMedia;
 
@@ -36,10 +39,16 @@ export function parseProductMedia(colorImagesJson: string | null | undefined): P
       const generic_pictures = Array.isArray(parsed.generic_pictures) ? parsed.generic_pictures : [];
       const rawCategories = Array.isArray(parsed.categories) ? parsed.categories : [];
       
-      const categories = rawCategories.map((c: any) => ({
-        name: String(c.name || ""),
-        images: Array.isArray(c.images) ? c.images.map(String) : []
-      })).filter((c: any) => c.name.trim() !== "");
+      const categories = rawCategories.map((c: any) => {
+        const name = String(c.name || "").trim();
+        // Fallback to overallStock if c.stock is missing/undefined
+        const stock = typeof c.stock === "number" ? c.stock : overallStock;
+        return {
+          name,
+          stock,
+          images: Array.isArray(c.images) ? c.images.map(String) : []
+        };
+      }).filter((c: any) => c.name !== "");
 
       return { generic_pictures, categories };
     }
@@ -60,10 +69,15 @@ export function parseProductMedia(colorImagesJson: string | null | undefined): P
         }
       });
 
-      const categories = Object.entries(categoriesMap).map(([name, images]) => ({
-        name,
-        images
-      }));
+      const categories = Object.entries(categoriesMap).map(([name, images]) => {
+        // Fallback category stock to overall stock or divide evenly
+        const stock = overallStock;
+        return {
+          name,
+          stock,
+          images
+        };
+      });
 
       return { generic_pictures: [], categories };
     }

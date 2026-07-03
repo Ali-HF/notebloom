@@ -24,7 +24,6 @@ const bookSchema = z.object({
   description: z.string().min(1, "Description is required."),
   genre: z.enum(GENRES, "Choose a genre."),
   price: z.coerce.number().min(0.01, "Price must be more than PKR 0."),
-  stock: z.coerce.number().int().min(0, "Stock can't be negative."),
   isbn: z.string().optional().default(""),
   cover_seed: z.string().optional().default(""),
   cover_seed_2: z.string().optional().default(""),
@@ -58,84 +57,49 @@ export async function createBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  // Process primary thumbnail/cover image upload
-  let coverUrl: string | undefined;
-  try {
-    coverUrl = await processUpload(formData.get("cover_file"), "Thumbnail image", parsed.data.title);
-  } catch (err: any) {
-    return { error: err.message || "Thumbnail upload failed." };
-  }
-
-  const coverSeedInput = formData.get("cover_seed") as string;
-  let resolvedThumbnail = coverUrl || coverSeedInput || "";
+  const resolvedThumbnail = (formData.get("cover_seed") as string || "").trim();
 
   // 1. Process Generic Pictures
   const genericKeysStr = formData.get("generic_picture_keys") as string || "";
   const genericKeys = genericKeysStr.split(",").filter(Boolean);
   const genericPictures: string[] = [];
 
-  try {
-    for (const key of genericKeys) {
-      const file = formData.get(`generic_file_${key}`);
-      const url = formData.get(`generic_url_${key}`) as string;
-
-      let imageUrl = url || "";
-      if (file && (file as File).size > 0) {
-        const uploadedUrl = await processUpload(file, "Generic picture", parsed.data.title);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
-        }
-      }
-      if (imageUrl) {
-        genericPictures.push(imageUrl);
-      }
+  for (const key of genericKeys) {
+    const url = (formData.get(`generic_url_${key}`) as string || "").trim();
+    if (url) {
+      genericPictures.push(url);
     }
-  } catch (err: any) {
-    return { error: err.message || "Generic pictures upload failed." };
   }
 
-  // 2. Process Categories
+  // 2. Process Categories & Category Stocks
   const categoryKeysStr = formData.get("category_keys") as string || "";
   const categoryKeys = categoryKeysStr.split(",").filter(Boolean);
-  const categoriesList: Array<{ name: string; images: string[] }> = [];
+  const categoriesList: Array<{ name: string; stock: number; images: string[] }> = [];
+  let totalStock = 0;
 
-  try {
-    for (const catKey of categoryKeys) {
-      const name = (formData.get(`category_name_${catKey}`) as string || "").trim();
-      if (!name) continue;
+  for (const catKey of categoryKeys) {
+    const name = (formData.get(`category_name_${catKey}`) as string || "").trim();
+    if (!name) continue;
 
-      const imgKeysStr = formData.get(`category_${catKey}_picture_keys`) as string || "";
-      const imgKeys = imgKeysStr.split(",").filter(Boolean);
-      const categoryImages: string[] = [];
+    const stock = Number(formData.get(`category_stock_${catKey}`)) || 0;
+    totalStock += stock;
 
-      for (const imgKey of imgKeys) {
-        const file = formData.get(`category_${catKey}_file_${imgKey}`);
-        const url = formData.get(`category_${catKey}_url_${imgKey}`) as string;
+    const imgKeysStr = formData.get(`category_${catKey}_picture_keys`) as string || "";
+    const imgKeys = imgKeysStr.split(",").filter(Boolean);
+    const categoryImages: string[] = [];
 
-        let imageUrl = url || "";
-        if (file && (file as File).size > 0) {
-          const uploadedUrl = await processUpload(file, `Category (${name}) picture`, parsed.data.title);
-          if (uploadedUrl) {
-            imageUrl = uploadedUrl;
-          }
-        }
-        if (imageUrl) {
-          categoryImages.push(imageUrl);
-        }
+    for (const imgKey of imgKeys) {
+      const url = (formData.get(`category_${catKey}_url_${imgKey}`) as string || "").trim();
+      if (url) {
+        categoryImages.push(url);
       }
-
-      categoriesList.push({
-        name,
-        images: categoryImages
-      });
     }
-  } catch (err: any) {
-    return { error: err.message || "Category pictures upload failed." };
-  }
 
-  // Backwards compatibility fallback for thumbnail
-  if (!resolvedThumbnail) {
-    resolvedThumbnail = genericPictures[0] || categoriesList[0]?.images[0] || "/images/placeholder.png";
+    categoriesList.push({
+      name,
+      stock,
+      images: categoryImages
+    });
   }
 
   const mediaJson = JSON.stringify({
@@ -149,9 +113,9 @@ export async function createBookAction(
     description: parsed.data.description,
     genre: parsed.data.genre,
     price_cents: Math.round(parsed.data.price * 100),
-    stock: parsed.data.stock,
+    stock: totalStock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: resolvedThumbnail,
+    cover_seed: resolvedThumbnail || genericPictures[0] || categoriesList[0]?.images[0] || "/images/placeholder.png",
     cover_seed_2: genericPictures[0] || null,
     color_images: mediaJson,
   });
@@ -173,94 +137,49 @@ export async function updateBookAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  // Process primary thumbnail/cover image upload
-  let coverUrl: string | undefined;
-  try {
-    coverUrl = await processUpload(formData.get("cover_file"), "Thumbnail image", parsed.data.title);
-  } catch (err: any) {
-    return { error: err.message || "Thumbnail upload failed." };
-  }
-
-  const coverSeedInput = formData.get("cover_seed") as string;
-  let resolvedThumbnail = coverUrl || coverSeedInput || undefined;
+  const resolvedThumbnail = (formData.get("cover_seed") as string || "").trim();
 
   // 1. Process Generic Pictures
   const genericKeysStr = formData.get("generic_picture_keys") as string || "";
   const genericKeys = genericKeysStr.split(",").filter(Boolean);
   const genericPictures: string[] = [];
 
-  try {
-    for (const key of genericKeys) {
-      if (key.startsWith("existing_")) {
-        const url = formData.get(`generic_url_${key}`) as string;
-        if (url) genericPictures.push(url);
-      } else {
-        const file = formData.get(`generic_file_${key}`);
-        const url = formData.get(`generic_url_${key}`) as string;
-
-        let imageUrl = url || "";
-        if (file && (file as File).size > 0) {
-          const uploadedUrl = await processUpload(file, "Generic picture", parsed.data.title);
-          if (uploadedUrl) {
-            imageUrl = uploadedUrl;
-          }
-        }
-        if (imageUrl) {
-          genericPictures.push(imageUrl);
-        }
-      }
+  for (const key of genericKeys) {
+    const url = (formData.get(`generic_url_${key}`) as string || "").trim();
+    if (url) {
+      genericPictures.push(url);
     }
-  } catch (err: any) {
-    return { error: err.message || "Generic pictures upload failed." };
   }
 
-  // 2. Process Categories
+  // 2. Process Categories & Stocks
   const categoryKeysStr = formData.get("category_keys") as string || "";
   const categoryKeys = categoryKeysStr.split(",").filter(Boolean);
-  const categoriesList: Array<{ name: string; images: string[] }> = [];
+  const categoriesList: Array<{ name: string; stock: number; images: string[] }> = [];
+  let totalStock = 0;
 
-  try {
-    for (const catKey of categoryKeys) {
-      const name = (formData.get(`category_name_${catKey}`) as string || "").trim();
-      if (!name) continue;
+  for (const catKey of categoryKeys) {
+    const name = (formData.get(`category_name_${catKey}`) as string || "").trim();
+    if (!name) continue;
 
-      const imgKeysStr = formData.get(`category_${catKey}_picture_keys`) as string || "";
-      const imgKeys = imgKeysStr.split(",").filter(Boolean);
-      const categoryImages: string[] = [];
+    const stock = Number(formData.get(`category_stock_${catKey}`)) || 0;
+    totalStock += stock;
 
-      for (const imgKey of imgKeys) {
-        if (imgKey.startsWith("existing_")) {
-          const url = formData.get(`category_${catKey}_url_${imgKey}`) as string;
-          if (url) categoryImages.push(url);
-        } else {
-          const file = formData.get(`category_${catKey}_file_${imgKey}`);
-          const url = formData.get(`category_${catKey}_url_${imgKey}`) as string;
+    const imgKeysStr = formData.get(`category_${catKey}_picture_keys`) as string || "";
+    const imgKeys = imgKeysStr.split(",").filter(Boolean);
+    const categoryImages: string[] = [];
 
-          let imageUrl = url || "";
-          if (file && (file as File).size > 0) {
-            const uploadedUrl = await processUpload(file, `Category (${name}) picture`, parsed.data.title);
-            if (uploadedUrl) {
-              imageUrl = uploadedUrl;
-            }
-          }
-          if (imageUrl) {
-            categoryImages.push(imageUrl);
-          }
-        }
+    for (const imgKey of imgKeys) {
+      const url = (formData.get(`category_${catKey}_url_${imgKey}`) as string || "").trim();
+      if (url) {
+        categoryImages.push(url);
       }
-
-      categoriesList.push({
-        name,
-        images: categoryImages
-      });
     }
-  } catch (err: any) {
-    return { error: err.message || "Category pictures upload failed." };
-  }
 
-  // Backwards compatibility fallback for thumbnail
-  if (!resolvedThumbnail) {
-    resolvedThumbnail = coverUrl || coverSeedInput || genericPictures[0] || categoriesList[0]?.images[0] || undefined;
+    categoriesList.push({
+      name,
+      stock,
+      images: categoryImages
+    });
   }
 
   const mediaJson = JSON.stringify({
@@ -274,9 +193,9 @@ export async function updateBookAction(
     description: parsed.data.description,
     genre: parsed.data.genre,
     price_cents: Math.round(parsed.data.price * 100),
-    stock: parsed.data.stock,
+    stock: totalStock,
     isbn: parsed.data.isbn ?? "",
-    cover_seed: resolvedThumbnail,
+    cover_seed: resolvedThumbnail || genericPictures[0] || categoriesList[0]?.images[0] || undefined,
     cover_seed_2: genericPictures[0] || null,
     color_images: mediaJson,
   });

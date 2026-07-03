@@ -118,32 +118,45 @@ export default function ProductDetailsClient({
 
         {/* Stock status & Add to Cart */}
         <div className="mt-6">
-          <div className="text-xs mb-3">
-            <span
-              className={`font-semibold uppercase tracking-wider ${book.stock > 0 ? "text-moss" : "text-oxblood"}`}
-              style={{ fontFamily: "var(--font-stamp)" }}
-            >
-              {book.stock > 0 ? "In-stock" : "Out of stock"}
-            </span>
-          </div>
+          {(() => {
+            const activeCat = media.categories.find(
+              (c) => c.name.toLowerCase() === selectedCategory.toLowerCase()
+            );
+            const activeStock = activeCat ? activeCat.stock : book.stock;
+            const isAvailable = activeStock > 0;
+            const computedMaxQty = Math.min(activeStock, 10);
 
-          {book.stock > 0 ? (
-            <div className="flex items-center gap-4">
-              <AddToCartButton
-                bookId={book.id}
-                bookTitle={book.title}
-                showQtySelect={true}
-                maxQty={maxQty}
-              />
-              <span className="text-xs text-ink-soft font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
-                {book.stock} units available
-              </span>
-            </div>
-          ) : (
-            <p className="text-oxblood text-sm font-bold tracking-wider" style={{ fontFamily: "var(--font-stamp)" }}>
-              SOLD OUT
-            </p>
-          )}
+            return (
+              <>
+                <div className="text-xs mb-3">
+                  <span
+                    className={`font-semibold uppercase tracking-wider ${isAvailable ? "text-moss" : "text-oxblood"}`}
+                    style={{ fontFamily: "var(--font-stamp)" }}
+                  >
+                    {isAvailable ? "In-stock" : "Out of stock"}
+                  </span>
+                </div>
+
+                {isAvailable ? (
+                  <div className="flex items-center gap-4">
+                    <AddToCartButton
+                      bookId={book.id}
+                      bookTitle={book.title}
+                      showQtySelect={true}
+                      maxQty={computedMaxQty}
+                    />
+                    <span className="text-xs text-ink-soft font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
+                      {activeStock} units available
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-oxblood text-sm font-bold tracking-wider animate-pulse" style={{ fontFamily: "var(--font-stamp)" }}>
+                    SOLD OUT
+                  </p>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {/* SKU */}
