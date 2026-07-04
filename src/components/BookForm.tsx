@@ -292,14 +292,22 @@ export default function BookForm({
         <Field label="SKU" name="isbn" defaultValue={initial?.isbn} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <Field
-          label="Price (USD)"
+          label="Price (PKR)"
           name="price"
           type="number"
           step="0.01"
           min="0.01"
           defaultValue={initial?.price_cents ? (initial.price_cents / 100).toFixed(2) : undefined}
+          required
+        />
+        <Field
+          label="Weight (grams)"
+          name="weight_grams"
+          type="number"
+          min="1"
+          defaultValue={initial?.weight_grams ?? 200}
           required
         />
       </div>

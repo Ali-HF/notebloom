@@ -16,6 +16,7 @@ import {
 } from "@/lib/db";
 import { sendWhatsappNotification } from "@/lib/whatsapp";
 import { sendOrderConfirmationRequestEmail } from "@/lib/email";
+import { calculateDelivery } from "@/lib/delivery-pricing";
 
 export async function addToCartAction(bookId: number, qty: number = 1) {
   const session = await auth();
@@ -190,6 +191,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
           stock: book.stock,
           color: (formData.get(`color_${book.id}`) as string) || null,
           color_images: book.color_images,
+          weight_grams: book.weight_grams,
         });
       }
     }
@@ -200,9 +202,10 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
     return { error: "Your cart is empty. Please add items before checking out." };
   }
 
-  // 4. Serialize shipping details
+  // 4. Calculate dynamic delivery cost based on total weight and city
   const delivery = (formData.get("delivery") as string) || "standard";
-  const shippingCost = delivery === "express" ? 350 : 150;
+  const totalWeightGrams = cartItems.reduce((sum, item) => sum + (item.weight_grams || 200) * item.quantity, 0);
+  const shippingCost = calculateDelivery(totalWeightGrams, city, delivery as "standard" | "express");
   const shippingCents = shippingCost * 100;
 
   const shippingDetails = {

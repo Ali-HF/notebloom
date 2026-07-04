@@ -35,7 +35,8 @@ export default async function CheckoutPage() {
                 price_cents: book.price_cents,
                 cover_seed: book.cover_seed,
                 stock: book.stock,
-                color_images: book.color_images
+                color_images: book.color_images,
+                weight_grams: book.weight_grams
               });
             }
           }

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { checkoutAction } from "@/app/actions/cart-actions";
 import BookCover from "@/components/BookCover";
 import { parseProductMedia } from "@/lib/cart-utils";
+import { calculateDelivery, getDeliveryOptions, formatWeight } from "@/lib/delivery-pricing";
 
 type CartRow = {
   id: number;
@@ -17,6 +18,7 @@ type CartRow = {
   cover_seed: string;
   stock: number;
   color_images?: string | null;
+  weight_grams: number;
 };
 
 type ShippingDetails = {
@@ -67,7 +69,7 @@ export default function CheckoutClient({
     addressType: savedShipping?.addressType || "home",
     street: savedShipping?.address || "",
     apartment: savedShipping?.apartment || "",
-    city: savedShipping?.city || "Lahore",
+    city: savedShipping?.city || "Karachi",
     area: savedShipping?.area || "",
     landmark: savedShipping?.landmark || "",
     delivery: savedShipping?.delivery || "standard",
@@ -79,7 +81,9 @@ export default function CheckoutClient({
   const set = (key: string, val: string | boolean) => setForm((p) => ({ ...p, [key]: val }));
 
   const subtotalCents = items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
-  const shippingCents = form.delivery === "express" ? 35000 : 15000; // 350 PKR and 150 PKR in cents
+  const totalWeightGrams = items.reduce((sum, item) => sum + (item.weight_grams || 200) * item.quantity, 0);
+  const shippingCost = calculateDelivery(totalWeightGrams, form.city, form.delivery as "standard" | "express");
+  const shippingCents = shippingCost * 100;
   const totalCents = subtotalCents + shippingCents;
 
   const formatPrice = (cents: number) => `PKR ${(cents / 100).toFixed(2)}`;
@@ -648,22 +652,26 @@ export default function CheckoutClient({
                 <span style={s.cardTitle}>Delivery Method</span>
               </div>
               <div style={s.deliveryGrid}>
-                {[
-                  { key: "standard", name: "Standard", price: "Rs. 150", desc: "3-5 Business Days. Tracked courier service." },
-                  { key: "express", name: "Express", price: "Rs. 350", desc: "Next Day Delivery (Lahore Only). 48 hours nationwide." },
-                ].map((opt) => (
-                  <div
-                    key={opt.key}
-                    style={s.deliveryCard(form.delivery === opt.key)}
-                    onClick={() => set("delivery", opt.key)}
-                  >
-                    <div style={s.deliveryTop}>
-                      <span style={s.deliveryName}>{opt.name}</span>
-                      <span style={s.deliveryPrice}>{opt.price}</span>
+                {(() => {
+                  const options = getDeliveryOptions(totalWeightGrams, form.city);
+                  const isKarachi = form.city.toLowerCase() === "karachi";
+                  return [
+                    { key: "standard", name: "Standard", price: `Rs. ${options.standard}`, desc: "3-5 Business Days. Tracked courier service." },
+                    { key: "express", name: "Express", price: `Rs. ${options.express}`, desc: isKarachi ? "Next Day Delivery (Karachi Only)." : "48-72 hours nationwide." },
+                  ].map((opt) => (
+                    <div
+                      key={opt.key}
+                      style={s.deliveryCard(form.delivery === opt.key)}
+                      onClick={() => set("delivery", opt.key)}
+                    >
+                      <div style={s.deliveryTop}>
+                        <span style={s.deliveryName}>{opt.name}</span>
+                        <span style={s.deliveryPrice}>{opt.price}</span>
+                      </div>
+                      <div style={s.deliveryDesc}>{opt.desc}</div>
                     </div>
-                    <div style={s.deliveryDesc}>{opt.desc}</div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
 
@@ -812,6 +820,10 @@ export default function CheckoutClient({
                 </label>
               )}
 
+              <div style={s.summaryRow}>
+                <span>Total Weight</span>
+                <span>{formatWeight(totalWeightGrams)}</span>
+              </div>
               <div style={s.summaryRow}>
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotalCents)}</span>

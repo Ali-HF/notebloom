@@ -131,6 +131,7 @@ async function main() {
     price_cents: 999,
     stock: 3,
     isbn: "000-0-0000-0000-0",
+    weight_grams: 200,
   });
   assert(!!(await db.getBook(newId)), "admin createBook works");
   await db.updateBook(newId, {
@@ -141,6 +142,7 @@ async function main() {
     price_cents: 1099,
     stock: 2,
     isbn: "000-0-0000-0000-0",
+    weight_grams: 200,
   });
   const updatedBook = await db.getBook(newId);
   assert(updatedBook?.title === "Updated Title", "admin updateBook works");

@@ -34,6 +34,8 @@ export type CartRow = {
   cover_seed: string;
   stock: number;
   color?: string | null;
+  color_images?: string | null;
+  weight_grams: number;
 };
 
 export type Order = {
@@ -147,6 +149,17 @@ export async function seedIfEmpty() {
         await sql`UPDATE orders SET order_code = ${code} WHERE id = ${o.id}`;
       }
       await sql`ALTER TABLE orders ADD CONSTRAINT orders_order_code_unique UNIQUE (order_code)`;
+    }
+
+    // Migrate: add weight_grams column if it doesn't exist
+    const weightColExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_name = 'books' AND column_name = 'weight_grams'
+      )
+    `;
+    if (!weightColExists[0].exists) {
+      await sql`ALTER TABLE books ADD COLUMN weight_grams INTEGER NOT NULL DEFAULT 200`;
     }
 
     const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
@@ -423,9 +436,10 @@ export async function createBook(
   const coverSeed = b.cover_seed || (slug(b.title) + "-" + Date.now());
   const coverSeed2 = b.cover_seed_2 || null;
   const colorImages = b.color_images || "[]";
+  const weightGrams = b.weight_grams || 200;
   const result = await sql`
-    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2, color_images)
-    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2}, ${colorImages})
+    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2, color_images, weight_grams)
+    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2}, ${colorImages}, ${weightGrams})
     RETURNING id
   `;
   return Number(result[0].id);
@@ -435,12 +449,14 @@ export async function updateBook(
   id: number,
   b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2" | "color_images"> & { cover_seed?: string; cover_seed_2?: string | null; color_images?: string | null }
 ): Promise<void> {
+  const weightGrams = b.weight_grams || 200;
   await sql`
     UPDATE books 
     SET title=${b.title}, author=${b.author}, description=${b.description}, genre=${b.genre}, price_cents=${b.price_cents}, stock=${b.stock}, isbn=${b.isbn},
         cover_seed=${b.cover_seed || sql`cover_seed`}, 
         cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`},
-        color_images=${b.color_images !== undefined ? b.color_images : sql`color_images`}
+        color_images=${b.color_images !== undefined ? b.color_images : sql`color_images`},
+        weight_grams=${weightGrams}
     WHERE id=${id}
   `;
   checkAndNotifyLowStock(id).catch(console.error);
@@ -606,7 +622,7 @@ export async function getUserSavedShipping(userId: number): Promise<string | nul
 
 export async function getCart(userId: number): Promise<CartRow[]> {
   const result = await sql`
-    SELECT ci.id, ci.book_id, ci.quantity, b.title, b.author, b.price_cents, b.cover_seed, b.stock, b.color_images, ci.color
+    SELECT ci.id, ci.book_id, ci.quantity, b.title, b.author, b.price_cents, b.cover_seed, b.stock, b.color_images, b.weight_grams, ci.color
     FROM cart_items ci JOIN books b ON b.id = ci.book_id
     WHERE ci.user_id = ${userId}
     ORDER BY ci.id DESC

@@ -27,6 +27,7 @@ const bookSchema = z.object({
   isbn: z.string().optional().default(""),
   cover_seed: z.string().optional().default(""),
   cover_seed_2: z.string().optional().default(""),
+  weight_grams: z.coerce.number().min(1, "Weight must be at least 1 gram."),
 });
 
 export type BookFormState = { error?: string } | undefined;
@@ -118,6 +119,7 @@ export async function createBookAction(
     cover_seed: resolvedThumbnail || genericPictures[0] || categoriesList[0]?.images[0] || "/images/placeholder.png",
     cover_seed_2: genericPictures[0] || null,
     color_images: mediaJson,
+    weight_grams: parsed.data.weight_grams,
   });
 
   revalidatePath("/admin");
@@ -198,6 +200,7 @@ export async function updateBookAction(
     cover_seed: resolvedThumbnail || genericPictures[0] || categoriesList[0]?.images[0] || undefined,
     cover_seed_2: genericPictures[0] || null,
     color_images: mediaJson,
+    weight_grams: parsed.data.weight_grams,
   });
 
   revalidatePath("/admin");

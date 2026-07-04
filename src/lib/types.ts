@@ -10,5 +10,6 @@ export type Book = {
   cover_seed: string;
   cover_seed_2?: string | null;
   color_images?: string | null;
+  weight_grams: number;
   created_at: string;
 };
