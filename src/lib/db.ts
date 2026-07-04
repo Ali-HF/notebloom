@@ -389,6 +389,17 @@ export async function listBooks(opts: { q?: string; genre?: string; sort?: strin
   }
 }
 
+export async function listBooksWithSales(): Promise<(Book & { sales: number })[]> {
+  const result = await sql`
+    SELECT b.*, COALESCE(SUM(oi.quantity), 0) as sales
+    FROM books b
+    LEFT JOIN order_items oi ON b.id = oi.book_id
+    GROUP BY b.id
+    ORDER BY b.created_at DESC
+  `;
+  return result as unknown as (Book & { sales: number })[];
+}
+
 export async function getBook(id: number): Promise<Book | undefined> {
   const result = await sql`SELECT * FROM books WHERE id = ${id}`;
   return result[0] as unknown as Book | undefined;

@@ -10,11 +10,15 @@ export default function FilterBar({
   q,
   count,
   sort,
+  onGenreChange,
+  onSortChange,
 }: {
   genre?: string;
   q?: string;
   count: number;
   sort?: string;
+  onGenreChange?: (genre: string) => void;
+  onSortChange?: (sort: string) => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -38,6 +42,10 @@ export default function FilterBar({
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    if (onSortChange) {
+      onSortChange(val);
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (val && val !== "best") {
       params.set("sort", val);
@@ -81,6 +89,12 @@ export default function FilterBar({
             })()}
             className={pillClass(!genre)}
             style={{ fontFamily: "var(--font-stamp)" }}
+            onClick={(e) => {
+              if (onGenreChange) {
+                e.preventDefault();
+                onGenreChange("");
+              }
+            }}
           >
             All
           </Link>
@@ -96,6 +110,12 @@ export default function FilterBar({
                 href={`/shop?${params.toString()}`}
                 className={pillClass(genre === g)}
                 style={{ fontFamily: "var(--font-stamp)" }}
+                onClick={(e) => {
+                  if (onGenreChange) {
+                    e.preventDefault();
+                    onGenreChange(g);
+                  }
+                }}
               >
                 {g}
               </Link>
@@ -161,7 +181,13 @@ export default function FilterBar({
             })()}
             className={pillClass(!genre)}
             style={{ fontFamily: "var(--font-stamp)" }}
-            onClick={() => setMobileOpen(false)}
+            onClick={(e) => {
+              setMobileOpen(false);
+              if (onGenreChange) {
+                e.preventDefault();
+                onGenreChange("");
+              }
+            }}
           >
             All
           </Link>
@@ -176,7 +202,13 @@ export default function FilterBar({
                 href={`/shop?${params.toString()}`}
                 className={pillClass(genre === g)}
                 style={{ fontFamily: "var(--font-stamp)" }}
-                onClick={() => setMobileOpen(false)}
+                onClick={(e) => {
+                  setMobileOpen(false);
+                  if (onGenreChange) {
+                    e.preventDefault();
+                    onGenreChange(g);
+                  }
+                }}
               >
                 {g}
               </Link>
