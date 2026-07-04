@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BookCover from "./BookCover";
-import { formatPrice, type Book } from "@/lib/db";
+import { formatPrice } from "@/lib/cart-utils";
+import type { Book } from "@/lib/types";
 import AddToCartButton from "./AddToCartButton";
 
 export default function BookCard({ book }: { book: Book }) {
