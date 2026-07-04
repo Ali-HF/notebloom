@@ -50,21 +50,21 @@ export default async function HomePage() {
 
       {/* category navigator */}
       {(() => {
-        const CATEGORY_DETAILS: Record<string, { emoji: string; desc: string }> = {
-          "Notebooks": { emoji: "📔", desc: "Journals" },
-          "Planners": { emoji: "📅", desc: "Schedules" },
-          "Pens": { emoji: "✍️", desc: "Gel pens" },
-          "Sticky Notes": { emoji: "📌", desc: "Memos" },
-          "Washi Tape": { emoji: "🎀", desc: "Tapes" },
-          "Pencil Cases": { emoji: "👝", desc: "Pouches" },
-          "Accessories": { emoji: "🧸", desc: "Stickers" },
-          "Desk Decor": { emoji: "🌿", desc: "Organizers" },
+        const CATEGORY_DETAILS: Record<string, { desc: string }> = {
+          "Notebooks": { desc: "JOURNALS" },
+          "Planners": { desc: "PLANNERS" },
+          "Pens": { desc: "WRITING" },
+          "Sticky Notes": { desc: "MEMOS" },
+          "Washi Tape": { desc: "TAPES" },
+          "Pencil Cases": { desc: "POUCHES" },
+          "Accessories": { desc: "ACCESSORIES" },
+          "Desk Decor": { desc: "DESKWARE" },
         };
 
         return (
           <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10 border-b border-ink/10">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xs font-bold tracking-[0.18em] uppercase text-ink-soft" style={{ fontFamily: "var(--font-stamp)" }}>
+              <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-ink-soft" style={{ fontFamily: "var(--font-stamp)" }}>
                 Shop by Category
               </h2>
               <Link href="/shop" className="trail-link text-xs font-semibold text-oxblood" style={{ fontFamily: "var(--font-stamp)" }}>
@@ -75,25 +75,27 @@ export default async function HomePage() {
             <div className="flex sm:grid sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-9 gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               <Link
                 href="/shop"
-                className="snap-start shrink-0 flex flex-col items-center justify-center w-24 h-24 sm:w-auto sm:h-auto sm:aspect-square bg-oxblood text-cream rounded-2xl hover:bg-oxblood-dark transition-all duration-300 shadow-sm flex-none group p-3 active:scale-95"
-                style={{ fontFamily: "var(--font-stamp)" }}
+                className="snap-start shrink-0 flex flex-col items-center justify-center w-28 h-20 sm:w-auto sm:aspect-[4/3] bg-oxblood text-cream rounded-2xl hover:bg-oxblood-dark transition-all duration-300 shadow-sm flex-none group p-3 active:scale-95"
               >
-                <span className="text-2xl mb-1.5 group-hover:scale-110 transition-transform">🛍️</span>
-                <span className="text-[9px] tracking-widest uppercase font-bold text-center leading-tight">ALL ITEMS</span>
+                <span className="text-sm font-semibold text-center leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+                  Shop All
+                </span>
+                <span className="text-[8px] tracking-[0.15em] uppercase font-bold text-cream/60 mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                  COLLECTION
+                </span>
               </Link>
               {GENRES.map((genre) => {
-                const details = CATEGORY_DETAILS[genre] || { emoji: "✨", desc: "Cozy" };
+                const details = CATEGORY_DETAILS[genre] || { desc: "COZY" };
                 return (
                   <Link
                     key={genre}
                     href={`/shop?genre=${encodeURIComponent(genre)}`}
-                    className="snap-start shrink-0 flex flex-col items-center justify-center w-24 h-24 sm:w-auto sm:h-auto sm:aspect-square bg-cream border border-ink/8 rounded-2xl hover:border-oxblood/40 hover:shadow-sm transition-all duration-300 flex-none group p-3 active:scale-95"
+                    className="snap-start shrink-0 flex flex-col items-center justify-center w-28 h-20 sm:w-auto sm:aspect-[4/3] bg-cream border border-ink/8 rounded-2xl hover:border-oxblood/40 hover:shadow-sm transition-all duration-300 flex-none group p-3 active:scale-95"
                   >
-                    <span className="text-2xl mb-1.5 group-hover:scale-110 transition-transform">{details.emoji}</span>
-                    <span className="text-[9px] tracking-wider uppercase font-bold text-ink text-center px-1 leading-tight" style={{ fontFamily: "var(--font-stamp)" }}>
+                    <span className="text-sm font-semibold text-ink text-center leading-tight" style={{ fontFamily: "var(--font-display)" }}>
                       {genre}
                     </span>
-                    <span className="hidden sm:block text-[7px] text-ink-soft/50 font-bold tracking-wider uppercase mt-1">
+                    <span className="text-[8px] tracking-[0.15em] uppercase text-ink-soft/40 font-bold mt-1" style={{ fontFamily: "var(--font-stamp)" }}>
                       {details.desc}
                     </span>
                   </Link>
