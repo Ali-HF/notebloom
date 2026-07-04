@@ -39,6 +39,15 @@ body {
   background-size: 4px 4px;
 }
 
+/* Hide scrollbars for clean swipe layouts */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* worm-trail underline used on links/nav */
 .trail-link {
   position: relative;
