@@ -300,34 +300,90 @@ function slug(s: string): string {
 
 // books
 
-export async function listBooks(opts: { q?: string; genre?: string } = {}): Promise<Book[]> {
-  if (opts.genre && opts.q) {
-    const term = `%${opts.q}%`;
+export async function listBooks(opts: { q?: string; genre?: string; sort?: string } = {}): Promise<Book[]> {
+  const { q, genre, sort = "best" } = opts;
+  
+  if (sort === "best") {
+    if (genre && q) {
+      const term = `%${q}%`;
+      const result = await sql`
+        SELECT b.*, COALESCE(SUM(oi.quantity), 0) as sales
+        FROM books b
+        LEFT JOIN order_items oi ON b.id = oi.book_id
+        WHERE b.genre = ${genre} AND (b.title ILIKE ${term} OR b.author ILIKE ${term})
+        GROUP BY b.id
+        ORDER BY sales DESC, b.created_at DESC
+      `;
+      return result as unknown as Book[];
+    } else if (genre) {
+      const result = await sql`
+        SELECT b.*, COALESCE(SUM(oi.quantity), 0) as sales
+        FROM books b
+        LEFT JOIN order_items oi ON b.id = oi.book_id
+        WHERE b.genre = ${genre}
+        GROUP BY b.id
+        ORDER BY sales DESC, b.created_at DESC
+      `;
+      return result as unknown as Book[];
+    } else if (q) {
+      const term = `%${q}%`;
+      const result = await sql`
+        SELECT b.*, COALESCE(SUM(oi.quantity), 0) as sales
+        FROM books b
+        LEFT JOIN order_items oi ON b.id = oi.book_id
+        WHERE (b.title ILIKE ${term} OR b.author ILIKE ${term})
+        GROUP BY b.id
+        ORDER BY sales DESC, b.created_at DESC
+      `;
+      return result as unknown as Book[];
+    } else {
+      const result = await sql`
+        SELECT b.*, COALESCE(SUM(oi.quantity), 0) as sales
+        FROM books b
+        LEFT JOIN order_items oi ON b.id = oi.book_id
+        GROUP BY b.id
+        ORDER BY sales DESC, b.created_at DESC
+      `;
+      return result as unknown as Book[];
+    }
+  }
+
+  let orderFragment = sql`ORDER BY created_at DESC`;
+  if (sort === "price-asc") {
+    orderFragment = sql`ORDER BY price_cents ASC, created_at DESC`;
+  } else if (sort === "price-desc") {
+    orderFragment = sql`ORDER BY price_cents DESC, created_at DESC`;
+  } else if (sort === "new") {
+    orderFragment = sql`ORDER BY created_at DESC`;
+  }
+
+  if (genre && q) {
+    const term = `%${q}%`;
     const result = await sql`
       SELECT * FROM books 
-      WHERE genre = ${opts.genre} AND (title ILIKE ${term} OR author ILIKE ${term})
-      ORDER BY created_at DESC
+      WHERE genre = ${genre} AND (title ILIKE ${term} OR author ILIKE ${term})
+      ${orderFragment}
     `;
     return result as unknown as Book[];
-  } else if (opts.genre) {
+  } else if (genre) {
     const result = await sql`
       SELECT * FROM books 
-      WHERE genre = ${opts.genre}
-      ORDER BY created_at DESC
+      WHERE genre = ${genre}
+      ${orderFragment}
     `;
     return result as unknown as Book[];
-  } else if (opts.q) {
-    const term = `%${opts.q}%`;
+  } else if (q) {
+    const term = `%${q}%`;
     const result = await sql`
       SELECT * FROM books 
       WHERE (title ILIKE ${term} OR author ILIKE ${term})
-      ORDER BY created_at DESC
+      ${orderFragment}
     `;
     return result as unknown as Book[];
   } else {
     const result = await sql`
       SELECT * FROM books 
-      ORDER BY created_at DESC
+      ${orderFragment}
     `;
     return result as unknown as Book[];
   }

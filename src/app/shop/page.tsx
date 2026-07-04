@@ -7,10 +7,10 @@ import Link from "next/link";
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string; genre?: string }>;
+  searchParams?: Promise<{ q?: string; genre?: string; sort?: string }>;
 }) {
-  const { q, genre } = (await searchParams) ?? {};
-  const books = await listBooks({ q, genre });
+  const { q, genre, sort } = (await searchParams) ?? {};
+  const books = await listBooks({ q, genre, sort });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -30,7 +30,7 @@ export default async function ShopPage({
         </h1>
       </div>
 
-      <FilterBar genre={genre} q={q} count={books.length} />
+      <FilterBar genre={genre} q={q} sort={sort} count={books.length} />
 
       {/* Grid */}
       <div>

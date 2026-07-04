@@ -3,18 +3,24 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { GENRES } from "@/lib/constants";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 export default function FilterBar({
   genre,
   q,
   count,
+  sort,
 }: {
   genre?: string;
   q?: string;
   count: number;
+  sort?: string;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -29,6 +35,17 @@ export default function FilterBar({
       ? "bg-oxblood text-cream border-oxblood shadow-[0_2px_8px_-2px_rgba(124,47,47,0.45)] scale-[1.03]"
       : "bg-parchment text-ink border-ink/12 hover:border-oxblood/40 hover:text-oxblood hover:bg-oxblood/5"
     }`;
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    if (val && val !== "best") {
+      params.set("sort", val);
+    } else {
+      params.delete("sort");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div
@@ -55,7 +72,13 @@ export default function FilterBar({
           <div className="shrink-0 w-px h-4 bg-ink/10 mx-1" />
 
           <Link
-            href={q ? `/shop?q=${encodeURIComponent(q)}` : "/shop"}
+            href={(() => {
+              const params = new URLSearchParams();
+              if (q) params.set("q", q);
+              if (sort) params.set("sort", sort);
+              const qs = params.toString();
+              return qs ? `/shop?${qs}` : "/shop";
+            })()}
             className={pillClass(!genre)}
             style={{ fontFamily: "var(--font-stamp)" }}
           >
@@ -66,6 +89,7 @@ export default function FilterBar({
             const params = new URLSearchParams();
             params.set("genre", g);
             if (q) params.set("q", q);
+            if (sort) params.set("sort", sort);
             return (
               <Link
                 key={g}
@@ -108,7 +132,8 @@ export default function FilterBar({
                        pl-3.5 pr-8 py-1.5 text-[0.7rem] text-ink cursor-pointer
                        hover:border-oxblood/40 focus:border-oxblood focus:outline-none transition-colors"
             style={{ fontFamily: "var(--font-stamp)" }}
-            defaultValue="best"
+            value={sort || "best"}
+            onChange={handleSortChange}
           >
             <option value="best">Best selling</option>
             <option value="new">New arrivals</option>
@@ -127,7 +152,13 @@ export default function FilterBar({
       {mobileOpen && (
         <div className="sm:hidden px-6 pb-4 flex flex-wrap gap-2 border-t border-ink/8 pt-3">
           <Link
-            href={q ? `/shop?q=${encodeURIComponent(q)}` : "/shop"}
+            href={(() => {
+              const params = new URLSearchParams();
+              if (q) params.set("q", q);
+              if (sort) params.set("sort", sort);
+              const qs = params.toString();
+              return qs ? `/shop?${qs}` : "/shop";
+            })()}
             className={pillClass(!genre)}
             style={{ fontFamily: "var(--font-stamp)" }}
             onClick={() => setMobileOpen(false)}
@@ -138,6 +169,7 @@ export default function FilterBar({
             const params = new URLSearchParams();
             params.set("genre", g);
             if (q) params.set("q", q);
+            if (sort) params.set("sort", sort);
             return (
               <Link
                 key={g}
