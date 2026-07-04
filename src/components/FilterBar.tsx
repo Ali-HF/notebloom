@@ -61,7 +61,7 @@ export default function FilterBar({
                   bg-cream/90 backdrop-blur-md border border-ink/8
                   ${scrolled
           ? "mx-2 sm:mx-6 rounded-2xl shadow-[0_8px_32px_-8px_rgba(32,40,58,0.18)]"
-          : "-mx-4 sm:-mx-6 rounded-b-2xl shadow-[0_4px_24px_-8px_rgba(32,40,58,0.08)]"
+          : "rounded-2xl shadow-[0_4px_24px_-8px_rgba(32,40,58,0.08)]"
         }`}
     >
       {/* Main row */}
