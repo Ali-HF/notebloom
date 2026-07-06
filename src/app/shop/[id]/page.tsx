@@ -67,9 +67,17 @@ export default async function BookDetailPage({
                 className="bg-cream border border-ink/10 rounded-xl p-5 shadow-[0_4px_12px_rgba(34,29,24,0.06)] hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center justify-between gap-3 border-b border-ink/5 pb-3 mb-3">
-                  <span className="text-sm font-semibold text-ink" style={{ fontFamily: "var(--font-body)" }}>
-                    {r.user_name}
-                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-ink" style={{ fontFamily: "var(--font-body)" }}>
+                      {r.user_name}
+                    </span>
+                    {r.verified && (
+                      <span className="text-[10px] text-moss font-semibold uppercase tracking-wider flex items-center gap-1" style={{ fontFamily: "var(--font-stamp)" }}>
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-moss"></span>
+                        Verified Buyer
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center">
                     <StarRating value={r.rating} size={11} />
                   </div>
@@ -85,15 +93,14 @@ export default async function BookDetailPage({
         )}
 
         {session?.user ? (
-          hasPurchased ? (
+          <div className="space-y-4">
             <ReviewForm bookId={book.id} />
-          ) : (
-            <div className="bg-brass/10 border border-brass/20 rounded-lg p-5 max-w-prose">
-              <p className="text-sm text-ink-soft leading-relaxed">
-                <strong>Verified Purchase Required</strong> — Only customers who have purchased this product and had it delivered can submit a review. If you bought this, please make sure the order status is updated to Delivered in your account.
+            {!hasPurchased && (
+              <p className="text-[11px] text-ink-soft/70 max-w-md leading-relaxed italic">
+                Note: Anyone registered can share their thoughts. Reviews written by customers who purchased this item and had it delivered will display a <strong className="text-moss">Verified Buyer</strong> badge.
               </p>
-            </div>
-          )
+            )}
+          </div>
         ) : (
           <p className="text-sm text-ink-soft">
             <Link href={`/login?next=/shop/${book.id}`} className="trail-link text-oxblood font-semibold">

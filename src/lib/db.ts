@@ -69,6 +69,7 @@ export type Review = {
   comment: string | null;
   created_at: Date;
   user_name: string;
+  verified?: boolean;
 };
 
 // ---------- connection (singleton across dev hot-reloads) ----------
@@ -796,7 +797,17 @@ export async function getAllOrders(): Promise<(Order & { user_name: string; user
 
 export async function getReviewsForBook(bookId: number): Promise<Review[]> {
   const result = await sql`
-    SELECT r.*, u.name as user_name FROM reviews r
+    SELECT 
+      r.*, 
+      u.name as user_name,
+      EXISTS (
+        SELECT 1 FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.user_id = r.user_id
+          AND oi.book_id = r.book_id
+          AND o.status = 'Delivered'
+      ) as verified
+    FROM reviews r
     JOIN users u ON u.id = r.user_id
     WHERE r.book_id = ${bookId}
     ORDER BY r.created_at DESC
