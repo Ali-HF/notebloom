@@ -248,7 +248,7 @@ export async function sendOrderDeliveredEmail(
         <strong style="color:#2e2926;">${item.title}</strong><br>
         <span style="color:#8c827a;font-size:13px;">by ${item.author}</span>
       </div>
-      <a href="${baseUrl}/shop/${item.book_id}" style="display:inline-block;background-color:#6b1d2f;color:#faf8f5 !important;padding:6px 12px;text-decoration:none;border-radius:12px;font-size:11px;font-weight:bold;">REVIEW</a>
+      <a href="${baseUrl}/shop/${item.book_id}#reviews" style="display:inline-block;background-color:#6b1d2f;color:#faf8f5 !important;padding:6px 12px;text-decoration:none;border-radius:12px;font-size:11px;font-weight:bold;">REVIEW</a>
     </div>`).join("");
 
   const htmlContent = `

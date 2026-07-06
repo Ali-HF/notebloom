@@ -49,7 +49,7 @@ export default async function BookDetailPage({
       <BloomDivider className="my-14" />
 
       {/* Reviews section styled in 2-column cards layout */}
-      <section>
+      <section id="reviews">
         <h2
           className="text-2xl mb-8"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

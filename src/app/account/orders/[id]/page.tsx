@@ -144,6 +144,22 @@ export default async function OrderDetailPage({
         </div>
       )}
 
+      {order.status === "Delivered" && (
+        <div className="mb-8 rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">🌸</span>
+            <div>
+              <p className="font-semibold text-emerald-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Order delivered!
+              </p>
+              <p className="text-sm text-emerald-800 leading-relaxed">
+                We hope you love your new stationery. Please share your thoughts and leave a review for the items you received!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ul className="divide-y divide-ink/10 mb-8">
         {items.map((item) => (
           <li key={item.id} className="py-4 flex gap-4">
@@ -163,6 +179,17 @@ export default async function OrderDetailPage({
               <p className="text-sm text-ink-soft">
                 {item.author} · Qty {item.quantity} {item.color ? `· Color: ${item.color}` : ""}
               </p>
+              {order.status === "Delivered" && item.book_id && (
+                <div className="mt-2">
+                  <Link
+                    href={`/shop/${item.book_id}#reviews`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-moss/10 hover:bg-moss/20 text-moss text-xs font-semibold uppercase tracking-wider transition-colors"
+                    style={{ fontFamily: "var(--font-stamp)" }}
+                  >
+                    ✍️ Review Product
+                  </Link>
+                </div>
+              )}
             </div>
             <div style={{ fontFamily: "var(--font-stamp)" }}>
               {formatPrice(item.price_cents * item.quantity)}
