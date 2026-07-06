@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { checkoutAction } from "@/app/actions/cart-actions";
@@ -48,6 +48,15 @@ export default function CheckoutClient({
   isGuest: boolean;
 }) {
   const [state, formAction, isPending] = useActionState(checkoutAction, undefined);
+  const [isPlacing, setIsPlacing] = useState(false);
+
+  // Stop loading indicator and scroll to top if error occurs so the user sees it on mobile
+  useEffect(() => {
+    if (state?.error) {
+      setIsPlacing(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [state]);
 
   // Initialize selected colors for each item (keyed by unique item.id)
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>(() => {
@@ -496,7 +505,7 @@ export default function CheckoutClient({
         </div>
       </nav>
 
-      <form action={formAction}>
+      <form onSubmit={() => setIsPlacing(true)} action={formAction}>
         {/* Hidden inputs to pass state elements to server actions */}
         <input type="hidden" name="addressType" value={form.addressType} />
         <input type="hidden" name="delivery" value={form.delivery} />
@@ -714,12 +723,36 @@ export default function CheckoutClient({
               </div>
             </div>
 
-            {state?.error && !state.error.toLowerCase().includes("phone") && (
-              <p className="text-sm text-oxblood font-semibold my-1">{state.error}</p>
+            {state?.error && (
+              <p className="text-sm text-oxblood font-semibold my-2 bg-oxblood/5 border border-oxblood/20 rounded p-3 animate-pulse">
+                ⚠️ {state.error}
+              </p>
             )}
 
-            <button type="submit" disabled={isPending} style={s.placeBtn}>
-              {isPending ? "PLACING ORDER..." : "PLACE ORDER · COD"}
+            <button
+              type="submit"
+              disabled={isPending || isPlacing}
+              style={{
+                ...s.placeBtn,
+                opacity: (isPending || isPlacing) ? 0.75 : 1,
+                cursor: (isPending || isPlacing) ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
+              }}
+            >
+              {(isPending || isPlacing) ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-cream" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style={{ animation: "spin 1s linear infinite" }}>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>PLACING ORDER...</span>
+                </>
+              ) : (
+                <span>PLACE ORDER · COD</span>
+              )}
             </button>
           </div>
 
