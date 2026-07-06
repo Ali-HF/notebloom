@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import BloomMark from "./BloomMark";
-import { GENRES } from "@/lib/db";
+import { GENRES } from "@/lib/constants";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
