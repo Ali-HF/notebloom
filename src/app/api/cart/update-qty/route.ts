@@ -5,7 +5,7 @@ import { setCartQty } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    const { bookId, qty } = await request.json();
+    const { bookId, qty, color } = await request.json();
     const cleanQty = Number.isFinite(qty) ? qty : 1;
 
     if (!bookId || !Number.isFinite(bookId)) {
@@ -15,15 +15,16 @@ export async function POST(request: Request) {
     const session = await auth();
 
     if (session?.user?.id) {
-      await setCartQty(Number(session.user.id), bookId, cleanQty);
+      await setCartQty(Number(session.user.id), bookId, cleanQty, color);
     } else {
       const cookieStore = await cookies();
       const cartCookie = cookieStore.get("notebloom_cart")?.value;
       if (cartCookie) {
         try {
-          const cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+          const cart: Array<{ book_id: number; quantity: number; color?: string | null }> = JSON.parse(cartCookie);
           if (Array.isArray(cart)) {
-            const idx = cart.findIndex((it) => it.book_id === bookId);
+            const cleanColor = color || "";
+            const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
             if (idx >= 0) {
               if (cleanQty <= 0) {
                 cart.splice(idx, 1);

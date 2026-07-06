@@ -18,15 +18,16 @@ import { sendWhatsappNotification } from "@/lib/whatsapp";
 import { sendOrderConfirmationRequestEmail } from "@/lib/email";
 import { calculateDelivery } from "@/lib/delivery-pricing";
 
-export async function addToCartAction(bookId: number, qty: number = 1) {
+export async function addToCartAction(bookId: number, qty: number = 1, color?: string | null) {
   const session = await auth();
+  const cleanColor = color || "";
   if (session?.user?.id) {
-    await addToCart(Number(session.user.id), bookId, qty);
+    await addToCart(Number(session.user.id), bookId, qty, cleanColor);
   } else {
     // Guest cart in cookies
     const cookieStore = await cookies();
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
-    let cart: Array<{ book_id: number; quantity: number }> = [];
+    let cart: Array<{ book_id: number; quantity: number; color?: string | null }> = [];
     if (cartCookie) {
       try {
         const parsed = JSON.parse(cartCookie);
@@ -34,11 +35,11 @@ export async function addToCartAction(bookId: number, qty: number = 1) {
       } catch (_e) {
       }
     }
-    const idx = cart.findIndex((it) => it.book_id === bookId);
+    const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
     if (idx >= 0) {
       cart[idx].quantity += qty;
     } else {
-      cart.push({ book_id: bookId, quantity: qty });
+      cart.push({ book_id: bookId, quantity: qty, color: cleanColor });
     }
     cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
@@ -50,14 +51,16 @@ export async function addToCartWithQtyAction(bookId: number, formData: FormData)
   const session = await auth();
   const qty = Number(formData.get("qty"));
   const cleanQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
+  const color = formData.get("color") as string | null;
+  const cleanColor = color || "";
 
   if (session?.user?.id) {
-    await addToCart(Number(session.user.id), bookId, cleanQty);
+    await addToCart(Number(session.user.id), bookId, cleanQty, cleanColor);
   } else {
     // Guest cart in cookies
     const cookieStore = await cookies();
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
-    let cart: Array<{ book_id: number; quantity: number }> = [];
+    let cart: Array<{ book_id: number; quantity: number; color?: string | null }> = [];
     if (cartCookie) {
       try {
         const parsed = JSON.parse(cartCookie);
@@ -65,11 +68,11 @@ export async function addToCartWithQtyAction(bookId: number, formData: FormData)
       } catch (_e) {
       }
     }
-    const idx = cart.findIndex((it) => it.book_id === bookId);
+    const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
     if (idx >= 0) {
       cart[idx].quantity += cleanQty;
     } else {
-      cart.push({ book_id: bookId, quantity: cleanQty });
+      cart.push({ book_id: bookId, quantity: cleanQty, color: cleanColor });
     }
     cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
@@ -81,17 +84,19 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
   const session = await auth();
   const qty = Number(formData.get("qty"));
   const cleanQty = Number.isFinite(qty) ? qty : 1;
+  const color = formData.get("color") as string | null;
+  const cleanColor = color || "";
 
   if (session?.user?.id) {
-    await setCartQty(Number(session.user.id), bookId, cleanQty);
+    await setCartQty(Number(session.user.id), bookId, cleanQty, cleanColor);
   } else {
     const cookieStore = await cookies();
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
     if (cartCookie) {
       try {
-        const cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+        const cart: Array<{ book_id: number; quantity: number; color?: string | null }> = JSON.parse(cartCookie);
         if (Array.isArray(cart)) {
-          const idx = cart.findIndex((it) => it.book_id === bookId);
+          const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
           if (idx >= 0) {
             if (cleanQty <= 0) {
               cart.splice(idx, 1);
@@ -107,18 +112,19 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
   }
 }
 
-export async function removeFromCartAction(bookId: number) {
+export async function removeFromCartAction(bookId: number, color?: string | null) {
   const session = await auth();
+  const cleanColor = color || "";
   if (session?.user?.id) {
-    await removeFromCart(Number(session.user.id), bookId);
+    await removeFromCart(Number(session.user.id), bookId, cleanColor);
   } else {
     const cookieStore = await cookies();
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
     if (cartCookie) {
       try {
-        const cart: Array<{ book_id: number; quantity: number }> = JSON.parse(cartCookie);
+        const cart: Array<{ book_id: number; quantity: number; color?: string | null }> = JSON.parse(cartCookie);
         if (Array.isArray(cart)) {
-          const filtered = cart.filter((it) => it.book_id !== bookId);
+          const filtered = cart.filter((it) => !(it.book_id === bookId && (it.color || "") === cleanColor));
           cookieStore.set("notebloom_cart", JSON.stringify(filtered), { maxAge: 86400 * 30, path: "/" });
         }
       } catch (_e) {
@@ -169,19 +175,20 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
     const rawItems = await getCart(userId);
     cartItems = rawItems.map(item => ({
       ...item,
-      color: (formData.get(`color_${item.book_id}`) as string) || null,
+      color: (formData.get(`color_${item.id}`) as string) || null,
     }));
   } else {
     const cookieStore = await cookies();
     const cartCookie = cookieStore.get("notebloom_cart")?.value;
-    const tempCart: Array<{ book_id: number; quantity: number }> = cartCookie ? JSON.parse(cartCookie) : [];
+    const tempCart: Array<{ book_id: number; quantity: number; color?: string | null }> = cartCookie ? JSON.parse(cartCookie) : [];
 
     const resolvedItems = [];
+    let i = 0;
     for (const item of tempCart) {
       const book = await getBook(item.book_id);
       if (book) {
         resolvedItems.push({
-          id: 0,
+          id: i,
           book_id: book.id,
           quantity: item.quantity,
           title: book.title,
@@ -189,13 +196,17 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
           price_cents: book.price_cents,
           cover_seed: book.cover_seed,
           stock: book.stock,
-          color: (formData.get(`color_${book.id}`) as string) || null,
+          color: item.color || null,
           color_images: book.color_images,
           weight_grams: book.weight_grams,
         });
+        i++;
       }
     }
-    cartItems = resolvedItems;
+    cartItems = resolvedItems.map(item => ({
+      ...item,
+      color: (formData.get(`color_${item.id}`) as string) || null,
+    }));
   }
 
   if (cartItems.length === 0) {

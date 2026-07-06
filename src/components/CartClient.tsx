@@ -29,50 +29,50 @@ export default function CartClient({
     };
   }, []);
 
-  const handleQtyChange = (bookId: number, newQty: number) => {
-    const oldItem = cartItems.find((it) => it.book_id === bookId);
+  const handleQtyChange = (itemId: number, bookId: number, newQty: number, color?: string | null) => {
+    const oldItem = cartItems.find((it) => it.id === itemId);
     const oldQty = oldItem ? oldItem.quantity : 0;
     const delta = newQty - oldQty;
 
     // Instantly update UI state — zero delay
     setCartItems((prev) =>
-      prev.map((it) => (it.book_id === bookId ? { ...it, quantity: newQty } : it))
+      prev.map((it) => (it.id === itemId ? { ...it, quantity: newQty } : it))
     );
 
     // Update global cart badge instantly
     window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta } }));
 
     // Debounce the background sync
-    if (qtyTimeouts.current[bookId]) {
-      clearTimeout(qtyTimeouts.current[bookId]);
+    if (qtyTimeouts.current[itemId]) {
+      clearTimeout(qtyTimeouts.current[itemId]);
     }
 
-    qtyTimeouts.current[bookId] = setTimeout(() => {
+    qtyTimeouts.current[itemId] = setTimeout(() => {
       fetch("/api/cart/update-qty", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, qty: newQty }),
+        body: JSON.stringify({ bookId, qty: newQty, color }),
       }).catch((err) => {
         console.error("Failed to sync qty:", err);
       });
     }, 400);
   };
 
-  const handleRemove = (bookId: number) => {
-    const item = cartItems.find((it) => it.book_id === bookId);
+  const handleRemove = (itemId: number, bookId: number, color?: string | null) => {
+    const item = cartItems.find((it) => it.id === itemId);
     if (item) {
       // Update global cart badge instantly
       window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -item.quantity } }));
     }
 
     // Instantly remove from UI
-    setCartItems((prev) => prev.filter((it) => it.book_id !== bookId));
+    setCartItems((prev) => prev.filter((it) => it.id !== itemId));
 
     // Fire-and-forget background sync
     fetch("/api/cart/remove", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookId }),
+      body: JSON.stringify({ bookId, color }),
     }).catch((err) => {
       console.error("Failed to sync remove:", err);
     });
@@ -92,15 +92,6 @@ export default function CartClient({
         </h1>
         <p className="text-ink-soft">Find some lovely stationery products to get started.</p>
         <div className="flex gap-3 mt-2">
-          {isGuest && (
-            <Link
-              href="/login?next=/cart"
-              className="px-5 py-2.5 rounded-full bg-oxblood text-cream text-sm hover:bg-oxblood-dark transition-colors"
-              style={{ fontFamily: "var(--font-stamp)" }}
-            >
-              LOG IN
-            </Link>
-          )}
           <Link
             href="/shop"
             className="px-5 py-2.5 rounded-full ring-1 ring-ink/20 text-sm hover:ring-oxblood transition-colors"
@@ -155,7 +146,7 @@ export default function CartClient({
                       <div className="shrink-0">
                         <button
                           type="button"
-                          onClick={() => handleRemove(item.book_id)}
+                          onClick={() => handleRemove(item.id, item.book_id, item.color)}
                           className="p-2 -mr-2 -mt-2 text-ink-soft hover:text-oxblood active:scale-90 active:opacity-75 transition-all cursor-pointer rounded-full"
                           aria-label="Remove item"
                         >
@@ -179,7 +170,7 @@ export default function CartClient({
                         bookId={item.book_id}
                         currentQty={item.quantity}
                         stock={activeStock}
-                        onChange={(newQty) => handleQtyChange(item.book_id, newQty)}
+                        onChange={(newQty) => handleQtyChange(item.id, item.book_id, newQty, item.color)}
                       />
                       <span className="font-semibold text-base text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
                         {formatPrice(item.price_cents * item.quantity)}

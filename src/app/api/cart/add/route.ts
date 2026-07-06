@@ -28,14 +28,12 @@ export async function POST(request: Request) {
           // ignore
         }
       }
-      const idx = cart.findIndex((it) => it.book_id === bookId);
+      const cleanColor = color || "";
+      const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
       if (idx >= 0) {
         cart[idx].quantity += cleanQty;
-        if (color) {
-          cart[idx].color = color;
-        }
       } else {
-        cart.push({ book_id: bookId, quantity: cleanQty, color: color || null });
+        cart.push({ book_id: bookId, quantity: cleanQty, color: cleanColor });
       }
       cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
     }

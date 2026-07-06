@@ -631,29 +631,32 @@ export async function getCart(userId: number): Promise<CartRow[]> {
   return result as unknown as CartRow[];
 }
 
-export async function addToCart(userId: number, bookId: number, quantity: number, color?: string): Promise<void> {
+export async function addToCart(userId: number, bookId: number, quantity: number, color?: string | null): Promise<void> {
+  const cleanColor = color || "";
   await sql`
     INSERT INTO cart_items (user_id, book_id, quantity, color) 
-    VALUES (${userId}, ${bookId}, ${quantity}, ${color || null})
-    ON CONFLICT (user_id, book_id) 
-    DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity, color = EXCLUDED.color
+    VALUES (${userId}, ${bookId}, ${quantity}, ${cleanColor})
+    ON CONFLICT (user_id, book_id, color) 
+    DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity
   `;
 }
 
-export async function setCartQty(userId: number, bookId: number, qty: number): Promise<void> {
+export async function setCartQty(userId: number, bookId: number, qty: number, color?: string | null): Promise<void> {
+  const cleanColor = color || "";
   if (qty <= 0) {
-    await sql`DELETE FROM cart_items WHERE user_id=${userId} AND book_id=${bookId}`;
+    await sql`DELETE FROM cart_items WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}`;
   } else {
     await sql`
       UPDATE cart_items 
       SET quantity=${qty} 
-      WHERE user_id=${userId} AND book_id=${bookId}
+      WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}
     `;
   }
 }
 
-export async function removeFromCart(userId: number, bookId: number): Promise<void> {
-  await sql`DELETE FROM cart_items WHERE user_id=${userId} AND book_id=${bookId}`;
+export async function removeFromCart(userId: number, bookId: number, color?: string | null): Promise<void> {
+  const cleanColor = color || "";
+  await sql`DELETE FROM cart_items WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}`;
 }
 
 export async function clearCart(userId: number): Promise<void> {
@@ -1034,6 +1037,27 @@ async function runAutoMigration() {
     if (!cartItemColumnExists[0].exists) {
       await sql`ALTER TABLE cart_items ADD COLUMN color TEXT;`;
       console.log("Auto-Migration: added color column to cart_items table.");
+    }
+
+    // 2c. Migrate cart_items unique constraint to include color
+    const constraintExists = await sql`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'cart_items_user_id_book_id_color_key'
+      )
+    `;
+    if (!constraintExists[0].exists) {
+      console.log("Auto-Migration: migrating cart_items unique constraint to support product variations...");
+      try {
+        await sql`ALTER TABLE cart_items DROP CONSTRAINT IF EXISTS cart_items_user_id_book_id_key`;
+        await sql`UPDATE cart_items SET color = '' WHERE color IS NULL`;
+        await sql`ALTER TABLE cart_items ALTER COLUMN color SET DEFAULT ''`;
+        await sql`ALTER TABLE cart_items ALTER COLUMN color SET NOT NULL`;
+        await sql`ALTER TABLE cart_items ADD CONSTRAINT cart_items_user_id_book_id_color_key UNIQUE (user_id, book_id, color)`;
+        console.log("Auto-Migration: successfully migrated cart_items unique constraint.");
+      } catch (err) {
+        console.error("Auto-Migration Error during cart_items constraint update:", err);
+      }
     }
 
     // 3. Migrate existing books

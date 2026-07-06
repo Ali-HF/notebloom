@@ -17,6 +17,7 @@ type CartRow = {
   price_cents: number;
   cover_seed: string;
   stock: number;
+  color?: string | null;
   color_images?: string | null;
   weight_grams: number;
 };
@@ -48,14 +49,16 @@ export default function CheckoutClient({
 }) {
   const [state, formAction, isPending] = useActionState(checkoutAction, undefined);
 
-  // Initialize selected colors for each item
+  // Initialize selected colors for each item (keyed by unique item.id)
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>(() => {
     const initialColors: Record<number, string> = {};
     items.forEach((item) => {
-      if (item.color_images) {
+      if (item.color) {
+        initialColors[item.id] = item.color;
+      } else if (item.color_images) {
         const media = parseProductMedia(item.color_images);
         if (media.categories.length > 0) {
-          initialColors[item.book_id] = media.categories[0].name;
+          initialColors[item.id] = media.categories[0].name;
         }
       }
     });
@@ -736,7 +739,7 @@ export default function CheckoutClient({
                       url: c.images[0] || item.cover_seed,
                       stock: c.stock,
                     }));
-                    const selectedColor = selectedColors[item.book_id];
+                    const selectedColor = selectedColors[item.id];
                     const found = colorsList.find((ci) => ci.color === selectedColor);
                     if (found) {
                       currentSeed = found.url;
@@ -747,8 +750,8 @@ export default function CheckoutClient({
                     <div key={item.id} style={{ ...s.summaryItem, height: "auto", minHeight: "80px", alignItems: "flex-start", padding: "0.75rem 0" }}>
                       <input
                         type="hidden"
-                        name={`color_${item.book_id}`}
-                        value={selectedColors[item.book_id] || ""}
+                        name={`color_${item.id}`}
+                        value={selectedColors[item.id] || ""}
                       />
                       <div style={s.summaryImg} className="overflow-hidden bg-cream flex items-center justify-center shrink-0">
                         <BookCover
@@ -769,18 +772,18 @@ export default function CheckoutClient({
                         {colorsList.length > 0 && (
                           <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                             <span className="text-[9px] tracking-wider text-ink-soft uppercase block mb-1 font-bold" style={{ fontFamily: "var(--font-stamp)" }}>
-                              Color: {selectedColors[item.book_id] || "None"}
+                              Color: {selectedColors[item.id] || "None"}
                             </span>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {colorsList.map((ci) => {
-                                const isSelected = selectedColors[item.book_id] === ci.color;
+                                const isSelected = selectedColors[item.id] === ci.color;
                                 const isOutOfStock = ci.stock <= 0;
                                 return (
                                   <button
                                     key={ci.color}
                                     type="button"
                                     disabled={isOutOfStock && !isSelected}
-                                    onClick={() => setSelectedColors((prev) => ({ ...prev, [item.book_id]: ci.color }))}
+                                    onClick={() => setSelectedColors((prev) => ({ ...prev, [item.id]: ci.color }))}
                                     className={`px-3 py-1.5 sm:px-2 sm:py-0.5 rounded-full text-[10px] sm:text-[9px] uppercase font-bold tracking-wider transition-all border active:scale-95 touch-manipulation select-none ${
                                       isSelected
                                         ? "bg-oxblood text-cream border-oxblood shadow-sm scale-105"
