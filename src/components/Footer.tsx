@@ -143,10 +143,10 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-parchment/50">
           <div>
-            © {new Date().getFullYear()} Notebloom Stationery. Crafted for focus.
+            © {new Date().getFullYear()} Notebloom Stationery. All rights reserved.
           </div>
-          <div className="italic text-center sm:text-right">
-            Demo storefront — no real orders or newsletter subscriptions are processed.
+          <div className="text-center sm:text-right">
+            Crafted for focus.
           </div>
         </div>
       </div>
