@@ -571,22 +571,7 @@ export default function CheckoutClient({
                 <div style={s.stepBadge}>02</div>
                 <span style={s.cardTitle}>Delivery Address</span>
               </div>
-              <div style={s.addrToggle}>
-                <button
-                  type="button"
-                  style={s.addrBtn(form.addressType === "home")}
-                  onClick={() => set("addressType", "home")}
-                >
-                  🏠 HOME (PRIMARY)
-                </button>
-                <button
-                  type="button"
-                  style={s.addrBtn(form.addressType === "studio")}
-                  onClick={() => set("addressType", "studio")}
-                >
-                  🗂 STUDIO
-                </button>
-              </div>
+
               <label style={{ ...s.fieldWrap, marginBottom: "0.75rem" }} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
                 <span style={s.fieldLabel}>Street Address *</span>
                 <input
@@ -628,11 +613,41 @@ export default function CheckoutClient({
                     value={form.city}
                     onChange={(e) => set("city", e.target.value)}
                   >
-                    <option value="Lahore">Lahore, Punjab</option>
                     <option value="Karachi">Karachi, Sindh</option>
+                    <option value="Lahore">Lahore, Punjab</option>
                     <option value="Islamabad">Islamabad, ICT</option>
                     <option value="Rawalpindi">Rawalpindi, Punjab</option>
                     <option value="Faisalabad">Faisalabad, Punjab</option>
+                    <option value="Abbottabad">Abbottabad, KPK</option>
+                    <option value="Bahawalpur">Bahawalpur, Punjab</option>
+                    <option value="Chiniot">Chiniot, Punjab</option>
+                    <option value="Dera Ghazi Khan">Dera Ghazi Khan, Punjab</option>
+                    <option value="Dera Ismail Khan">Dera Ismail Khan, KPK</option>
+                    <option value="Gilgit">Gilgit, Gilgit-Baltistan</option>
+                    <option value="Gujranwala">Gujranwala, Punjab</option>
+                    <option value="Gujrat">Gujrat, Punjab</option>
+                    <option value="Gwadar">Gwadar, Balochistan</option>
+                    <option value="Hyderabad">Hyderabad, Sindh</option>
+                    <option value="Jhang">Jhang, Punjab</option>
+                    <option value="Jhelum">Jhelum, Punjab</option>
+                    <option value="Kasur">Kasur, Punjab</option>
+                    <option value="Kohat">Kohat, KPK</option>
+                    <option value="Larkana">Larkana, Sindh</option>
+                    <option value="Mardan">Mardan, KPK</option>
+                    <option value="Mirpur">Mirpur, AJK</option>
+                    <option value="Multan">Multan, Punjab</option>
+                    <option value="Muzaffarabad">Muzaffarabad, AJK</option>
+                    <option value="Nawabshah">Nawabshah, Sindh</option>
+                    <option value="Okara">Okara, Punjab</option>
+                    <option value="Peshawar">Peshawar, KPK</option>
+                    <option value="Quetta">Quetta, Balochistan</option>
+                    <option value="Rahim Yar Khan">Rahim Yar Khan, Punjab</option>
+                    <option value="Sahiwal">Sahiwal, Punjab</option>
+                    <option value="Sargodha">Sargodha, Punjab</option>
+                    <option value="Sheikhupura">Sheikhupura, Punjab</option>
+                    <option value="Sialkot">Sialkot, Punjab</option>
+                    <option value="Sukkur">Sukkur, Sindh</option>
+                    <option value="Other">Other City (Specify in address)</option>
                   </select>
                 </label>
                 <label style={s.fieldWrap} className="focus-within:!border-oxblood/60 focus-within:ring-1 focus-within:ring-oxblood/30 transition-all cursor-text">
@@ -856,10 +871,7 @@ export default function CheckoutClient({
                 </label>
               )}
 
-              <div style={s.summaryRow}>
-                <span>Total Weight</span>
-                <span>{formatWeight(totalWeightGrams)}</span>
-              </div>
+
               <div style={s.summaryRow}>
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotalCents)}</span>

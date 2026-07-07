@@ -23,11 +23,12 @@ export default async function CheckoutPage() {
         const parsed = JSON.parse(cartCookie);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const resolvedItems = [];
+          let i = 0;
           for (const it of parsed) {
             const book = await getBook(Number(it.book_id));
             if (book) {
               resolvedItems.push({
-                id: Number(it.book_id),
+                id: i,
                 book_id: book.id,
                 quantity: Number(it.quantity) || 1,
                 title: book.title,
@@ -35,9 +36,11 @@ export default async function CheckoutPage() {
                 price_cents: book.price_cents,
                 cover_seed: book.cover_seed,
                 stock: book.stock,
+                color: it.color || null,
                 color_images: book.color_images,
                 weight_grams: book.weight_grams
               });
+              i++;
             }
           }
           items = resolvedItems;
