@@ -93,20 +93,27 @@ export default async function BookDetailPage({
         )}
 
         {session?.user ? (
-          <div className="space-y-4">
-            <ReviewForm bookId={book.id} />
-            {!hasPurchased && (
-              <p className="text-[11px] text-ink-soft/70 max-w-md leading-relaxed italic">
-                Note: Anyone registered can share their thoughts. Reviews written by customers who purchased this item and had it delivered will display a <strong className="text-moss">Verified Buyer</strong> badge.
-              </p>
-            )}
-          </div>
+          (session.user.isAdmin || hasPurchased) ? (
+            <div className="space-y-4">
+              <ReviewForm bookId={book.id} />
+              {session.user.isAdmin && !hasPurchased && (
+                <p className="text-[11px] text-moss max-w-md leading-relaxed italic font-medium">
+                  Note: You are writing this review as an Administrator.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-ink-soft">
+              Only customers who have purchased this product and had it delivered can leave a review.
+            </p>
+          )
         ) : (
           <p className="text-sm text-ink-soft">
+            Only customers who have purchased this product and had it delivered can leave a review.{" "}
             <Link href={`/login?next=/shop/${book.id}`} className="trail-link text-oxblood font-semibold">
               Log in
             </Link>{" "}
-            to leave a review.
+            to check eligibility.
           </p>
         )}
       </section>

@@ -24,6 +24,11 @@ export async function submitReviewAction(
 
 
 
+  const isAllowed = session.user.isAdmin || await hasUserPurchasedBook(Number(session.user.id), bookId);
+  if (!isAllowed) {
+    return { error: "Only verified buyers or admins can review this product." };
+  }
+
   await upsertReview(bookId, Number(session.user.id), rating, comment);
   revalidatePath(`/shop/${bookId}`);
 }
