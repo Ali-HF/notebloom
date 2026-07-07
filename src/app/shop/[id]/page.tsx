@@ -71,12 +71,6 @@ export default async function BookDetailPage({
                     <span className="text-sm font-semibold text-ink" style={{ fontFamily: "var(--font-body)" }}>
                       {r.user_name}
                     </span>
-                    {r.verified && (
-                      <span className="text-[10px] text-moss font-semibold uppercase tracking-wider flex items-center gap-1" style={{ fontFamily: "var(--font-stamp)" }}>
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-moss"></span>
-                        Verified Buyer
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center">
                     <StarRating value={r.rating} size={11} />
