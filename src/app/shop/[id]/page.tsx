@@ -1,16 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import ReviewForm from "@/components/ReviewForm";
 import BloomDivider from "@/components/BloomDivider";
 import StarRating from "@/components/StarRating";
 import {
   getBook,
   getReviewsForBook,
   getRatingSummary,
-  hasUserPurchasedBook,
 } from "@/lib/db";
 import ProductDetailsClient from "@/components/ProductDetailsClient";
-import { auth } from "@/lib/auth";
 
 export default async function BookDetailPage({
   params,
@@ -22,14 +19,9 @@ export default async function BookDetailPage({
   const book = await getBook(bookId);
   if (!book) notFound();
 
-  const session = await auth();
   const reviews = await getReviewsForBook(bookId);
   const summary = await getRatingSummary(bookId);
   const maxQty = Math.min(book.stock, 10);
-
-  const hasPurchased = session?.user?.id 
-    ? await hasUserPurchasedBook(Number(session.user.id), bookId)
-    : false;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 animate-fadeIn">
@@ -84,31 +76,6 @@ export default async function BookDetailPage({
               </div>
             ))}
           </div>
-        )}
-
-        {session?.user ? (
-          (session.user.isAdmin || hasPurchased) ? (
-            <div className="space-y-4">
-              <ReviewForm bookId={book.id} />
-              {session.user.isAdmin && !hasPurchased && (
-                <p className="text-[11px] text-moss max-w-md leading-relaxed italic font-medium">
-                  Note: You are writing this review as an Administrator.
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-ink-soft">
-              Only customers who have purchased this product and had it delivered can leave a review.
-            </p>
-          )
-        ) : (
-          <p className="text-sm text-ink-soft">
-            Only customers who have purchased this product and had it delivered can leave a review.{" "}
-            <Link href={`/login?next=/shop/${book.id}`} className="trail-link text-oxblood font-semibold">
-              Log in
-            </Link>{" "}
-            to check eligibility.
-          </p>
         )}
       </section>
     </div>
