@@ -21,11 +21,12 @@ export default async function CartPage() {
         const parsed = JSON.parse(cartCookie);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const resolvedItems = [];
+          let i = 0;
           for (const it of parsed) {
             const book = await getBook(Number(it.book_id));
             if (book) {
               resolvedItems.push({
-                id: Number(it.book_id),
+                id: i,
                 book_id: book.id,
                 quantity: Number(it.quantity) || 1,
                 title: book.title,
@@ -36,6 +37,7 @@ export default async function CartPage() {
                 color: it.color || null,
                 color_images: book.color_images,
               });
+              i++;
             }
           }
           items = resolvedItems;

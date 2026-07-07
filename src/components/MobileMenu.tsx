@@ -121,6 +121,27 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
                 </Link>
               ))}
             </div>
+
+            {/* Contact Info */}
+            <div className="mt-8 border-t border-ink/8 pt-5">
+              <p className="text-[10px] font-bold tracking-widest text-ink-soft uppercase mb-3">
+                Contact Us
+              </p>
+              <div className="space-y-3 font-sans">
+                <div>
+                  <span className="text-[9px] uppercase tracking-wider block font-bold text-ink-soft/50" style={{ fontFamily: "var(--font-stamp)" }}>PHONE</span>
+                  <a href="tel:03373876846" className="text-oxblood font-semibold hover:underline block text-[13px]">
+                    03373876846
+                  </a>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase tracking-wider block font-bold text-ink-soft/50" style={{ fontFamily: "var(--font-stamp)" }}>EMAIL</span>
+                  <a href="mailto:support@notebloom.shop" className="text-oxblood font-semibold hover:underline block text-[13px]">
+                    support@notebloom.shop
+                  </a>
+                </div>
+              </div>
+            </div>
           </nav>
         </div>
 

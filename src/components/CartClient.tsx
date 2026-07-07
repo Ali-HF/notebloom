@@ -119,6 +119,7 @@ export default function CartClient({
               (c) => c.name.toLowerCase() === (item.color || "").toLowerCase()
             );
             const activeStock = activeCat ? activeCat.stock : item.stock;
+            const currentSeed = activeCat?.images[0] || item.cover_seed;
 
             return (
               <li key={item.id} className="py-6 flex flex-col sm:flex-row gap-5 sm:gap-6">
@@ -129,7 +130,7 @@ export default function CartClient({
                       title={item.title}
                       author={item.author}
                       genre=""
-                      seed={item.cover_seed}
+                      seed={currentSeed}
                       className="w-full h-full object-cover"
                     />
                   </Link>

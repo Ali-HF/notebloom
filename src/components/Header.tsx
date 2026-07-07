@@ -6,6 +6,7 @@ import { logoutAction } from "@/app/actions/auth-actions";
 import { cookies } from "next/headers";
 import MobileMenu from "./MobileMenu";
 import CartBadge from "./CartBadge";
+import ContactButton from "./ContactButton";
 
 export default async function Header() {
   const session = await auth();
@@ -56,6 +57,8 @@ export default async function Header() {
             <Link href="/my-orders" className="trail-link hidden sm:inline">
               MY ORDERS
             </Link>
+
+            <ContactButton />
 
             {/* Cart — desktop */}
             <Link href="/cart" className="trail-link relative hidden sm:flex items-center gap-1.5" aria-label="Cart">
