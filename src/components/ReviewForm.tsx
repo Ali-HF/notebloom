@@ -3,9 +3,17 @@
 import { useActionState } from "react";
 import { submitReviewAction } from "@/app/actions/review-actions";
 
-export default function ReviewForm({ bookId }: { bookId: number }) {
+export default function ReviewForm({
+  bookId,
+  orderId,
+  orderCode,
+}: {
+  bookId: number;
+  orderId?: number;
+  orderCode?: string;
+}) {
   const [state, formAction, isPending] = useActionState(
-    submitReviewAction.bind(null, bookId),
+    submitReviewAction.bind(null, bookId, orderId, orderCode),
     undefined
   );
 

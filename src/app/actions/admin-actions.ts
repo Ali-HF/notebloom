@@ -256,7 +256,7 @@ export async function updateOrderStatusAction(orderId: number, formData: FormDat
             phone: shipping.phone || "",
           });
         } else if (status === "Delivered") {
-          await sendOrderDeliveredEmail(email, orderId, customerName, items);
+          await sendOrderDeliveredEmail(email, orderId, order.order_code || `#${orderId}`, customerName, items);
         }
       }
     }

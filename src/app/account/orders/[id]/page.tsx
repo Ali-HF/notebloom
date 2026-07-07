@@ -231,7 +231,7 @@ export default async function OrderDetailPage({
               {order.status === "Delivered" && item.book_id && (
                 <div className="mt-2">
                   <Link
-                    href={`/shop/${item.book_id}#reviews`}
+                    href={`/shop/${item.book_id}/review?orderId=${order.id}&code=${order.order_code}`}
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-moss/10 hover:bg-moss/20 text-moss text-xs font-semibold uppercase tracking-wider transition-colors"
                     style={{ fontFamily: "var(--font-stamp)" }}
                   >

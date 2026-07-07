@@ -239,7 +239,7 @@ export async function sendOrderOutForDeliveryEmail(
 }
 
 export async function sendOrderDeliveredEmail(
-  to: string, orderId: number, customerName: string, items: OrderItem[]
+  to: string, orderId: number, orderCode: string, customerName: string, items: OrderItem[]
 ): Promise<boolean> {
   const baseUrl = getBaseUrl();
   const itemsListHtml = items.map((item) => `
@@ -250,7 +250,7 @@ export async function sendOrderDeliveredEmail(
           <span style="color:#8c827a;font-size:12px;">by ${item.author}</span>
         </td>
         <td align="right" width="80" style="vertical-align:middle;text-align:right;padding-left:10px;width:80px;">
-          <a href="${baseUrl}/shop/${item.book_id}#reviews" style="display:inline-block;background-color:#6b1d2f;color:#faf8f5 !important;padding:8px 16px;text-decoration:none;border-radius:18px;font-size:11px;font-weight:bold;letter-spacing:0.03em;white-space:nowrap;text-align:center;">REVIEW</a>
+          <a href="${baseUrl}/shop/${item.book_id}/review?orderId=${orderId}&code=${orderCode}" style="display:inline-block;background-color:#6b1d2f;color:#faf8f5 !important;padding:8px 16px;text-decoration:none;border-radius:18px;font-size:11px;font-weight:bold;letter-spacing:0.03em;white-space:nowrap;text-align:center;">REVIEW</a>
         </td>
       </tr>
     </table>`).join("");
