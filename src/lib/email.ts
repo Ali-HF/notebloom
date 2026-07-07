@@ -243,13 +243,17 @@ export async function sendOrderDeliveredEmail(
 ): Promise<boolean> {
   const baseUrl = getBaseUrl();
   const itemsListHtml = items.map((item) => `
-    <div style="padding:15px 0;border-bottom:1px solid #f2ece4;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <strong style="color:#2e2926;">${item.title}</strong><br>
-        <span style="color:#8c827a;font-size:13px;">by ${item.author}</span>
-      </div>
-      <a href="${baseUrl}/shop/${item.book_id}#reviews" style="display:inline-block;background-color:#6b1d2f;color:#faf8f5 !important;padding:6px 12px;text-decoration:none;border-radius:12px;font-size:11px;font-weight:bold;">REVIEW</a>
-    </div>`).join("");
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-bottom:1px solid #f2ece4;margin-bottom:10px;padding-bottom:10px;">
+      <tr>
+        <td align="left" style="vertical-align:middle;padding:10px 0;">
+          <strong style="color:#2e2926;font-size:14px;line-height:1.3;display:block;">${item.title}</strong>
+          <span style="color:#8c827a;font-size:12px;">by ${item.author}</span>
+        </td>
+        <td align="right" width="80" style="vertical-align:middle;text-align:right;padding-left:10px;width:80px;">
+          <a href="${baseUrl}/shop/${item.book_id}#reviews" style="display:inline-block;background-color:#6b1d2f;color:#faf8f5 !important;padding:8px 16px;text-decoration:none;border-radius:18px;font-size:11px;font-weight:bold;letter-spacing:0.03em;white-space:nowrap;text-align:center;">REVIEW</a>
+        </td>
+      </tr>
+    </table>`).join("");
 
   const htmlContent = `
     <!DOCTYPE html><html><head><meta charset="utf-8">
