@@ -46,6 +46,7 @@ export default async function OrderDetailPage({
     Confirmed: { color: "text-emerald-700", bg: "bg-emerald-100", icon: "✅", heading: "Order confirmed — it's blooming its way to you." },
     Processing: { color: "text-blue-700", bg: "bg-blue-100", icon: "📦", heading: "Your order is being processed." },
     Shipped: { color: "text-indigo-700", bg: "bg-indigo-100", icon: "🚚", heading: "Your order is on the way!" },
+    "Out for Delivery": { color: "text-purple-700", bg: "bg-purple-100", icon: "🛵", heading: "Out for delivery!" },
     Delivered: { color: "text-emerald-700", bg: "bg-emerald-100", icon: "🎉", heading: "Delivered — enjoy your goodies!" },
     Cancelled: { color: "text-red-700", bg: "bg-red-100", icon: "❌", heading: "This order was cancelled." },
   };
@@ -138,6 +139,54 @@ export default async function OrderDetailPage({
               </p>
               <p className="text-sm text-red-800 leading-relaxed">
                 This order was cancelled. If this was a mistake, you can place a new order from our shop.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {order.status === "Processing" && (
+        <div className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">📦</span>
+            <div>
+              <p className="font-semibold text-blue-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Order processing
+              </p>
+              <p className="text-sm text-blue-800 leading-relaxed">
+                We're packaging up your stationery items with care. We'll send you an update when it ships!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {order.status === "Shipped" && (
+        <div className="mb-8 rounded-lg border border-indigo-200 bg-indigo-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">🚚</span>
+            <div>
+              <p className="font-semibold text-indigo-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Order shipped!
+              </p>
+              <p className="text-sm text-indigo-800 leading-relaxed">
+                Your order is on the way. Keep an eye out for updates as it makes its way to you.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {order.status === "Out for Delivery" && (
+        <div className="mb-8 rounded-lg border border-purple-200 bg-purple-50 p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">🛵</span>
+            <div>
+              <p className="font-semibold text-purple-900 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                Out for delivery!
+              </p>
+              <p className="text-sm text-purple-800 leading-relaxed">
+                Your package is out with the local courier today. Please ensure someone is available to receive it.
               </p>
             </div>
           </div>

@@ -767,7 +767,7 @@ export async function placeOrder(
 export async function getOrder(orderId: number) {
   const result = await sql`
     SELECT o.*, u.name as user_name, u.email as user_email
-    FROM orders o JOIN users u ON u.id = o.user_id
+    FROM orders o LEFT JOIN users u ON u.id = o.user_id
     WHERE o.id = ${orderId}
   `;
   return result[0] as unknown as (Order & { user_name: string; user_email: string; shipping_json: string | null; payment_method: string | null }) | undefined;

@@ -115,7 +115,7 @@ export default function OrdersPage() {
               <span className={`text-xs font-bold uppercase px-3 py-1 rounded-full ${
                 order.status === "Delivered" || order.status === "Confirmed"
                   ? "bg-emerald-100 text-emerald-700"
-                  : order.status === "Shipped"
+                  : order.status === "Shipped" || order.status === "Out for Delivery"
                   ? "bg-indigo-100 text-indigo-700"
                   : order.status === "Cancelled"
                   ? "bg-red-100 text-red-700"
