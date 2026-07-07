@@ -295,6 +295,7 @@ export async function checkoutAction(prevState: unknown, formData: FormData): Pr
     await sendOrderConfirmationRequestEmail(
       targetEmail,
       result.orderId,
+      result.orderCode,
       fullName,
       cartItems,
       result.total,

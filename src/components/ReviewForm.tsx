@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { submitReviewAction } from "@/app/actions/review-actions";
 
 export default function ReviewForm({
@@ -12,6 +12,9 @@ export default function ReviewForm({
   orderId?: number;
   orderCode?: string;
 }) {
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+
   const [state, formAction, isPending] = useActionState(
     submitReviewAction.bind(null, bookId, orderId, orderCode),
     undefined
@@ -20,26 +23,38 @@ export default function ReviewForm({
   return (
     <form action={formAction} className="space-y-3 max-w-md" data-no-progress>
       <div className="flex items-center gap-3">
-        <label
-          htmlFor="rating"
+        <span
           className="text-sm text-ink-soft"
           style={{ fontFamily: "var(--font-stamp)" }}
         >
           RATING
-        </label>
-        <select
-          id="rating"
-          name="rating"
-          required
-          defaultValue="5"
-          className="rounded-md border border-ink/20 bg-cream px-2 py-1.5 text-sm focus:border-oxblood"
-        >
-          {[5, 4, 3, 2, 1].map((n) => (
-            <option key={n} value={n}>
-              {n} {n === 1 ? "star" : "stars"}
-            </option>
-          ))}
-        </select>
+        </span>
+        <input type="hidden" name="rating" value={rating} />
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((n) => {
+            const active = hoverRating !== null ? hoverRating >= n : rating >= n;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                onMouseEnter={() => setHoverRating(n)}
+                onMouseLeave={() => setHoverRating(null)}
+                className="focus:outline-none transition-transform hover:scale-110 cursor-pointer p-0.5"
+                aria-label={`${n} Star${n > 1 ? "s" : ""}`}
+              >
+                <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M10 1.5l2.6 5.6 6.1.6-4.6 4 1.4 6-5.5-3.3-5.5 3.3 1.4-6-4.6-4 6.1-.6L10 1.5Z"
+                    fill={active ? "var(--color-brass)" : "transparent"}
+                    stroke="var(--color-brass)"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <textarea

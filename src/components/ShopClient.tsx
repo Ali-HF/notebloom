@@ -7,7 +7,7 @@ import BookCard from "./BookCard";
 import BloomMark from "./BloomMark";
 import type { Book } from "@/lib/types";
 
-type BookWithSales = Book & { sales?: number };
+type BookWithSales = Book & { sales?: number; rating_avg?: number; rating_count?: number };
 
 export default function ShopClient({
   initialBooks,

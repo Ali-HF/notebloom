@@ -88,7 +88,7 @@ function getBaseUrl() {
 }
 
 export async function sendOrderConfirmationRequestEmail(
-  to: string, orderId: number, customerName: string,
+  to: string, orderId: number, orderCode: string, customerName: string,
   items: CartRow[], totalCents: number,
   shipping: { address: string; area: string; city: string; phone: string }
 ): Promise<boolean> {
@@ -117,7 +117,7 @@ export async function sendOrderConfirmationRequestEmail(
       <div class="header"><span class="logo">~ notebloom ~</span></div>
       <div class="content">
         <h1 style="color:#591724;">Thank you for your order, ${customerName}!</h1>
-        <p>We've received your order <strong>#${orderId}</strong>. Our team will call you shortly to confirm.</p>
+        <p>We've received your order <strong>${orderCode}</strong>. Our team will call you shortly to confirm.</p>
         <div style="text-align:center;margin:30px 0;">
           <a href="${confirmUrl}" class="btn" style="color:#faf8f5;">VIEW ORDER</a>
         </div>
@@ -135,11 +135,11 @@ export async function sendOrderConfirmationRequestEmail(
       <div class="footer">&copy; 2026 Notebloom. All rights reserved.</div>
     </div></body></html>`;
 
-  return sendEmailNotification(to, `Your Order #${orderId} - Notebloom`, htmlContent);
+  return sendEmailNotification(to, `Your Order ${orderCode} - Notebloom`, htmlContent);
 }
 
 export async function sendOrderShippedEmail(
-  to: string, orderId: number, customerName: string,
+  to: string, orderId: number, orderCode: string, customerName: string,
   items: OrderItem[], totalCents: number,
   shipping: { address: string; area: string; city: string; phone: string }
 ): Promise<boolean> {
@@ -168,7 +168,7 @@ export async function sendOrderShippedEmail(
       <div class="header"><span class="logo">~ notebloom ~</span></div>
       <div class="content">
         <h1 style="color:#591724;">Your order has shipped! 📦</h1>
-        <p>Hi ${customerName}, your order <strong>#${orderId}</strong> is on its way!</p>
+        <p>Hi ${customerName}, your order <strong>${orderCode}</strong> is on its way!</p>
         <div style="text-align:center;margin:30px 0;">
           <a href="${viewOrderUrl}" class="btn" style="color:#faf8f5;">VIEW ORDER</a>
         </div>
@@ -185,11 +185,11 @@ export async function sendOrderShippedEmail(
       <div class="footer">&copy; 2026 Notebloom. All rights reserved.</div>
     </div></body></html>`;
 
-  return sendEmailNotification(to, `Your Order #${orderId} Has Shipped! 📦 - Notebloom`, htmlContent);
+  return sendEmailNotification(to, `Your Order ${orderCode} Has Shipped! 📦 - Notebloom`, htmlContent);
 }
 
 export async function sendOrderOutForDeliveryEmail(
-  to: string, orderId: number, customerName: string,
+  to: string, orderId: number, orderCode: string, customerName: string,
   items: OrderItem[], totalCents: number,
   shipping: { address: string; area: string; city: string; phone: string }
 ): Promise<boolean> {
@@ -218,7 +218,7 @@ export async function sendOrderOutForDeliveryEmail(
       <div class="header"><span class="logo">~ notebloom ~</span></div>
       <div class="content">
         <h1 style="color:#591724;">Out for delivery! 🛵</h1>
-        <p>Hi ${customerName}, your order <strong>#${orderId}</strong> is out for delivery and will arrive soon!</p>
+        <p>Hi ${customerName}, your order <strong>${orderCode}</strong> is out for delivery and will arrive soon!</p>
         <div style="text-align:center;margin:30px 0;">
           <a href="${viewOrderUrl}" class="btn" style="color:#faf8f5;">VIEW ORDER</a>
         </div>
@@ -235,7 +235,7 @@ export async function sendOrderOutForDeliveryEmail(
       <div class="footer">&copy; 2026 Notebloom. All rights reserved.</div>
     </div></body></html>`;
 
-  return sendEmailNotification(to, `Your Order #${orderId} Is Out for Delivery! 🛵 - Notebloom`, htmlContent);
+  return sendEmailNotification(to, `Your Order ${orderCode} Is Out for Delivery! 🛵 - Notebloom`, htmlContent);
 }
 
 export async function sendOrderDeliveredEmail(
@@ -270,7 +270,7 @@ export async function sendOrderDeliveredEmail(
       <div class="header"><span class="logo">~ notebloom ~</span></div>
       <div class="content">
         <h1 style="color:#591724;">Your package has arrived! 🎉</h1>
-        <p>Hi ${customerName}, your order <strong>#${orderId}</strong> has been delivered. We hope you love it!</p>
+        <p>Hi ${customerName}, your order <strong>${orderCode}</strong> has been delivered. We hope you love it!</p>
         <div class="card">
           <div style="font-weight:bold;color:#591724;border-bottom:2px solid #e5e0d8;padding-bottom:8px;margin-bottom:15px;font-size:14px;text-transform:uppercase;letter-spacing:0.05em;">Share Your Feedback</div>
           ${itemsListHtml}
@@ -280,7 +280,7 @@ export async function sendOrderDeliveredEmail(
       <div class="footer">&copy; 2026 Notebloom. All rights reserved.</div>
     </div></body></html>`;
 
-  return sendEmailNotification(to, `Order #${orderId} Delivered! 🎉 - Notebloom`, htmlContent);
+  return sendEmailNotification(to, `Order ${orderCode} Delivered! 🎉 - Notebloom`, htmlContent);
 }
 
 export async function sendPasswordResetEmail(to: string, token: string): Promise<boolean> {

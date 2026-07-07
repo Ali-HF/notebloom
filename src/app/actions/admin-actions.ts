@@ -242,14 +242,14 @@ export async function updateOrderStatusAction(orderId: number, formData: FormDat
 
       if (email) {
         if (status === "Shipped") {
-          await sendOrderShippedEmail(email, orderId, customerName, items, order.total_cents, {
+          await sendOrderShippedEmail(email, orderId, order.order_code || `#${orderId}`, customerName, items, order.total_cents, {
             address: shipping.address || "",
             area: shipping.area || "",
             city: shipping.city || "",
             phone: shipping.phone || "",
           });
         } else if (status === "Out for Delivery") {
-          await sendOrderOutForDeliveryEmail(email, orderId, customerName, items, order.total_cents, {
+          await sendOrderOutForDeliveryEmail(email, orderId, order.order_code || `#${orderId}`, customerName, items, order.total_cents, {
             address: shipping.address || "",
             area: shipping.area || "",
             city: shipping.city || "",

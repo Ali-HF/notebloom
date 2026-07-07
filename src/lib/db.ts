@@ -403,15 +403,27 @@ export async function listBooks(opts: { q?: string; genre?: string; sort?: strin
   }
 }
 
-export async function listBooksWithSales(): Promise<(Book & { sales: number })[]> {
+export async function listBooksWithSales(): Promise<(Book & { sales: number; rating_avg: number; rating_count: number })[]> {
   const result = await sql`
-    SELECT b.*, COALESCE(SUM(oi.quantity), 0) as sales
+    SELECT 
+      b.*, 
+      COALESCE(sales_sub.total_qty, 0) as sales,
+      COALESCE(reviews_sub.avg_rating, 0)::float as rating_avg,
+      COALESCE(reviews_sub.review_count, 0)::int as rating_count
     FROM books b
-    LEFT JOIN order_items oi ON b.id = oi.book_id
-    GROUP BY b.id
+    LEFT JOIN (
+      SELECT book_id, SUM(quantity) as total_qty 
+      FROM order_items 
+      GROUP BY book_id
+    ) sales_sub ON b.id = sales_sub.book_id
+    LEFT JOIN (
+      SELECT book_id, AVG(rating) as avg_rating, COUNT(*) as review_count 
+      FROM reviews 
+      GROUP BY book_id
+    ) reviews_sub ON b.id = reviews_sub.book_id
     ORDER BY b.created_at DESC
   `;
-  return result as unknown as (Book & { sales: number })[];
+  return result as unknown as (Book & { sales: number; rating_avg: number; rating_count: number })[];
 }
 
 export async function getBook(id: number): Promise<Book | undefined> {
@@ -708,7 +720,7 @@ export async function placeOrder(
   paymentMethod: string = "cod",
   items?: CartRow[],
   shippingCents: number = 0
-): Promise<{ orderId: number; total: number } | { error: string }> {
+): Promise<{ orderId: number; orderCode: string; total: number } | { error: string }> {
   const finalItems = items ?? await getCart(userId);
   if (finalItems.length === 0) return { error: "Your cart is empty." };
 
@@ -749,7 +761,7 @@ export async function placeOrder(
       // 3. Clear cart
       await sql`DELETE FROM cart_items WHERE user_id=${userId}`;
 
-      return orderId;
+      return { orderId, orderCode };
     });
 
     // Check stock levels after transaction succeeds
@@ -757,7 +769,7 @@ export async function placeOrder(
       checkAndNotifyLowStock(it.book_id).catch(console.error);
     }
 
-    return { orderId: Number(result), total };
+    return { orderId: Number(result.orderId), orderCode: result.orderCode, total };
   } catch (error) {
     console.error("Order placement transaction failed:", error);
     throw error;

@@ -3,8 +3,13 @@ import BookCover from "./BookCover";
 import { formatPrice } from "@/lib/cart-utils";
 import type { Book } from "@/lib/types";
 import AddToCartButton from "./AddToCartButton";
+import StarRating from "./StarRating";
 
-export default function BookCard({ book }: { book: Book }) {
+export default function BookCard({
+  book,
+}: {
+  book: Book & { rating_avg?: number; rating_count?: number };
+}) {
   return (
     <div className="group flex flex-col bg-white border border-[#ddd0b8] rounded-[10px] overflow-hidden transition-all duration-200 hover:shadow-[0_4px_20px_rgba(32,40,58,0.12)] cursor-pointer">
       <div className="relative w-full h-[180px] overflow-hidden shrink-0">
@@ -38,7 +43,18 @@ export default function BookCard({ book }: { book: Book }) {
             {book.title}
           </h3>
         </Link>
-        <p className="text-[11px] text-ink-soft/80 italic mb-3">{book.author}</p>
+        <p className="text-[11px] text-ink-soft/80 italic mb-2">{book.author}</p>
+
+        {book.rating_count && book.rating_count > 0 ? (
+          <div className="flex items-center gap-1.5 mb-3">
+            <StarRating value={book.rating_avg || 0} size={11} />
+            <span className="text-[10px] text-ink-soft/60 font-semibold" style={{ fontFamily: "var(--font-stamp)" }}>
+              ({book.rating_count})
+            </span>
+          </div>
+        ) : (
+          <div className="h-4 mb-3" /> /* Spacer to keep card layouts aligned when there are no reviews */
+        )}
 
         <div className="mt-auto pt-1 flex items-center justify-between gap-2">
           <div className="text-[13px] font-semibold text-ink" style={{ fontFamily: "var(--font-stamp)" }}>
