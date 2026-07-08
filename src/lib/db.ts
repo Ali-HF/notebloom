@@ -773,11 +773,43 @@ export async function getCart(userId: number): Promise<CartRow[]> {
 
 export async function addToCart(userId: number, bookId: number, quantity: number, color?: string | null): Promise<void> {
   const cleanColor = color || "";
+  const book = await getBook(bookId);
+  if (!book) return;
+
+  let availableStock = book.stock;
+  if (cleanColor && book.color_images) {
+    try {
+      const parsed = JSON.parse(book.color_images);
+      if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+        const cat = parsed.categories.find(
+          (c: any) => c.name.toLowerCase() === cleanColor.toLowerCase()
+        );
+        if (cat) {
+          availableStock = cat.stock;
+        }
+      }
+    } catch {}
+  }
+
+  const cartResult = await sql`
+    SELECT quantity 
+    FROM cart_items 
+    WHERE user_id = ${userId} AND book_id = ${bookId} AND color = ${cleanColor}
+  `;
+  const currentQty = cartResult[0]?.quantity ?? 0;
+
+  let newQtyToAdd = quantity;
+  if (currentQty + quantity > availableStock) {
+    newQtyToAdd = Math.max(0, availableStock - currentQty);
+  }
+
+  if (newQtyToAdd <= 0) return;
+
   await sql`
     INSERT INTO cart_items (user_id, book_id, quantity, color) 
-    VALUES (${userId}, ${bookId}, ${quantity}, ${cleanColor})
+    VALUES (${userId}, ${bookId}, ${newQtyToAdd}, ${cleanColor})
     ON CONFLICT (user_id, book_id, color) 
-    DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity
+    DO UPDATE SET quantity = LEAST(${availableStock}, cart_items.quantity + EXCLUDED.quantity)
   `;
 }
 
@@ -786,11 +818,35 @@ export async function setCartQty(userId: number, bookId: number, qty: number, co
   if (qty <= 0) {
     await sql`DELETE FROM cart_items WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}`;
   } else {
-    await sql`
-      UPDATE cart_items 
-      SET quantity=${qty} 
-      WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}
-    `;
+    const book = await getBook(bookId);
+    if (!book) return;
+
+    let availableStock = book.stock;
+    if (cleanColor && book.color_images) {
+      try {
+        const parsed = JSON.parse(book.color_images);
+        if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+          const cat = parsed.categories.find(
+            (c: any) => c.name.toLowerCase() === cleanColor.toLowerCase()
+          );
+          if (cat) {
+            availableStock = cat.stock;
+          }
+        }
+      } catch {}
+    }
+
+    const cappedQty = Math.min(qty, availableStock);
+
+    if (cappedQty <= 0) {
+      await sql`DELETE FROM cart_items WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}`;
+    } else {
+      await sql`
+        UPDATE cart_items 
+        SET quantity=${cappedQty} 
+        WHERE user_id=${userId} AND book_id=${bookId} AND color=${cleanColor}
+      `;
+    }
   }
 }
 

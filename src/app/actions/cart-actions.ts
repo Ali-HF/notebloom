@@ -35,13 +35,34 @@ export async function addToCartAction(bookId: number, qty: number = 1, color?: s
       } catch (_e) {
       }
     }
-    const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
-    if (idx >= 0) {
-      cart[idx].quantity += qty;
-    } else {
-      cart.push({ book_id: bookId, quantity: qty, color: cleanColor });
+    const book = await getBook(bookId);
+    if (book) {
+      let availableStock = book.stock;
+      if (cleanColor && book.color_images) {
+        try {
+          const parsed = JSON.parse(book.color_images);
+          if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+            const cat = parsed.categories.find(
+              (c: any) => c.name.toLowerCase() === cleanColor.toLowerCase()
+            );
+            if (cat) availableStock = cat.stock;
+          }
+        } catch {}
+      }
+
+      const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
+      if (idx >= 0) {
+        const currentQty = cart[idx].quantity;
+        const allowedAdd = Math.max(0, availableStock - currentQty);
+        cart[idx].quantity += allowedAdd;
+      } else {
+        const allowedAdd = Math.min(availableStock, qty);
+        if (allowedAdd > 0) {
+          cart.push({ book_id: bookId, quantity: allowedAdd, color: cleanColor });
+        }
+      }
+      cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
     }
-    cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
   revalidatePath("/cart");
   revalidatePath("/shop");
@@ -68,13 +89,34 @@ export async function addToCartWithQtyAction(bookId: number, formData: FormData)
       } catch (_e) {
       }
     }
-    const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
-    if (idx >= 0) {
-      cart[idx].quantity += cleanQty;
-    } else {
-      cart.push({ book_id: bookId, quantity: cleanQty, color: cleanColor });
+    const book = await getBook(bookId);
+    if (book) {
+      let availableStock = book.stock;
+      if (cleanColor && book.color_images) {
+        try {
+          const parsed = JSON.parse(book.color_images);
+          if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+            const cat = parsed.categories.find(
+              (c: any) => c.name.toLowerCase() === cleanColor.toLowerCase()
+            );
+            if (cat) availableStock = cat.stock;
+          }
+        } catch {}
+      }
+
+      const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
+      if (idx >= 0) {
+        const currentQty = cart[idx].quantity;
+        const allowedAdd = Math.max(0, availableStock - currentQty);
+        cart[idx].quantity += allowedAdd;
+      } else {
+        const allowedAdd = Math.min(availableStock, cleanQty);
+        if (allowedAdd > 0) {
+          cart.push({ book_id: bookId, quantity: allowedAdd, color: cleanColor });
+        }
+      }
+      cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
     }
-    cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
   }
   revalidatePath("/cart");
   revalidatePath("/shop");
@@ -101,7 +143,20 @@ export async function updateCartQtyAction(bookId: number, formData: FormData) {
             if (cleanQty <= 0) {
               cart.splice(idx, 1);
             } else {
-              cart[idx].quantity = cleanQty;
+              const book = await getBook(bookId);
+              let availableStock = book?.stock ?? 10;
+              if (book && cleanColor && book.color_images) {
+                try {
+                  const parsed = JSON.parse(book.color_images);
+                  if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+                    const cat = parsed.categories.find(
+                      (c: any) => c.name.toLowerCase() === cleanColor.toLowerCase()
+                    );
+                    if (cat) availableStock = cat.stock;
+                  }
+                } catch {}
+              }
+              cart[idx].quantity = Math.min(cleanQty, availableStock);
             }
             cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
           }

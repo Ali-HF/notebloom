@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { addToCart } from "@/lib/db";
+import { addToCart, getBook } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -29,13 +29,36 @@ export async function POST(request: Request) {
         }
       }
       const cleanColor = color || "";
-      const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
-      if (idx >= 0) {
-        cart[idx].quantity += cleanQty;
-      } else {
-        cart.push({ book_id: bookId, quantity: cleanQty, color: cleanColor });
+      const book = await getBook(bookId);
+      if (book) {
+        let availableStock = book.stock;
+        if (cleanColor && book.color_images) {
+          try {
+            const parsed = JSON.parse(book.color_images);
+            if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+              const cat = parsed.categories.find(
+                (c: any) => c.name.toLowerCase() === cleanColor.toLowerCase()
+              );
+              if (cat) {
+                availableStock = cat.stock;
+              }
+            }
+          } catch {}
+        }
+
+        const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
+        if (idx >= 0) {
+          const currentQty = cart[idx].quantity;
+          const allowedAdd = Math.max(0, availableStock - currentQty);
+          cart[idx].quantity += allowedAdd;
+        } else {
+          const allowedAdd = Math.min(availableStock, cleanQty);
+          if (allowedAdd > 0) {
+            cart.push({ book_id: bookId, quantity: allowedAdd, color: cleanColor });
+          }
+        }
+        cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
       }
-      cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
     }
 
     return NextResponse.json({ ok: true });
