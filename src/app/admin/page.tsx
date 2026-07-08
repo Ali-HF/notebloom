@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { listBooks, formatPrice, getAdminStats } from "@/lib/db";
-import { deleteBookAction } from "@/app/actions/admin-actions";
+import InventoryTable from "@/components/InventoryTable";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -57,62 +57,7 @@ export default async function AdminPage() {
 
       {/* Inventory List Card Wrapper */}
       <div className="bg-cream border border-ink/10 rounded-xl p-6 shadow-[0_4px_12px_rgba(34,29,24,0.04)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr
-                className="text-left text-xs tracking-[0.12em] uppercase text-ink-soft border-b border-ink/15"
-                style={{ fontFamily: "var(--font-stamp)" }}
-              >
-                <th className="pb-3 pr-4 font-semibold">Title</th>
-                <th className="pb-3 pr-4 font-semibold">Category</th>
-                <th className="pb-3 pr-4 font-semibold">Price</th>
-                <th className="pb-3 pr-4 font-semibold">Stock</th>
-                <th className="pb-3 pr-4 text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {books.map((b) => (
-                <tr key={b.id} className="border-b border-ink/10 last:border-0 hover:bg-parchment/20 transition-colors">
-                  <td className="py-4 pr-4">
-                    <p className="font-semibold text-ink" style={{ fontFamily: "var(--font-body)" }}>
-                      {b.title}
-                    </p>
-                    <p className="text-xs text-ink-soft mt-0.5">{b.author}</p>
-                  </td>
-                  <td className="py-4 pr-4 text-ink-soft">{b.genre}</td>
-                  <td className="py-4 pr-4 font-medium" style={{ fontFamily: "var(--font-stamp)" }}>
-                    {formatPrice(b.price_cents)}
-                  </td>
-                  <td className="py-4 pr-4 whitespace-nowrap">
-                    <span className={b.stock === 0 ? "text-oxblood font-semibold" : "font-medium"}>{b.stock}</span>
-                    {/* Stock Level Warning Badges (Requirement 5) */}
-                    {b.stock === 0 && (
-                      <span className="ml-2 text-[9px] uppercase font-bold text-oxblood bg-oxblood/10 border border-oxblood/20 px-2 py-0.5 rounded-full" style={{ fontFamily: "var(--font-stamp)" }}>
-                        OUT OF STOCK
-                      </span>
-                    )}
-                    {b.stock > 0 && b.stock < 5 && (
-                      <span className="ml-2 text-[9px] uppercase font-bold text-brass bg-brass/10 border border-brass/20 px-2 py-0.5 rounded-full" style={{ fontFamily: "var(--font-stamp)" }}>
-                        LOW STOCK
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-4 pr-4 text-right whitespace-nowrap">
-                    <Link href={`/admin/edit/${b.id}`} className="trail-link text-ink mr-4 font-medium" style={{ fontFamily: "var(--font-stamp)" }}>
-                      EDIT
-                    </Link>
-                    <form action={deleteBookAction.bind(null, b.id)} className="inline">
-                      <button type="submit" className="trail-link text-oxblood cursor-pointer font-medium" style={{ fontFamily: "var(--font-stamp)" }}>
-                        DELETE
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <InventoryTable books={books} />
       </div>
     </div>
   );
