@@ -18,49 +18,58 @@ export default function AddToCartButton({
 }) {
   const [status, setStatus] = useState<"idle" | "adding" | "added">("idle");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (status !== "idle") return;
-
-    setStatus("adding");
 
     const formData = new FormData(e.currentTarget);
     const qty = showQtySelect ? Number(formData.get("qty")) || 1 : 1;
 
-    try {
-      const res = await fetch("/api/cart/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, qty, color: selectedCategory }),
+    // 1. Optimistic UI Update: immediately mark as added
+    setStatus("added");
+    showToast(`"${bookTitle}" added to cart!`, "success");
+
+    // 2. Optimistic Cart Badge Update: immediately increase by qty
+    window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: qty } }));
+
+    // 3. Background Sync & Validation
+    fetch("/api/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookId, qty, color: selectedCategory }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          // Revert full quantity
+          window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -qty } }));
+          showToast(data.error || "Failed to add item to cart.", "error");
+          setStatus("idle");
+          return;
+        }
+
+        if (data.addedQty === 0) {
+          // Revert full quantity
+          window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -qty } }));
+          showToast(`Cannot add more. You already have the maximum available stock of this item in your cart.`, "error");
+          setStatus("idle");
+          return;
+        }
+
+        if (data.capped) {
+          // Adjust cart badge for the difference (subtracting the capped amount)
+          const diff = data.addedQty - qty; // e.g. 1 - 3 = -2
+          window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: diff } }));
+          showToast(`Only added ${data.addedQty} units (reached stock limit).`, "error");
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to add to cart:", err);
+        showToast("Failed to add item to cart.", "error");
+        // Revert full quantity
+        window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -qty } }));
+        setStatus("idle");
       });
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        showToast(data.error || "Failed to add item to cart.", "error");
-        setStatus("idle");
-        return;
-      }
-
-      if (data.addedQty === 0) {
-        showToast(`Cannot add more. You already have the maximum available stock of this item in your cart.`, "error");
-        setStatus("idle");
-        return;
-      }
-
-      if (data.capped) {
-        showToast(`Only added ${data.addedQty} units (reached stock limit).`, "error");
-        window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: data.addedQty } }));
-      } else {
-        showToast(`"${bookTitle}" added to cart!`, "success");
-        window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: qty } }));
-      }
-
-      setStatus("added");
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      showToast("Failed to add item to cart.", "error");
-      setStatus("idle");
-    }
 
     // Reset the button after 2 seconds so user can add again
     setTimeout(() => setStatus("idle"), 2000);
