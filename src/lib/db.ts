@@ -1160,8 +1160,8 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
 }
 
 export async function getAdminStats() {
-  const revenueResult = await sql`SELECT SUM(total_cents)::int as total FROM orders`;
-  const ordersResult = await sql`SELECT COUNT(*)::int as count FROM orders`;
+  const revenueResult = await sql`SELECT SUM(total_cents)::int as total FROM orders WHERE status != 'Cancelled'`;
+  const ordersResult = await sql`SELECT COUNT(*)::int as count FROM orders WHERE status != 'Cancelled'`;
   const productsResult = await sql`SELECT COUNT(*)::int as count FROM books`;
   const lowStockResult = await sql`SELECT COUNT(*)::int as count FROM books WHERE stock < 5`;
 
