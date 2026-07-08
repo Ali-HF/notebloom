@@ -14,8 +14,13 @@ export async function POST(request: Request) {
     const cleanQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
     const session = await auth();
 
+    let addedQty = 0;
+    let capped = false;
+
     if (session?.user?.id) {
-      await addToCart(Number(session.user.id), bookId, cleanQty, color);
+      const res = await addToCart(Number(session.user.id), bookId, cleanQty, color);
+      addedQty = res.addedQty;
+      capped = res.capped;
     } else {
       const cookieStore = await cookies();
       const cartCookie = cookieStore.get("notebloom_cart")?.value;
@@ -49,19 +54,29 @@ export async function POST(request: Request) {
         const idx = cart.findIndex((it) => it.book_id === bookId && (it.color || "") === cleanColor);
         if (idx >= 0) {
           const currentQty = cart[idx].quantity;
-          const allowedAdd = Math.max(0, availableStock - currentQty);
-          cart[idx].quantity += allowedAdd;
+          if (currentQty + cleanQty > availableStock) {
+            addedQty = Math.max(0, availableStock - currentQty);
+            capped = true;
+          } else {
+            addedQty = cleanQty;
+          }
+          cart[idx].quantity += addedQty;
         } else {
-          const allowedAdd = Math.min(availableStock, cleanQty);
-          if (allowedAdd > 0) {
-            cart.push({ book_id: bookId, quantity: allowedAdd, color: cleanColor });
+          if (cleanQty > availableStock) {
+            addedQty = availableStock;
+            capped = true;
+          } else {
+            addedQty = cleanQty;
+          }
+          if (addedQty > 0) {
+            cart.push({ book_id: bookId, quantity: addedQty, color: cleanColor });
           }
         }
         cookieStore.set("notebloom_cart", JSON.stringify(cart), { maxAge: 86400 * 30, path: "/" });
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, addedQty, capped });
   } catch (err) {
     console.error("Cart add error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

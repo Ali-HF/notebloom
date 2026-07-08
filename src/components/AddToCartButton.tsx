@@ -18,32 +18,49 @@ export default function AddToCartButton({
 }) {
   const [status, setStatus] = useState<"idle" | "adding" | "added">("idle");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (status !== "idle") return;
+
+    setStatus("adding");
 
     const formData = new FormData(e.currentTarget);
     const qty = showQtySelect ? Number(formData.get("qty")) || 1 : 1;
 
-    // Instant UI feedback
-    setStatus("added");
-    showToast(`"${bookTitle}" added to cart!`, "success");
+    try {
+      const res = await fetch("/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, qty, color: selectedCategory }),
+      });
+      const data = await res.json();
 
-    // Update the header cart badge instantly
-    window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: qty } }));
+      if (!res.ok || data.error) {
+        showToast(data.error || "Failed to add item to cart.", "error");
+        setStatus("idle");
+        return;
+      }
 
-    // Fire-and-forget background sync
-    fetch("/api/cart/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookId, qty, color: selectedCategory }),
-    }).catch((err) => {
+      if (data.addedQty === 0) {
+        showToast(`Cannot add more. You already have the maximum available stock of this item in your cart.`, "error");
+        setStatus("idle");
+        return;
+      }
+
+      if (data.capped) {
+        showToast(`Only added ${data.addedQty} units (reached stock limit).`, "error");
+        window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: data.addedQty } }));
+      } else {
+        showToast(`"${bookTitle}" added to cart!`, "success");
+        window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: qty } }));
+      }
+
+      setStatus("added");
+    } catch (err) {
       console.error("Failed to add to cart:", err);
       showToast("Failed to add item to cart.", "error");
-      // Revert badge
-      window.dispatchEvent(new CustomEvent("cart-update", { detail: { delta: -qty } }));
       setStatus("idle");
-    });
+    }
 
     // Reset the button after 2 seconds so user can add again
     setTimeout(() => setStatus("idle"), 2000);

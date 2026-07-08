@@ -771,10 +771,10 @@ export async function getCart(userId: number): Promise<CartRow[]> {
   return result as unknown as CartRow[];
 }
 
-export async function addToCart(userId: number, bookId: number, quantity: number, color?: string | null): Promise<void> {
+export async function addToCart(userId: number, bookId: number, quantity: number, color?: string | null): Promise<{ addedQty: number; capped: boolean }> {
   const cleanColor = color || "";
   const book = await getBook(bookId);
-  if (!book) return;
+  if (!book) return { addedQty: 0, capped: false };
 
   let availableStock = book.stock;
   if (cleanColor && book.color_images) {
@@ -799,11 +799,13 @@ export async function addToCart(userId: number, bookId: number, quantity: number
   const currentQty = cartResult[0]?.quantity ?? 0;
 
   let newQtyToAdd = quantity;
+  let capped = false;
   if (currentQty + quantity > availableStock) {
     newQtyToAdd = Math.max(0, availableStock - currentQty);
+    capped = true;
   }
 
-  if (newQtyToAdd <= 0) return;
+  if (newQtyToAdd <= 0) return { addedQty: 0, capped: true };
 
   await sql`
     INSERT INTO cart_items (user_id, book_id, quantity, color) 
@@ -811,6 +813,8 @@ export async function addToCart(userId: number, bookId: number, quantity: number
     ON CONFLICT (user_id, book_id, color) 
     DO UPDATE SET quantity = LEAST(${availableStock}, cart_items.quantity + EXCLUDED.quantity)
   `;
+
+  return { addedQty: newQtyToAdd, capped };
 }
 
 export async function setCartQty(userId: number, bookId: number, qty: number, color?: string | null): Promise<void> {
