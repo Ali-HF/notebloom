@@ -163,6 +163,55 @@ export async function seedIfEmpty() {
       await sql`ALTER TABLE books ADD COLUMN weight_grams INTEGER NOT NULL DEFAULT 200`;
     }
 
+    // Migrate: create book_variations table if it doesn't exist
+    const variationsTableExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+          AND table_name = 'book_variations'
+      )
+    `;
+    if (!variationsTableExists[0].exists) {
+      await sql`
+        CREATE TABLE book_variations (
+          id SERIAL PRIMARY KEY,
+          book_id INT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          stock INT NOT NULL DEFAULT 0,
+          images TEXT NOT NULL,
+          UNIQUE (book_id, name)
+        )
+      `;
+      console.log("Auto-Migration: created book_variations table.");
+      
+      // Migrate existing books' color_images JSON into book_variations rows
+      const booksToMigrate = await sql`SELECT id, stock, color_images FROM books`;
+      for (const b of booksToMigrate) {
+        if (b.color_images && b.color_images !== "[]") {
+          try {
+            const parsed = JSON.parse(b.color_images);
+            if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+              for (const cat of parsed.categories) {
+                const name = String(cat.name || "").trim();
+                if (!name) continue;
+                const catStock = typeof cat.stock === "number" ? cat.stock : b.stock;
+                const imagesJson = JSON.stringify(Array.isArray(cat.images) ? cat.images : []);
+                
+                await sql`
+                  INSERT INTO book_variations (book_id, name, stock, images)
+                  VALUES (${b.id}, ${name}, ${catStock}, ${imagesJson})
+                  ON CONFLICT (book_id, name) DO NOTHING
+                `;
+              }
+            }
+          } catch (err) {
+            console.error(`Migration error for book #${b.id}:`, err);
+          }
+        }
+      }
+      console.log("Auto-Migration: migrated all color_images variations to book_variations table.");
+    }
+
     const countResult = await sql`SELECT COUNT(*)::int as c FROM books`;
     const count = countResult[0]?.c ?? 0;
 
@@ -450,12 +499,43 @@ export async function createBook(
   const coverSeed2 = b.cover_seed_2 || null;
   const colorImages = b.color_images || "[]";
   const weightGrams = b.weight_grams || 200;
-  const result = await sql`
-    INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2, color_images, weight_grams)
-    VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2}, ${colorImages}, ${weightGrams})
-    RETURNING id
-  `;
-  return Number(result[0].id);
+  
+  const result = await sql.begin(async (sql) => {
+    const insertResult = await sql`
+      INSERT INTO books (title, author, description, genre, price_cents, stock, isbn, cover_seed, cover_seed_2, color_images, weight_grams)
+      VALUES (${b.title}, ${b.author}, ${b.description}, ${b.genre}, ${b.price_cents}, ${b.stock}, ${b.isbn}, ${coverSeed}, ${coverSeed2}, ${colorImages}, ${weightGrams})
+      RETURNING id
+    `;
+    const bookId = Number(insertResult[0].id);
+
+    // Sync categories to book_variations
+    if (b.color_images) {
+      try {
+        const parsed = JSON.parse(b.color_images);
+        if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+          for (const cat of parsed.categories) {
+            const name = String(cat.name || "").trim();
+            if (!name) continue;
+            const catStock = typeof cat.stock === "number" ? cat.stock : b.stock;
+            const imagesJson = JSON.stringify(Array.isArray(cat.images) ? cat.images : []);
+
+            await sql`
+              INSERT INTO book_variations (book_id, name, stock, images)
+              VALUES (${bookId}, ${name}, ${catStock}, ${imagesJson})
+              ON CONFLICT (book_id, name) DO UPDATE 
+              SET stock = EXCLUDED.stock, images = EXCLUDED.images
+            `;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync variations in createBook:", err);
+      }
+    }
+
+    return bookId;
+  });
+
+  return result;
 }
 
 export async function updateBook(
@@ -463,15 +543,63 @@ export async function updateBook(
   b: Omit<Book, "id" | "created_at" | "cover_seed" | "cover_seed_2" | "color_images"> & { cover_seed?: string; cover_seed_2?: string | null; color_images?: string | null }
 ): Promise<void> {
   const weightGrams = b.weight_grams || 200;
-  await sql`
-    UPDATE books 
-    SET title=${b.title}, author=${b.author}, description=${b.description}, genre=${b.genre}, price_cents=${b.price_cents}, stock=${b.stock}, isbn=${b.isbn},
-        cover_seed=${b.cover_seed || sql`cover_seed`}, 
-        cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`},
-        color_images=${b.color_images !== undefined ? b.color_images : sql`color_images`},
-        weight_grams=${weightGrams}
-    WHERE id=${id}
-  `;
+  await sql.begin(async (sql) => {
+    await sql`
+      UPDATE books 
+      SET title=${b.title}, author=${b.author}, description=${b.description}, genre=${b.genre}, price_cents=${b.price_cents}, stock=${b.stock}, isbn=${b.isbn},
+          cover_seed=${b.cover_seed || sql`cover_seed`}, 
+          cover_seed_2=${b.cover_seed_2 !== undefined ? b.cover_seed_2 : sql`cover_seed_2`},
+          color_images=${b.color_images !== undefined ? b.color_images : sql`color_images`},
+          weight_grams=${weightGrams}
+      WHERE id=${id}
+    `;
+
+    // Sync categories to book_variations
+    if (b.color_images !== undefined) {
+      const colorImages = b.color_images || "[]";
+      try {
+        const parsed = JSON.parse(colorImages);
+        if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
+          // Get the names of the active categories to delete any removed ones
+          const activeNames = parsed.categories
+            .map((cat: any) => String(cat.name || "").trim())
+            .filter(Boolean);
+
+          if (activeNames.length > 0) {
+            await sql`
+              DELETE FROM book_variations 
+              WHERE book_id = ${id} AND name NOT IN (${activeNames})
+            `;
+          } else {
+            await sql`
+              DELETE FROM book_variations 
+              WHERE book_id = ${id}
+            `;
+          }
+
+          for (const cat of parsed.categories) {
+            const name = String(cat.name || "").trim();
+            if (!name) continue;
+            const catStock = typeof cat.stock === "number" ? cat.stock : b.stock;
+            const imagesJson = JSON.stringify(Array.isArray(cat.images) ? cat.images : []);
+
+            await sql`
+              INSERT INTO book_variations (book_id, name, stock, images)
+              VALUES (${id}, ${name}, ${catStock}, ${imagesJson})
+              ON CONFLICT (book_id, name) DO UPDATE 
+              SET stock = EXCLUDED.stock, images = EXCLUDED.images
+            `;
+          }
+        } else {
+          // If color_images is cleared or not containing categories, clear variations
+          await sql`DELETE FROM book_variations WHERE book_id = ${id}`;
+        }
+      } catch (err) {
+        console.error("Failed to sync variations in updateBook:", err);
+      }
+    }
+  });
+
   checkAndNotifyLowStock(id).catch(console.error);
 }
 
@@ -694,20 +822,59 @@ async function adjustCategoryStock(
 ) {
   if (!colorName) return;
 
-  const result = await sqlConn`SELECT color_images FROM books WHERE id = ${bookId}`;
-  if (result.length === 0 || !result[0].color_images) return;
-
   try {
-    const parsed = JSON.parse(result[0].color_images);
-    if (parsed && typeof parsed === "object" && Array.isArray(parsed.categories)) {
-      const cat = parsed.categories.find(
-        (c: any) => c.name.toLowerCase() === colorName.toLowerCase()
-      );
-      if (cat) {
-        cat.stock = Math.max(0, (cat.stock || 0) + quantityDelta);
-        const updatedJson = JSON.stringify(parsed);
-        await sqlConn`UPDATE books SET color_images = ${updatedJson} WHERE id = ${bookId}`;
-      }
+    // 1. Update the specific variation stock in book_variations
+    await sqlConn`
+      UPDATE book_variations 
+      SET stock = GREATEST(0, stock + ${quantityDelta}) 
+      WHERE book_id = ${bookId} AND LOWER(name) = LOWER(${colorName})
+    `;
+
+    // 2. Fetch all current variations from the database
+    const vars = await sqlConn`
+      SELECT name, stock, images 
+      FROM book_variations 
+      WHERE book_id = ${bookId}
+    `;
+
+    if (vars.length > 0) {
+      // 3. Re-calculate overall stock as the sum of variations
+      const totalStock = vars.reduce((sum: number, v: any) => sum + v.stock, 0);
+
+      // 4. Fetch the book's current color_images to preserve generic pictures
+      const currentBook = await sqlConn`
+        SELECT color_images 
+        FROM books 
+        WHERE id = ${bookId}
+      `;
+      const parsed = currentBook.length > 0 && currentBook[0].color_images 
+        ? JSON.parse(currentBook[0].color_images) 
+        : { generic_pictures: [] };
+
+      // 5. Rebuild categories list
+      const categories = vars.map((v: any) => {
+        let imagesList = [];
+        try {
+          imagesList = JSON.parse(v.images);
+        } catch {}
+        return {
+          name: v.name,
+          stock: v.stock,
+          images: imagesList
+        };
+      });
+
+      const updatedColorImages = JSON.stringify({
+        generic_pictures: parsed.generic_pictures || [],
+        categories
+      });
+
+      // 6. Update parent book's stock and color_images
+      await sqlConn`
+        UPDATE books 
+        SET stock = ${totalStock}, color_images = ${updatedColorImages} 
+        WHERE id = ${bookId}
+      `;
     }
   } catch (err) {
     console.error("Failed to adjust category stock:", err);
