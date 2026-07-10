@@ -1,4 +1,7 @@
+import Image from "next/image";
+
 type Palette = { bg: string; fg: string; band: string };
+
 
 const PALETTES: Record<string, Palette> = {
   Notebooks: { bg: "#faf0e6", fg: "#4a3c31", band: "#d8c3a5" },
@@ -56,11 +59,12 @@ export default function BookCover({
   if (isUrl && !isSecondary) {
     return (
       <div className={`relative overflow-hidden bg-stone-50 rounded-xl shadow-md ring-1 ring-ink/10 ${className}`} style={{ aspectRatio: "1/1" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={seed}
           alt={`Cover of ${title} by ${author}`}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {/* spine shadow overlay */}
         <div className="absolute top-0 left-0 w-[10px] h-full bg-black/10 pointer-events-none" />
