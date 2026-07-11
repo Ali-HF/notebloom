@@ -52,14 +52,31 @@ export default function MyOrdersPage() {
     return Math.max(1, Math.ceil(ms / (24 * 60 * 60 * 1000)));
   };
 
+  const handleClear = () => {
+    if (window.confirm("Are you sure you want to clear your order history from this device?")) {
+      localStorage.removeItem(GUEST_ORDERS_KEY);
+      setOrders([]);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-6">
-      <h1
-        className="text-3xl font-bold mb-2"
-        style={{ fontFamily: "var(--font-stamp)" }}
-      >
-        My Orders
-      </h1>
+      <div className="flex justify-between items-baseline mb-2">
+        <h1
+          className="text-3xl font-bold"
+          style={{ fontFamily: "var(--font-stamp)" }}
+        >
+          My Orders
+        </h1>
+        {orders.length > 0 && (
+          <button
+            onClick={handleClear}
+            className="text-xs text-oxblood hover:underline font-medium cursor-pointer"
+          >
+            Clear history
+          </button>
+        )}
+      </div>
       <p className="text-sm text-ink-soft mb-6">
         Orders are remembered on this device for {EXPIRY_DAYS} days.
       </p>
