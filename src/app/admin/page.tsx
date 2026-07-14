@@ -8,12 +8,26 @@ export default async function AdminPage() {
   const session = await auth();
   
   if (!session?.user?.id || !session.user.isAdmin) {
-    console.log("AdminPage: Unauthorized access or no session.", {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      isAdmin: session?.user && (session.user as any).isAdmin,
-    });
-    notFound();
+    return (
+      <div className="max-w-md mx-auto py-20 text-center bg-cream border border-ink/10 rounded-xl p-6 my-10">
+        <h1 className="text-2xl font-bold mb-4">Debug Access Denied</h1>
+        <p className="text-sm mb-4 text-ink-soft">
+          You are seeing this page because you do not have admin permissions or are not logged in.
+        </p>
+        <pre className="text-left bg-parchment p-4 rounded text-xs font-mono overflow-auto max-h-60 border border-ink/5">
+          {JSON.stringify({
+            hasSession: !!session,
+            sessionUser: session?.user ?? null,
+            cookies: "Inspect in browser devtools",
+          }, null, 2)}
+        </pre>
+        <div className="mt-6">
+          <Link href="/notebloom-secure-gate-77" className="underline text-oxblood text-sm font-semibold">
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   try {
@@ -21,6 +35,7 @@ export default async function AdminPage() {
     const stats = await getAdminStats();
 
     return (
+
 
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
       {/* Title Header */}
