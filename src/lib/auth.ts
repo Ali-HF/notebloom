@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { getUserByEmail, getUserById } from "@/lib/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/notebloom-secure-gate-77",
