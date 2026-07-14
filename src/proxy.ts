@@ -3,7 +3,9 @@ import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  if (!requestHeaders.has("x-pathname")) {
+    requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  }
 
   return NextResponse.next({
     request: {
