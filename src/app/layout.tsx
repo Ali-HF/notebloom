@@ -20,7 +20,7 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
-  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/account");
 
   return (
     <html lang="en" className="h-full antialiased">
