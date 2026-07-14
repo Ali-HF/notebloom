@@ -6,12 +6,22 @@ import InventoryTable from "@/components/InventoryTable";
 
 export default async function AdminPage() {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isAdmin) notFound();
+  
+  if (!session?.user?.id || !session.user.isAdmin) {
+    console.log("AdminPage: Unauthorized access or no session.", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      isAdmin: session?.user && (session.user as any).isAdmin,
+    });
+    notFound();
+  }
 
-  const books = await listBooks();
-  const stats = await getAdminStats();
+  try {
+    const books = await listBooks();
+    const stats = await getAdminStats();
 
-  return (
+    return (
+
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
       {/* Title Header */}
       <div className="flex items-center justify-between mb-8">
@@ -61,6 +71,15 @@ export default async function AdminPage() {
       </div>
     </div>
   );
+  } catch (error: any) {
+    console.error("AdminPage database fetch error:", error);
+    return (
+      <div className="max-w-md mx-auto py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Error loading dashboard</h1>
+        <p className="text-red-600 font-mono text-sm">{error.message || String(error)}</p>
+      </div>
+    );
+  }
 }
 
 function StatCard({ title, value, isAlert = false }: { title: string; value: string; isAlert?: boolean }) {
