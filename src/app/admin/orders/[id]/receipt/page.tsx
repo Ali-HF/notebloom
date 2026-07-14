@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getOrder, getOrderItems, formatPrice } from "@/lib/db";
 import PrintTrigger from "@/components/PrintTrigger";
@@ -10,7 +10,7 @@ export default async function OrderReceiptPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isAdmin) redirect("/login?next=/admin/orders");
+  if (!session?.user?.id || !session.user.isAdmin) notFound();
 
   const { id } = await params;
   const orderId = Number(id);

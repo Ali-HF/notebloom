@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getBook } from "@/lib/db";
 import BookForm from "@/components/BookForm";
@@ -10,7 +10,7 @@ export default async function EditBookPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isAdmin) redirect("/login?next=/admin");
+  if (!session?.user?.id || !session.user.isAdmin) notFound();
 
   const { id } = await params;
   const book = await getBook(Number(id));

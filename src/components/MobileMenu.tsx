@@ -92,17 +92,7 @@ export default function MobileMenu({ session, count = 0 }: MobileMenuProps) {
               <span>MY ORDERS</span><span className="text-ink/30 text-xs">→</span>
             </Link>
 
-            {session?.user?.isAdmin ? (
-              <Link href="/admin" onClick={closeMenu}
-                className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink hover:text-oxblood transition-colors">
-                <span>ADMIN PANEL</span><span className="text-ink/30 text-xs">→</span>
-              </Link>
-            ) : (
-              <Link href="/login?next=/admin" onClick={closeMenu}
-                className="flex items-center justify-between py-3.5 border-b border-ink/8 text-sm font-semibold text-ink-soft/50 hover:text-oxblood transition-colors">
-                <span>ADMIN</span><span className="text-ink/20 text-xs">→</span>
-              </Link>
-            )}
+
 
             {/* Categories */}
             <div className="mt-5">

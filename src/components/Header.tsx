@@ -69,21 +69,12 @@ export default async function Header() {
 
             {/* Admin section — desktop */}
             <div className="hidden sm:flex items-center gap-4">
-              {session?.user?.isAdmin ? (
-                <>
-                  <Link href="/admin" className="trail-link">
-                    ADMIN
-                  </Link>
-                  <form action={logoutAction}>
-                    <button type="submit" className="trail-link cursor-pointer">
-                      LOG OUT
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <Link href="/login?next=/admin" className="trail-link text-ink-soft/60 hover:text-ink transition-colors text-xs">
-                  ADMIN
-                </Link>
+              {session?.user && (
+                <form action={logoutAction}>
+                  <button type="submit" className="trail-link cursor-pointer">
+                    LOG OUT
+                  </button>
+                </form>
               )}
             </div>
 

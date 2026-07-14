@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { put } from "@vercel/blob";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createBook, updateBook, deleteBook, GENRES, updateOrderStatus, getOrder, getOrderItems } from "@/lib/db";
@@ -14,7 +14,7 @@ import { sendOrderShippedEmail, sendOrderDeliveredEmail, sendOrderOutForDelivery
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.id || !session.user.isAdmin) {
-    redirect("/login?next=/admin");
+    notFound();
   }
 }
 

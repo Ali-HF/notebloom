@@ -1,11 +1,11 @@
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import BookForm from "@/components/BookForm";
 import { createBookAction } from "@/app/actions/admin-actions";
 
 export default async function NewBookPage() {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isAdmin) redirect("/login?next=/admin/new");
+  if (!session?.user?.id || !session.user.isAdmin) notFound();
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">

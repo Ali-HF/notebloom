@@ -6,7 +6,7 @@ import { getUserByEmail, getUserById } from "@/lib/db";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/login",
+    signIn: "/notebloom-secure-gate-77",
   },
   providers: [
     Credentials({

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { listBooks, formatPrice, getAdminStats } from "@/lib/db";
 import InventoryTable from "@/components/InventoryTable";
 
 export default async function AdminPage() {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isAdmin) redirect("/login?next=/admin");
+  if (!session?.user?.id || !session.user.isAdmin) notFound();
 
   const books = await listBooks();
   const stats = await getAdminStats();

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getAllOrders, formatPrice } from "@/lib/db";
 import OrderStatusSelect from "@/components/OrderStatusSelect";
 
 export default async function AdminOrdersPage() {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isAdmin) redirect("/login?next=/admin/orders");
+  if (!session?.user?.id || !session.user.isAdmin) notFound();
 
   const orders = await getAllOrders();
 

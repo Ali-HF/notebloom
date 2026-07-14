@@ -35,7 +35,7 @@ export default async function OrderDetailPage({
     order = await getOrder(orderId);
   }
 
-  if (!order) redirect("/login");
+  if (!order) redirect("/orders");
 
   const isGuest = !session?.user?.id;
   const items = await getOrderItems(orderId);
