@@ -4,6 +4,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { signIn, signOut } from "@/lib/auth";
 import { createUser, getUserByEmail, createVerificationCode, verifyEmailCode, upgradeGuestUser, createPasswordResetToken, verifyPasswordResetToken, resetUserPassword, checkAndIncrementOtpRateLimit } from "@/lib/db";
 import { sendVerificationCodeEmail, sendPasswordResetEmail } from "@/lib/email";
@@ -169,7 +170,10 @@ export async function resendVerificationAction(email: string): Promise<{ success
 }
 
 export async function logoutAction() {
-  await signOut({ redirectTo: "/" });
+  const headersList = await headers();
+  const host = headersList.get("host") || "notebloom.shop";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  await signOut({ redirectTo: `${protocol}://${host}/` });
 }
 
 const forgotPasswordSchema = z.object({
