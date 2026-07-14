@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { listBooks, formatPrice, getAdminStats } from "@/lib/db";
 import InventoryTable from "@/components/InventoryTable";
@@ -8,6 +9,9 @@ export default async function AdminPage() {
   const session = await auth();
   
   if (!session?.user?.id || !session.user.isAdmin) {
+    const cookieStore = await cookies();
+    const cookieNames = cookieStore.getAll().map(c => c.name);
+
     return (
       <div className="max-w-md mx-auto py-20 text-center bg-cream border border-ink/10 rounded-xl p-6 my-10">
         <h1 className="text-2xl font-bold mb-4">Debug Access Denied</h1>
@@ -18,7 +22,7 @@ export default async function AdminPage() {
           {JSON.stringify({
             hasSession: !!session,
             sessionUser: session?.user ?? null,
-            cookies: "Inspect in browser devtools",
+            cookieNames,
           }, null, 2)}
         </pre>
         <div className="mt-6">
