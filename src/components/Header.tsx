@@ -58,7 +58,9 @@ export default async function Header() {
               MY ORDERS
             </Link>
 
-            <ContactButton />
+            <div className="hidden sm:inline-block">
+              <ContactButton />
+            </div>
 
             {/* Cart — desktop */}
             <Link href="/cart" className="trail-link relative hidden sm:flex items-center gap-1.5" aria-label="Cart">

@@ -7,7 +7,7 @@ export default function Logo({ tagline = false }: { tagline?: boolean }) {
       href="/"
       className="flex flex-col focus-visible:outline-none focus-visible:rounded-sm hover:opacity-85 transition-opacity"
     >
-      <div className="relative h-20 w-64 sm:h-24 sm:w-72 shrink-0 -my-5 sm:-my-7">
+      <div className="relative h-16 w-48 sm:h-24 sm:w-72 shrink-0 -my-3 sm:-my-7">
         <Image
           src="/logo-transparent.png"
           alt="Notebloom Logo"
