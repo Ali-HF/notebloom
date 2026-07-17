@@ -133,7 +133,7 @@ export async function verifyCodeAction(
     return { error: "Failed to verify the code. Please try again." };
   }
 
-  redirect("/login?verified=true");
+  redirect("/notebloom-secure-gate-77?verified=true");
 }
 
 export async function resendVerificationAction(email: string): Promise<{ success?: string; error?: string }> {
@@ -238,5 +238,5 @@ export async function resetPasswordAction(
     return { error: "An error occurred resetting your password. Please try again." };
   }
 
-  redirect("/login?resetSuccess=true");
+  redirect("/notebloom-secure-gate-77?resetSuccess=true");
 }

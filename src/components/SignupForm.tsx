@@ -82,7 +82,7 @@ export default function SignupForm({ next, initialEmail = "" }: { next: string; 
 
       <p className="text-sm text-ink-soft text-center">
         Already have an account?{" "}
-        <Link href={`/login?next=${encodeURIComponent(next)}`} className="trail-link text-oxblood">
+        <Link href={`/notebloom-secure-gate-77?next=${encodeURIComponent(next)}`} className="trail-link text-oxblood">
           Log in
         </Link>
       </p>
