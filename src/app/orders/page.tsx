@@ -9,24 +9,28 @@ export const dynamic = "force-dynamic";
 const GUEST_ORDERS_KEY = "guestOrders";
 const EXPIRY_DAYS = 14;
 
-function saveGuestOrder(id: string) {
+function saveGuestOrder(id: string, orderCode?: string) {
   try {
     const raw = localStorage.getItem(GUEST_ORDERS_KEY);
     const parsed: unknown[] = raw ? JSON.parse(raw) : [];
     const expiryMs = EXPIRY_DAYS * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    // Normalise old string[] format → {id, savedAt}[]
-    const existing = parsed.map((e) =>
-      typeof e === "string" ? { id: e, savedAt: now } : (e as { id: string; savedAt: number })
-    );
+    // Normalise old formats
+    const existing: Array<{ id: string; savedAt: number; orderCode?: string }> = parsed.map((e) => {
+      if (typeof e === "string") return { id: e, savedAt: now };
+      return e as { id: string; savedAt: number; orderCode?: string };
+    });
 
     // Remove expired entries
     const fresh = existing.filter((o) => now - o.savedAt < expiryMs);
 
-    // Add if not already saved
-    if (!fresh.find((o) => o.id === id)) {
-      fresh.push({ id, savedAt: now });
+    // Add or update if not already saved
+    const match = fresh.find((o) => o.id === id);
+    if (!match) {
+      fresh.push({ id, savedAt: now, orderCode });
+    } else if (orderCode && !match.orderCode) {
+      match.orderCode = orderCode;
     }
 
     localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(fresh));
@@ -61,11 +65,11 @@ export default function OrdersPage() {
       if (!res.ok) throw new Error("Failed to fetch status");
       const data = await res.json();
       setOrder(data);
-      saveGuestOrder(orderId);
+      saveGuestOrder(data.id.toString(), data.order_code);
       if (data.status && data.status !== lastStatus) {
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("Order Update", {
-            body: `Order #${orderId} is now ${data.status}`,
+            body: `Order ${data.order_code || `#${data.id}`} is now ${data.status}`,
           });
         }
         setLastStatus(data.status);

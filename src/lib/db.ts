@@ -1012,6 +1012,15 @@ export async function getOrder(orderId: number) {
   return result[0] as unknown as (Order & { user_name: string; user_email: string; shipping_json: string | null; payment_method: string | null }) | undefined;
 }
 
+export async function getOrderByCode(code: string) {
+  const result = await sql`
+    SELECT o.*, u.name as user_name, u.email as user_email
+    FROM orders o LEFT JOIN users u ON u.id = o.user_id
+    WHERE UPPER(o.order_code) = ${code.toUpperCase()}
+  `;
+  return result[0] as unknown as (Order & { user_name: string; user_email: string; shipping_json: string | null; payment_method: string | null }) | undefined;
+}
+
 export async function getOrdersForUser(userId: number): Promise<Order[]> {
   const result = await sql`
     SELECT * FROM orders WHERE user_id=${userId} ORDER BY created_at DESC
