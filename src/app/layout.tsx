@@ -24,7 +24,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col overflow-x-hidden">
+      <body className="min-h-full flex flex-col">
         {!isAdminRoute && <Header />}
         <main className="flex-1">{children}</main>
         {!isAdminRoute && <Footer />}
