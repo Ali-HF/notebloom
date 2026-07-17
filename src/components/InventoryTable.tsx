@@ -175,6 +175,7 @@ export default function InventoryTable({ books }: { books: Book[] }) {
                                       genre={b.genre}
                                       seed={coverSeed}
                                       className="w-full h-full object-cover"
+                                      sizes="48px"
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">

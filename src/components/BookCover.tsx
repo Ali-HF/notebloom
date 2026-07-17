@@ -47,6 +47,7 @@ export default function BookCover({
   seed,
   isSecondary = false,
   className = "",
+  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
 }: {
   title: string;
   author: string;
@@ -54,6 +55,7 @@ export default function BookCover({
   seed: string;
   isSecondary?: boolean;
   className?: string;
+  sizes?: string;
 }) {
   const isUrl = seed.startsWith("http://") || seed.startsWith("https://") || seed.startsWith("/");
   if (isUrl && !isSecondary) {
@@ -63,7 +65,7 @@ export default function BookCover({
           src={seed}
           alt={`Cover of ${title} by ${author}`}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes={sizes}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {/* spine shadow overlay */}

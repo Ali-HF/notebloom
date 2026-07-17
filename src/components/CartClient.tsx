@@ -132,6 +132,7 @@ export default function CartClient({
                       genre=""
                       seed={currentSeed}
                       className="w-full h-full object-cover"
+                      sizes="96px"
                     />
                   </Link>
 

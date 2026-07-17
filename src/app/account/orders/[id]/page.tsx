@@ -219,6 +219,7 @@ export default async function OrderDetailPage({
                 genre=""
                 seed={item.cover_seed}
                 className="w-full h-auto rounded-xl ring-1 ring-ink/10"
+                sizes="48px"
               />
             </div>
             <div className="flex-1">

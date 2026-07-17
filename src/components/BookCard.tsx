@@ -19,6 +19,7 @@ export default function BookCard({
           genre={book.genre}
           seed={book.cover_seed}
           className="w-full h-full object-cover"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
         />
         <div className="absolute inset-0 bg-black/35 flex flex-col items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <span className="text-white text-center px-4 text-sm font-semibold font-display line-clamp-2 leading-tight">

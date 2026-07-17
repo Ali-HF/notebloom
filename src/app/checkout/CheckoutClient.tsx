@@ -808,6 +808,7 @@ export default function CheckoutClient({
                           genre=""
                           seed={currentSeed}
                           className="w-full h-full object-cover"
+                          sizes="96px"
                         />
                       </div>
                       <div style={s.summaryItemInfo} className="flex-1 min-w-0 pr-2">
