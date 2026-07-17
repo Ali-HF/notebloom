@@ -134,7 +134,7 @@ export default function OrdersPage() {
                 {order.items.map((item: any, i: number) => (
                   <li key={i} className="py-2 flex justify-between text-sm">
                     <span>{item.title} × {item.quantity}</span>
-                    <span className="text-ink-soft">${((item.price_cents * item.quantity) / 100).toFixed(2)}</span>
+                    <span className="text-ink-soft">PKR {((item.price_cents * item.quantity) / 100).toFixed(2)}</span>
                   </li>
                 ))}
               </ul>
@@ -143,7 +143,7 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between pt-2 border-t border-ink/10">
               <span className="font-semibold">Total</span>
               <span className="font-bold" style={{ fontFamily: "var(--font-stamp)" }}>
-                ${(order.total_cents / 100).toFixed(2)}
+                PKR {(order.total_cents / 100).toFixed(2)}
               </span>
             </div>
 
