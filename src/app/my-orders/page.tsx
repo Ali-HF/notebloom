@@ -37,10 +37,43 @@ export default function MyOrdersPage() {
   useEffect(() => {
     const fresh = getSavedOrders();
     setOrders(fresh);
+    
     // Write back cleaned list (expired removed)
     try {
       localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(fresh));
     } catch {}
+
+    // Verify order validity with database dynamically
+    const verifyOrders = async () => {
+      const verifiedList: SavedOrder[] = [];
+      let changed = false;
+
+      for (const order of fresh) {
+        try {
+          const res = await fetch(`/api/orders/${order.id}/status`);
+          if (res.status === 404) {
+            // Order no longer exists in database
+            changed = true;
+          } else {
+            verifiedList.push(order);
+          }
+        } catch {
+          // If fetch fails (network issue), retain the order to prevent false deletions
+          verifiedList.push(order);
+        }
+      }
+
+      if (changed) {
+        setOrders(verifiedList);
+        try {
+          localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(verifiedList));
+        } catch {}
+      }
+    };
+
+    if (fresh.length > 0) {
+      verifyOrders();
+    }
   }, []);
 
   const handleClick = (id: string) => {
