@@ -316,12 +316,11 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
 
 export async function sendLowStockAlert(productName: string, remainingStock: number): Promise<boolean> {
   const adminEmail = process.env.BREVO_SENDER_EMAIL || "admin@notebloom.shop";
-  const htmlContent = `
-    <!DOCTYPE html><html><head><meta charset="utf-8">
+  const baseUrl = process.env.NEXTAUTH_URL || "https://notebloom.shop";
+  const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
-      body { font-family: sans-serif; background-color: #ede4d3; color: #20283a; margin:0; padding:20px; }
-      .container { max-width:600px; margin:0 auto; background-color:#faf6ec; padding:30px; border-radius:12px; border:1px solid rgba(32,40,58,0.1); }
-      h2 { color:#7c2f2f; margin-top:0; }
+      body { font-family:sans-serif; background-color:#faf6ec; color:#221d18; padding:20px; }
+      .container { max-width:500px; margin:0 auto; background-color:#f6f0e2; border:1px solid rgba(34,29,24,0.1); padding:30px; border-radius:12px; }
       .details { background-color:#ede4d3; padding:20px; border-radius:8px; margin:20px 0; border:1.5px dashed #af8a4f; }
       .btn { display:inline-block; background-color:#7c2f2f; color:#faf6ec !important; text-decoration:none; padding:12px 24px; border-radius:20px; font-size:14px; text-transform:uppercase; font-family:monospace; font-weight:bold; }
     </style></head>
@@ -334,7 +333,7 @@ export async function sendLowStockAlert(productName: string, remainingStock: num
       </div>
       <p>Please restock soon.</p>
       <div style="text-align:center;margin-top:25px;">
-        <a href="https://the-paperworm.vercel.app/admin" class="btn" style="color:#faf6ec;">Admin Panel</a>
+        <a href="${baseUrl}/admin" class="btn" style="color:#faf6ec;">Admin Panel</a>
       </div>
     </div></body></html>`;
 
